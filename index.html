@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Streaming Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1400px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .service-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 40px 20px;
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+            border-radius: 20px;
+            border: 2px solid #333;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            aspect-ratio: 1;
+        }
+
+        .service-link:hover {
+            transform: translateY(-5px);
+            border-color: #666;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+        }
+
+        .service-name {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .fullscreen-btn {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-color: #555;
+        }
+
+        .fullscreen-btn:hover {
+            border-color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid">
+            <!-- Row 1 -->
+            <a href="https://www.netflix.com" class="service-link" data-url="https://www.netflix.com">
+                <div class="icon">🎬</div>
+                <div class="service-name">Netflix</div>
+            </a>
+            <a href="https://app.plex.tv" class="service-link" data-url="https://app.plex.tv">
+                <div class="icon">▶️</div>
+                <div class="service-name">Plex</div>
+            </a>
+            <a href="https://www.youtube.com" class="service-link" data-url="https://www.youtube.com">
+                <div class="icon">📺</div>
+                <div class="service-name">YouTube</div>
+            </a>
+
+            <!-- Row 2 -->
+            <a href="https://www.tv2.no" class="service-link" data-url="https://www.tv2.no">
+                <div class="icon">📡</div>
+                <div class="service-name">TV2</div>
+            </a>
+            <a href="https://tv.nrk.no" class="service-link" data-url="https://tv.nrk.no">
+                <div class="icon">🇳🇴</div>
+                <div class="service-name">NRK</div>
+            </a>
+            <a href="https://viaplay.no" class="service-link" data-url="https://viaplay.no">
+                <div class="icon">🎭</div>
+                <div class="service-name">Viaplay</div>
+            </a>
+
+            <!-- Row 3 -->
+            <a href="https://www.hbomax.com" class="service-link" data-url="https://www.hbomax.com">
+                <div class="icon">🎪</div>
+                <div class="service-name">HBO Max</div>
+            </a>
+            <a href="https://tv.apple.com" class="service-link" data-url="https://tv.apple.com">
+                <div class="icon">🍎</div>
+                <div class="service-name">Apple TV</div>
+            </a>
+            <a href="https://globoplay.globo.com" class="service-link" data-url="https://globoplay.globo.com">
+                <div class="icon">🌎</div>
+                <div class="service-name">Globo</div>
+            </a>
+
+            <!-- Row 4 -->
+            <a href="#" class="service-link fullscreen-btn" id="fullscreen-trigger">
+                <div class="icon">⛶</div>
+                <div class="service-name">Go Fullscreen</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // YouTube redirect base - you'll need to create a YouTube video with links in description
+        // Or use a playlist that can redirect. This is a placeholder.
+        const YOUTUBE_REDIRECT_BASE = 'https://www.youtube.com/redirect?q=';
+
+        function isFullscreen() {
+            // Check if browser is in fullscreen mode
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                return true;
+            }
+            
+            // Check screen dimensions as proxy for Tesla fullscreen
+            // Tesla Model 3/Y screen is typically 1920x1200 or 1820x1080
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isLikelyTeslaFullscreen = (width >= 1800 && height >= 1000) || 
+                                             (width >= window.screen.width * 0.95 && 
+                                              height >= window.screen.height * 0.95);
+            
+            return isLikelyTeslaFullscreen;
+        }
+
+        function navigateToService(url, event) {
+            event.preventDefault();
+            
+            if (isFullscreen()) {
+                // Already in fullscreen, navigate directly
+                window.location.href = url;
+            } else {
+                // Not in fullscreen - route through YouTube redirect
+                // This attempts to use YouTube's redirect which may trigger fullscreen in Tesla
+                window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(url);
+            }
+        }
+
+        // Add click handlers to all service links
+        document.querySelectorAll('.service-link:not(#fullscreen-trigger)').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const url = this.getAttribute('data-url');
+                navigateToService(url, e);
+            });
+        });
+
+        // Fullscreen button handler
+        document.getElementById('fullscreen-trigger').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const elem = document.documentElement;
+            
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+            
+            // After requesting fullscreen, reload the page to return to launcher
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        });
+
+        // Prevent default link behavior
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>
