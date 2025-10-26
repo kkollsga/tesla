@@ -22,15 +22,21 @@
         }
 
         .container {
-            width: 90%;
-            max-width: 1400px;
+            width: 95%;
+            height: 95vh;
+            max-width: 1600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            padding: 20px;
+            grid-template-rows: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            height: 100%;
         }
 
         .service-link {
@@ -39,110 +45,177 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            padding: 40px 20px;
-            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-            border-radius: 20px;
-            border: 2px solid #333;
-            transition: all 0.3s ease;
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            border: 1px solid #222;
+            transition: all 0.2s ease;
             cursor: pointer;
-            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
         .service-link:hover {
-            transform: translateY(-5px);
-            border-color: #666;
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            border-color: #444;
+            transform: scale(1.02);
+        }
+
+        .service-link:hover::before {
+            opacity: 1;
         }
 
         .icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
         }
 
         .service-name {
             color: #fff;
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 500;
             text-align: center;
+            letter-spacing: 0.3px;
         }
 
-        .fullscreen-btn {
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-            border-color: #555;
-        }
-
-        .fullscreen-btn:hover {
-            border-color: #888;
-        }
+        /* Service-specific colors */
+        .netflix { border-color: #E50914; }
+        .netflix:hover { border-color: #E50914; box-shadow: 0 0 20px rgba(229, 9, 20, 0.3); }
+        
+        .plex { border-color: #E5A00D; }
+        .plex:hover { border-color: #E5A00D; box-shadow: 0 0 20px rgba(229, 160, 13, 0.3); }
+        
+        .youtube { border-color: #FF0000; }
+        .youtube:hover { border-color: #FF0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); }
+        
+        .tv2 { border-color: #00B2A9; }
+        .tv2:hover { border-color: #00B2A9; box-shadow: 0 0 20px rgba(0, 178, 169, 0.3); }
+        
+        .nrk { border-color: #0071BC; }
+        .nrk:hover { border-color: #0071BC; box-shadow: 0 0 20px rgba(0, 113, 188, 0.3); }
+        
+        .viaplay { border-color: #6B3FA0; }
+        .viaplay:hover { border-color: #6B3FA0; box-shadow: 0 0 20px rgba(107, 63, 160, 0.3); }
+        
+        .hbo { border-color: #7B3CFF; }
+        .hbo:hover { border-color: #7B3CFF; box-shadow: 0 0 20px rgba(123, 60, 255, 0.3); }
+        
+        .apple { border-color: #555; }
+        .apple:hover { border-color: #888; box-shadow: 0 0 20px rgba(136, 136, 136, 0.3); }
+        
+        .globo { border-color: #0047BB; }
+        .globo:hover { border-color: #0047BB; box-shadow: 0 0 20px rgba(0, 71, 187, 0.3); }
+        
+        .fullscreen-btn { border-color: #333; }
+        .fullscreen-btn:hover { border-color: #666; box-shadow: 0 0 20px rgba(102, 102, 102, 0.3); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="grid">
             <!-- Row 1 -->
-            <a href="https://www.netflix.com" class="service-link" data-url="https://www.netflix.com">
-                <div class="icon">🎬</div>
+            <a href="https://www.netflix.com" class="service-link netflix" data-url="https://www.netflix.com">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 10 L35 10 L35 90 L20 90 L20 10 Z" fill="#E50914"/>
+                    <path d="M65 10 L80 10 L80 90 L65 90 L65 10 Z" fill="#E50914"/>
+                    <path d="M35 10 L65 90 L65 10 L35 90 Z" fill="#B20710"/>
+                </svg>
                 <div class="service-name">Netflix</div>
             </a>
-            <a href="https://app.plex.tv" class="service-link" data-url="https://app.plex.tv">
-                <div class="icon">▶️</div>
+            <a href="https://app.plex.tv" class="service-link plex" data-url="https://app.plex.tv">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 20 L65 35 L50 50 L65 65 L50 80 L35 65 L50 50 L35 35 Z" fill="#E5A00D"/>
+                    <circle cx="50" cy="50" r="8" fill="#000"/>
+                </svg>
                 <div class="service-name">Plex</div>
             </a>
-            <a href="https://www.youtube.com" class="service-link" data-url="https://www.youtube.com">
-                <div class="icon">📺</div>
+            <a href="https://www.youtube.com" class="service-link youtube" data-url="https://www.youtube.com">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="30" width="70" height="40" rx="8" fill="#FF0000"/>
+                    <path d="M42 42 L42 58 L62 50 Z" fill="#FFF"/>
+                </svg>
                 <div class="service-name">YouTube</div>
             </a>
 
             <!-- Row 2 -->
-            <a href="https://www.tv2.no" class="service-link" data-url="https://www.tv2.no">
-                <div class="icon">📡</div>
+            <a href="https://www.tv2.no" class="service-link tv2" data-url="https://www.tv2.no">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="50" y="65" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#00B2A9" text-anchor="middle">TV2</text>
+                </svg>
                 <div class="service-name">TV2</div>
             </a>
-            <a href="https://tv.nrk.no" class="service-link" data-url="https://tv.nrk.no">
-                <div class="icon">🇳🇴</div>
+            <a href="https://tv.nrk.no" class="service-link nrk" data-url="https://tv.nrk.no">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="35" fill="#0071BC"/>
+                    <text x="50" y="62" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FFF" text-anchor="middle">NRK</text>
+                </svg>
                 <div class="service-name">NRK</div>
             </a>
-            <a href="https://viaplay.no" class="service-link" data-url="https://viaplay.no">
-                <div class="icon">🎭</div>
+            <a href="https://viaplay.no" class="service-link viaplay" data-url="https://viaplay.no">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 25 L50 75 L70 25" stroke="#6B3FA0" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="50" cy="75" r="5" fill="#6B3FA0"/>
+                </svg>
                 <div class="service-name">Viaplay</div>
             </a>
 
             <!-- Row 3 -->
-            <a href="https://www.hbomax.com" class="service-link" data-url="https://www.hbomax.com">
-                <div class="icon">🎪</div>
+            <a href="https://www.hbomax.com" class="service-link hbo" data-url="https://www.hbomax.com">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="35" fill="#7B3CFF"/>
+                    <text x="50" y="62" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFF" text-anchor="middle">MAX</text>
+                </svg>
                 <div class="service-name">HBO Max</div>
             </a>
-            <a href="https://tv.apple.com" class="service-link" data-url="https://tv.apple.com">
-                <div class="icon">🍎</div>
+            <a href="https://tv.apple.com" class="service-link apple" data-url="https://tv.apple.com">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 25 C50 25 48 20 52 18 C56 16 58 20 58 20 L58 25 C58 25 65 28 68 35 C71 42 68 50 65 55 C62 60 55 65 50 65 C45 65 38 60 35 55 C32 50 29 42 32 35 C35 28 42 25 42 25 L42 20" fill="#FFF" stroke="#FFF" stroke-width="1"/>
+                    <path d="M48 25 L48 28" stroke="#000" stroke-width="2"/>
+                </svg>
                 <div class="service-name">Apple TV</div>
             </a>
-            <a href="https://globoplay.globo.com" class="service-link" data-url="https://globoplay.globo.com">
-                <div class="icon">🌎</div>
+            <a href="https://globoplay.globo.com" class="service-link globo" data-url="https://globoplay.globo.com">
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="35" fill="#0047BB"/>
+                    <circle cx="50" cy="50" r="20" fill="#FFF"/>
+                    <circle cx="50" cy="50" r="10" fill="#0047BB"/>
+                </svg>
                 <div class="service-name">Globo</div>
             </a>
 
             <!-- Row 4 -->
             <a href="#" class="service-link fullscreen-btn" id="fullscreen-trigger">
-                <div class="icon">⛶</div>
+                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25 25 L25 40 M25 25 L40 25" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M75 25 L75 40 M75 25 L60 25" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M25 75 L25 60 M25 75 L40 75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M75 75 L75 60 M75 75 L60 75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+                </svg>
                 <div class="service-name">Go Fullscreen</div>
             </a>
         </div>
     </div>
 
     <script>
-        // YouTube redirect base - you'll need to create a YouTube video with links in description
-        // Or use a playlist that can redirect. This is a placeholder.
         const YOUTUBE_REDIRECT_BASE = 'https://www.youtube.com/redirect?q=';
 
         function isFullscreen() {
-            // Check if browser is in fullscreen mode
             if (document.fullscreenElement || document.webkitFullscreenElement) {
                 return true;
             }
             
-            // Check screen dimensions as proxy for Tesla fullscreen
-            // Tesla Model 3/Y screen is typically 1920x1200 or 1820x1080
             const width = window.innerWidth;
             const height = window.innerHeight;
             const isLikelyTeslaFullscreen = (width >= 1800 && height >= 1000) || 
@@ -156,16 +229,12 @@
             event.preventDefault();
             
             if (isFullscreen()) {
-                // Already in fullscreen, navigate directly
                 window.location.href = url;
             } else {
-                // Not in fullscreen - route through YouTube redirect
-                // This attempts to use YouTube's redirect which may trigger fullscreen in Tesla
                 window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(url);
             }
         }
 
-        // Add click handlers to all service links
         document.querySelectorAll('.service-link:not(#fullscreen-trigger)').forEach(link => {
             link.addEventListener('click', function(e) {
                 const url = this.getAttribute('data-url');
@@ -173,7 +242,6 @@
             });
         });
 
-        // Fullscreen button handler
         document.getElementById('fullscreen-trigger').addEventListener('click', function(e) {
             e.preventDefault();
             
@@ -189,13 +257,11 @@
                 elem.msRequestFullscreen();
             }
             
-            // After requesting fullscreen, reload the page to return to launcher
             setTimeout(() => {
                 window.location.reload();
             }, 500);
         });
 
-        // Prevent default link behavior
         document.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
