@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="252 217 24 24">
+  <defs>
+    <linearGradient id="viaplayLight" gradientUnits="userSpaceOnUse" x1="259" y1="224.779" x2="268.5" y2="224.779">
+      <stop offset="0" style="stop-color:#ebf5f5"/>
+      <stop offset="0.34375" style="stop-color:#f5fafa"/>
+      <stop offset="0.6875" style="stop-color:#fdfdfd"/>
+      <stop offset="1" style="stop-color:#ffffff"/>
+    </linearGradient>
+    <linearGradient id="viaplayPink" gradientUnits="userSpaceOnUse" x1="262.5" y1="219.5" x2="262.5" y2="230">
+      <stop offset="0" style="stop-color:#c52790"/>
+      <stop offset="0.5" style="stop-color:#d42366"/>
+      <stop offset="0.8125" style="stop-color:#eb1e23"/>
+      <stop offset="1" style="stop-color:#eb1e23"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main circle with pink/red gradient - larger and shifted right -->
+  <circle cx="264.2" cy="224.777" r="7.8" fill="url(#viaplayPink)"/>
+
+  <!-- Play button V-shape highlight (white gradient) - unchanged position -->
+  <path fill="url(#viaplayLight)" d="M259.2,221.8 L265.8,224.777 L259.2,227.75 C259.7,228.7 260.4,229.5 261.3,230.2 L269.2,226.2 L269.22,226.18 L269.27,226.14 V223.4 L269.22,223.36 L269.2,223.34 L261.3,219.35 C260.4,220.05 259.7,220.85 259.2,221.8"/>
+</svg>

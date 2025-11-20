@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <!-- Main outer circle -->
+  <circle cx="500" cy="500" r="480" fill="#00aeef"/>
+
+  <!-- TV screen rectangle - centered, maintaining original proportions -->
+  <!-- Original: width ~789, height ~545, relative to circle diameter ~1092 -->
+  <!-- Ratios: width 0.72, height 0.50 of diameter -->
+  <rect x="155" y="260" width="690" height="480" rx="25" fill="#fff"/>
+
+  <!-- Inner circle representing the TV screen -->
+  <!-- Original ratio: 221/545.96 = 0.405 of outer circle radius -->
+  <circle cx="500" cy="500" r="195" fill="#00aeef"/>
+</svg>
