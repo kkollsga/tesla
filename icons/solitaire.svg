@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140">
+  <!-- Card background -->
+  <rect x="2" y="2" width="96" height="136" rx="8" fill="#fff" stroke="#ddd" stroke-width="2"/>
+
+  <!-- Spade symbol in center -->
+  <g transform="translate(50, 70)">
+    <path d="M0,-25 C-8,-17 -15,-10 -15,0 C-15,8 -8,15 0,15 C8,15 15,8 15,0 C15,-10 8,-17 0,-25 Z" fill="#000"/>
+    <path d="M-6,10 L-6,20 L6,20 L6,10 Z" fill="#000"/>
+  </g>
+
+  <!-- Corner value -->
+  <text x="10" y="25" font-family="Arial" font-size="20" font-weight="bold" fill="#000">♠</text>
+</svg>
