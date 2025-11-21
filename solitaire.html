@@ -40,22 +40,16 @@
             z-index: 1;
         }
         .game-board {
-            width: 96vw;
-            max-width: 1350px;
-            height: 700px;
-            margin: 0 auto;
-            transform: scale(1.05);
-            transform-origin: center center;
             position: relative;
             z-index: 2;
-            padding: 0 20px;
+            transform-origin: top left;
         }
         .card {
             position: relative;
-            width: 100px;
-            height: 140px;
+            width: 130px;
+            height: 182px;
             background-color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 2px solid #ccc;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2) inset;
         }
@@ -109,14 +103,15 @@
         }
         .tableau-area {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 50px;
             margin-bottom: 30px;
             width: 100%;
         }
         .tableau-column {
             position: relative;
-            min-height: 160px;
-            width: 100px;
+            min-height: 205px;
+            width: 130px;
         }
         .tableau-card {
             position: absolute;
@@ -130,8 +125,8 @@
         }
         .foundation-pile {
             position: relative;
-            width: 100px;
-            height: 140px;
+            width: 130px;
+            height: 182px;
         }
         .foundation-card {
             position: absolute;
@@ -162,29 +157,29 @@
         }
         .card-value {
             position: absolute;
-            top: 5px;
-            left: 5px;
+            top: 6px;
+            left: 6px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 20px;
         }
         .card-value-bottom {
             position: absolute;
-            bottom: 5px;
-            right: 5px;
+            bottom: 6px;
+            right: 6px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 20px;
             transform: rotate(180deg);
         }
         .card-suit {
-            font-size: 26px;
+            font-size: 32px;
             line-height: 1;
         }
         .game-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 40px;
-            height: 160px;
-            margin-top: 20px;
+            margin-bottom: 50px;
+            height: 205px;
+            margin-top: 25px;
         }
         .stock-waste-area {
             display: flex;
@@ -196,28 +191,28 @@
         }
         .waste-pile {
             position: relative;
-            width: 160px;  /* Wider to accommodate multiple cards */
-            height: 140px;
+            width: 210px;  /* Wider to accommodate multiple cards */
+            height: 182px;
         }
         .game-controls {
-            padding: 10px 16px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 30px;
+            margin-top: 35px;
         }
         .stats-container {
             display: flex;
-            gap: 12px;
+            gap: 15px;
         }
         .stat-box {
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 10px 15px;
+            font-size: 16px;
             font-weight: 500;
             color: white;
-            min-width: 80px;
+            min-width: 95px;
             text-align: center;
-            height: 36px;
+            height: 42px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -226,12 +221,12 @@
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
             background-size: 200% 200%;
             border: 2px solid #444;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 14px;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
             font-weight: 600;
             color: white;
-            height: 36px;
+            height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -287,7 +282,7 @@
         }
         .controls-left {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         /* Confetti animation that can't be done with Tailwind */
@@ -317,25 +312,20 @@
         /* Custom board styling */
         .game-container {
             background: linear-gradient(135deg, #6B1F3A 0%, #4A0E1F 100%);
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 14px;
+            padding: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 1200px; /* Base width for scaling calculations */
         }
 
         .stat-container {
             background: rgba(74, 14, 31, 0.6);
-            border-radius: 6px;
-            padding: 8px 12px;
+            border-radius: 8px;
+            padding: 10px 15px;
             color: white;
         }
 
-        /* Responsive styles */
-        @media (max-width: 1000px) {
-            .game-board {
-                width: 100%;
-                padding: 0 10px;
-            }
-        }
+        /* Responsive styles - handled by JavaScript now */
     </style>
 </head>
 <body>
@@ -412,6 +402,25 @@
     </div>
     
     <script>
+        // ============================================
+        // GAME SETTINGS - Easy customization
+        // ============================================
+        const GAME_SETTINGS = {
+            // Card dimensions
+            cardWidth: 130,
+            cardHeight: 182,
+
+            // Spacing
+            tableauGap: 50,              // Gap between tableau columns
+            hiddenCardSpacing: 13,       // Spacing for face-down cards
+            revealedCardSpacing: 26,     // Spacing for face-up cards
+
+            // Layout
+            tableauColumnHeight: 494,    // Fixed height for tableau columns
+            gameBoardMarginTop: 80,      // Margin above game board (px)
+        };
+        // ============================================
+
         // Game state
         let deck = [];
         let stock = [];
@@ -447,13 +456,71 @@
         // Used to store references to card elements
         let cardElementMap = new WeakMap();
         
+        // Scale and position the game board to fit the screen
+        function scaleGameBoard() {
+            const gameBoard = document.querySelector('.game-board');
+            const gameContainer = document.querySelector('.game-container');
+
+            if (!gameBoard || !gameContainer) return;
+
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Define padding (dark red border) - 2% of viewport on each side
+            const paddingPercent = 0.02;
+            const paddingX = viewportWidth * paddingPercent;
+            const paddingY = viewportHeight * paddingPercent;
+
+            // Available space after padding
+            const availableWidth = viewportWidth - (paddingX * 2);
+            const availableHeight = viewportHeight - (paddingY * 2);
+
+            // Base dimensions of the game container (the design width/height)
+            const baseWidth = 1200;
+            const baseHeight = gameContainer.scrollHeight || 900; // Use actual height or fallback
+
+            // Calculate scale to fit both width and height with padding
+            const scaleX = availableWidth / baseWidth;
+            const scaleY = availableHeight / baseHeight;
+            const scale = Math.min(scaleX, scaleY); // Use the smaller scale to ensure it fits
+
+            // Apply the scale transform
+            gameBoard.style.transform = `scale(${scale})`;
+
+            // Calculate the scaled dimensions
+            const scaledWidth = baseWidth * scale;
+            const scaledHeight = baseHeight * scale;
+
+            // Set the game board dimensions to the base size (before scaling)
+            gameBoard.style.width = baseWidth + 'px';
+
+            // Center the game board in the viewport
+            // Account for the fact that transform scale doesn't affect layout
+            const leftOffset = (viewportWidth - scaledWidth) / 2;
+            const topOffset = (viewportHeight - scaledHeight) / 2;
+
+            gameBoard.style.position = 'absolute';
+            gameBoard.style.left = leftOffset + 'px';
+            gameBoard.style.top = topOffset + 'px';
+        }
+
         // Wait for DOM to be fully loaded before initializing
         document.addEventListener('DOMContentLoaded', function() {
             // Set up event delegation
             setupEventDelegation();
-            
+
             // Initialize the game
             initGame();
+
+            // Scale the game board to fit the screen
+            scaleGameBoard();
+
+            // Rescale on window resize
+            window.addEventListener('resize', scaleGameBoard);
+
+            // Also rescale after a short delay to ensure DOM is fully rendered
+            setTimeout(scaleGameBoard, 100);
         });
         
         // Set up event delegation
@@ -719,10 +786,10 @@
                 const cardEl = createCardElement(card, true);
                 cardEl.style.position = 'relative';
                 cardEl.style.top = dragOffset + 'px';
-                cardEl.style.marginBottom = index < draggedCards.length - 1 ? '-120px' : '0';
+                cardEl.style.marginBottom = index < draggedCards.length - 1 ? `-${GAME_SETTINGS.cardHeight - GAME_SETTINGS.revealedCardSpacing}px` : '0';
                 container.appendChild(cardEl);
-                // All dragged cards are face-up and visible, so use 20px spacing
-                dragOffset += 20;
+                // All dragged cards are face-up and visible, so use spacing from settings
+                dragOffset += GAME_SETTINGS.revealedCardSpacing;
             });
 
             dragClone = container;
@@ -956,6 +1023,9 @@
             clearGameBoard();
             renderGame();
             document.getElementById('high-score').textContent = getHighScore();
+
+            // Rescale board after rendering
+            setTimeout(scaleGameBoard, 50);
         }
         
         // Clear the game board elements before re-rendering
@@ -1103,13 +1173,12 @@
 
                     tableauElement.appendChild(cardElement);
 
-                    // Hidden cards use 10px spacing, revealed cards use 20px spacing
-                    cumulativeOffset += card.faceUp ? 20 : 10;
+                    // Use spacing from settings
+                    cumulativeOffset += card.faceUp ? GAME_SETTINGS.revealedCardSpacing : GAME_SETTINGS.hiddenCardSpacing;
                 }
 
-                // Set fixed height for all columns to accommodate full stack (13 cards)
-                // Max spacing would be 12 cards * 20px = 240px, plus base card height 140px
-                tableauElement.style.height = '380px';
+                // Set fixed height for all columns from settings
+                tableauElement.style.height = GAME_SETTINGS.tableauColumnHeight + 'px';
             }
             
             // Check for win condition
