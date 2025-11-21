@@ -291,21 +291,144 @@
             width: 10px;
             height: 16px;
             border-radius: 0 50% 50% 50%;
-            animation: confetti-fall 8s ease-in-out forwards;
+            animation: confetti-fall 3s ease-in forwards;
             transform: rotate(45deg);
         }
         
         @keyframes confetti-fall {
             0% {
-                transform: translateY(0) rotate(45deg);
+                transform: translateY(-20vh) translateX(0) rotate(0deg);
                 opacity: 1;
+            }
+            10% {
+                transform: translateY(10vh) translateX(var(--drift-x)) rotate(90deg);
+            }
+            30% {
+                transform: translateY(40vh) translateX(calc(var(--drift-x) * 2)) rotate(270deg);
             }
             50% {
+                transform: translateY(70vh) translateX(calc(var(--drift-x) * 2.5)) rotate(450deg);
                 opacity: 1;
             }
+            70% {
+                transform: translateY(90vh) translateX(calc(var(--drift-x) * 2.8)) rotate(630deg);
+            }
             100% {
-                transform: translateY(100vh) rotate(425deg);
+                transform: translateY(110vh) translateX(calc(var(--drift-x) * 3)) rotate(810deg);
                 opacity: 0;
+            }
+        }
+
+        @keyframes card-drop-bounce {
+            0% {
+                transform: translate(0, 0) rotate(var(--start-rotate));
+                opacity: 1;
+            }
+            /* First drop - hits ground */
+            25% {
+                transform: translate(var(--drift-1), var(--drop-distance)) rotate(calc(var(--start-rotate) + var(--spin-1)));
+            }
+            /* First bounce up */
+            35% {
+                transform: translate(var(--drift-2), calc(var(--drop-distance) - var(--bounce-1))) rotate(calc(var(--start-rotate) + var(--spin-2)));
+            }
+            /* Second drop */
+            50% {
+                transform: translate(var(--drift-3), var(--drop-distance)) rotate(calc(var(--start-rotate) + var(--spin-3)));
+            }
+            /* Second bounce up (smaller) */
+            60% {
+                transform: translate(var(--drift-4), calc(var(--drop-distance) - var(--bounce-2))) rotate(calc(var(--start-rotate) + var(--spin-4)));
+            }
+            /* Third drop */
+            73% {
+                transform: translate(var(--drift-5), var(--drop-distance)) rotate(calc(var(--start-rotate) + var(--spin-5)));
+            }
+            /* Third bounce up (even smaller) */
+            83% {
+                transform: translate(var(--drift-6), calc(var(--drop-distance) - var(--bounce-3))) rotate(calc(var(--start-rotate) + var(--spin-6)));
+            }
+            /* Final settle */
+            100% {
+                transform: translate(var(--drift-final), var(--drop-distance)) rotate(calc(var(--start-rotate) + var(--spin-final)));
+                opacity: 1;
+            }
+        }
+
+        .card-celebration {
+            position: fixed !important;
+            z-index: 9999 !important;
+            animation: card-drop-bounce 4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
+
+        .victory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .victory-text {
+            font-size: 80px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                4px 4px 8px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: victory-glow 2s ease-in-out infinite alternate;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+
+        .victory-subtext {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            text-shadow:
+                0 0 10px rgba(255, 255, 255, 0.8),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fade-in-up 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes victory-glow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            to {
+                text-shadow:
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 60px rgba(255, 215, 0, 0.8),
+                    0 0 90px rgba(255, 215, 0, 0.6),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
         
@@ -452,16 +575,57 @@
         // Card configuration
         const suits = ['♥', '♦', '♣', '♠'];
         const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-        
+
         // Used to store references to card elements
         let cardElementMap = new WeakMap();
-        
+
+        // Cached DOM references (initialized after DOM load)
+        let domCache = {
+            gameBoard: null,
+            gameContainer: null,
+            stock: null,
+            waste: null,
+            foundations: [],
+            tableaus: [],
+            timer: null,
+            moveCount: null,
+            highScore: null,
+            undoButton: null,
+            foundationArea: null,
+            tableauContainer: null
+        };
+
+        // Utility: Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Utility: Throttle function
+        function throttle(func, limit) {
+            let inThrottle;
+            return function executedFunction(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
         // Scale and position the game board to fit the screen
         function scaleGameBoard() {
-            const gameBoard = document.querySelector('.game-board');
-            const gameContainer = document.querySelector('.game-container');
+            if (!domCache.gameBoard || !domCache.gameContainer) return;
 
-            if (!gameBoard || !gameContainer) return;
+            const gameBoard = domCache.gameBoard;
+            const gameContainer = domCache.gameContainer;
 
             // Get viewport dimensions
             const viewportWidth = window.innerWidth;
@@ -505,8 +669,63 @@
             gameBoard.style.top = topOffset + 'px';
         }
 
+        // Debug function to instantly win the game (for testing celebration)
+        function instantWin() {
+            // Clear all piles
+            stock = [];
+            waste = [];
+            tableau = [[], [], [], [], [], [], []];
+
+            // Fill foundation piles with all cards in order
+            const suitOrder = ['♥', '♦', '♣', '♠'];
+            for (let s = 0; s < 4; s++) {
+                foundation[s] = [];
+                for (let v = 0; v < 13; v++) {
+                    foundation[s].push({
+                        suit: suitOrder[s],
+                        value: values[v],
+                        numValue: v + 1,
+                        color: (suitOrder[s] === '♥' || suitOrder[s] === '♦') ? 'red' : 'black',
+                        faceUp: true
+                    });
+                }
+            }
+
+            // Render the game and trigger win condition
+            renderGame();
+            checkWinCondition();
+        }
+
+        // Initialize DOM cache
+        function initDOMCache() {
+            domCache.gameBoard = document.querySelector('.game-board');
+            domCache.gameContainer = document.querySelector('.game-container');
+            domCache.stock = document.getElementById('stock');
+            domCache.waste = document.getElementById('waste');
+            domCache.timer = document.getElementById('timer');
+            domCache.moveCount = document.getElementById('move-count');
+            domCache.highScore = document.getElementById('high-score');
+            domCache.undoButton = document.getElementById('undo');
+            domCache.foundationArea = document.querySelector('.foundation-area');
+            domCache.tableauContainer = document.getElementById('tableau-container');
+
+            // Cache foundation and tableau elements
+            for (let i = 0; i < 4; i++) {
+                domCache.foundations[i] = document.getElementById(`foundation-${i}`);
+            }
+            for (let i = 0; i < 7; i++) {
+                domCache.tableaus[i] = document.getElementById(`tableau-${i}`);
+            }
+        }
+
+        // Create debounced version of scaleGameBoard for resize events
+        const debouncedScaleGameBoard = debounce(scaleGameBoard, 150);
+
         // Wait for DOM to be fully loaded before initializing
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DOM cache
+            initDOMCache();
+
             // Set up event delegation
             setupEventDelegation();
 
@@ -516,11 +735,21 @@
             // Scale the game board to fit the screen
             scaleGameBoard();
 
-            // Rescale on window resize
-            window.addEventListener('resize', scaleGameBoard);
+            // Rescale on window resize (debounced to avoid excessive calls)
+            window.addEventListener('resize', debouncedScaleGameBoard);
 
             // Also rescale after a short delay to ensure DOM is fully rendered
             setTimeout(scaleGameBoard, 100);
+
+            // Add keyboard shortcut for testing: Press 'W' key to instantly win
+            // DISABLED: Uncomment to enable instant win cheat code
+            /*
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'w' || e.key === 'W') {
+                    instantWin();
+                }
+            });
+            */
         });
         
         // Set up event delegation
@@ -529,7 +758,7 @@
             setupDragAndDrop();
 
             // Stock pile events
-            document.getElementById('stock').addEventListener('click', function(event) {
+            domCache.stock.addEventListener('click', function(event) {
                 if (stock.length > 0) {
                     startGameIfNeeded();
                     saveGameState(); // Save state before making the move
@@ -540,26 +769,26 @@
                     resetStock();
                 }
             });
-            
+
             // Waste pile events
-            document.getElementById('waste').addEventListener('click', function(event) {
+            domCache.waste.addEventListener('click', function(event) {
                 const target = event.target.closest('.waste-card');
                 if (!target) return;
-                
+
                 startGameIfNeeded();
                 const index = parseInt(target.dataset.index || '0');
                 if (index === waste.length - 1) { // Only select top card
                     selectWasteCard(index);
                 }
             });
-            
+
             // Foundation events
-            document.querySelector('.foundation-area').addEventListener('click', function(event) {
+            domCache.foundationArea.addEventListener('click', function(event) {
                 const target = event.target.closest('.foundation-pile');
                 if (!target) return;
-                
+
                 const pileIndex = parseInt(target.id.split('-')[1]);
-                
+
                 if (selectedCard) {
                     startGameIfNeeded();
                     saveGameState(); // Save state before making the move
@@ -569,9 +798,9 @@
                     selectFoundationCard(pileIndex);
                 }
             });
-            
+
             // Tableau events
-            document.getElementById('tableau-container').addEventListener('click', function(event) {
+            domCache.tableauContainer.addEventListener('click', function(event) {
                 const targetCard = event.target.closest('.card');
                 if (!targetCard) return;
                 
@@ -611,7 +840,7 @@
             });
             
             // Undo button event
-            document.getElementById('undo').addEventListener('click', function() {
+            domCache.undoButton.addEventListener('click', function() {
                 undoLastMove();
             });
         }
@@ -619,13 +848,13 @@
         // Save the current game state to history
         function saveGameState() {
             const gameState = {
-                stock: JSON.parse(JSON.stringify(stock)),
-                waste: JSON.parse(JSON.stringify(waste)),
-                foundation: JSON.parse(JSON.stringify(foundation)),
-                tableau: JSON.parse(JSON.stringify(tableau)),
+                stock: structuredClone(stock),
+                waste: structuredClone(waste),
+                foundation: structuredClone(foundation),
+                tableau: structuredClone(tableau),
                 moveCount: moveCount
             };
-            
+
             moveHistory.push(gameState);
             updateUndoButton();
         }
@@ -658,22 +887,19 @@
         
         // Update the undo button state (enabled/disabled)
         function updateUndoButton() {
-            const undoButton = document.getElementById('undo');
-            undoButton.disabled = moveHistory.length === 0;
+            domCache.undoButton.disabled = moveHistory.length === 0;
         }
         
         // Set up drag and drop event handlers
         function setupDragAndDrop() {
             // Use event delegation on the game board
-            const gameBoard = document.querySelector('.game-board');
-
             // Mouse events
-            gameBoard.addEventListener('mousedown', handleDragStart, false);
+            domCache.gameBoard.addEventListener('mousedown', handleDragStart, false);
             document.addEventListener('mousemove', handleDragMove, false);
             document.addEventListener('mouseup', handleDragEnd, false);
 
             // Touch events (optimized for iOS and Tesla)
-            gameBoard.addEventListener('touchstart', handleDragStart, { passive: false });
+            domCache.gameBoard.addEventListener('touchstart', handleDragStart, { passive: false });
             document.addEventListener('touchmove', handleDragMove, { passive: false });
             document.addEventListener('touchend', handleDragEnd, false);
             document.addEventListener('touchcancel', handleDragEnd, false);
@@ -797,21 +1023,28 @@
         }
 
         // Handle drag move
-        function handleDragMove(e) {
-            if (!isDragging || !dragClone) return;
+        const handleDragMove = (function() {
+            // Throttle the drop zone highlighting to improve performance
+            const throttledUpdateDropZone = throttle((touch) => {
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                updateDropZoneHighlight(elementBelow);
+            }, 16); // ~60fps
 
-            e.preventDefault(); // Prevent scrolling on touch devices
+            return function(e) {
+                if (!isDragging || !dragClone) return;
 
-            const touch = e.type.startsWith('touch') ? e.touches[0] : e;
+                e.preventDefault(); // Prevent scrolling on touch devices
 
-            // Update clone position
-            dragClone.style.left = (touch.clientX - dragOffsetX) + 'px';
-            dragClone.style.top = (touch.clientY - dragOffsetY) + 'px';
+                const touch = e.type.startsWith('touch') ? e.touches[0] : e;
 
-            // Detect drop zone under cursor/finger
-            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            updateDropZoneHighlight(elementBelow);
-        }
+                // Update clone position (not throttled for smooth dragging)
+                dragClone.style.left = (touch.clientX - dragOffsetX) + 'px';
+                dragClone.style.top = (touch.clientY - dragOffsetY) + 'px';
+
+                // Detect drop zone under cursor/finger (throttled)
+                throttledUpdateDropZone(touch);
+            };
+        })();
 
         // Update drop zone highlighting
         function updateDropZoneHighlight(element) {
@@ -919,12 +1152,16 @@
 
         // Execute the drop action
         function executeDrop(dropZone) {
+            let sourcePileToRender = null;
+
             // Remove cards from source
             if (draggedFromPile === 'waste') {
                 waste.pop();
+                sourcePileToRender = 'waste';
             } else if (draggedFromPile.startsWith('foundation')) {
                 const sourcePileIndex = parseInt(draggedFromPile.split('-')[1]);
                 foundation[sourcePileIndex].pop();
+                sourcePileToRender = `foundation-${sourcePileIndex}`;
             } else if (draggedFromPile.startsWith('tableau')) {
                 const sourcePileIndex = parseInt(draggedFromPile.split('-')[1]);
                 tableau[sourcePileIndex].splice(draggedFromIndex);
@@ -936,6 +1173,7 @@
                         newTopCard.faceUp = true;
                     }
                 }
+                sourcePileToRender = `tableau-${sourcePileIndex}`;
             }
 
             // Add cards to destination
@@ -947,7 +1185,24 @@
 
             // Update UI
             incrementMoveCount();
-            renderGame();
+
+            // Incremental render: only update source and destination piles
+            if (sourcePileToRender === 'waste') {
+                renderWaste();
+            } else if (sourcePileToRender.startsWith('foundation')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderFoundationPile(idx);
+            } else if (sourcePileToRender.startsWith('tableau')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderTableauPile(idx);
+            }
+
+            if (dropZone.type === 'foundation') {
+                renderFoundationPile(dropZone.index);
+                checkWinCondition();
+            } else if (dropZone.type === 'tableau') {
+                renderTableauPile(dropZone.index);
+            }
         }
 
         // Start the game timer if this is the first move
@@ -965,6 +1220,11 @@
         
         // Initialize the game
         function initGame() {
+            // Clean up any victory elements from previous game
+            document.querySelectorAll('.victory-overlay, .card-celebration, .confetti-container').forEach(el => {
+                el.remove();
+            });
+
             // Reset game state
             deck = [];
             stock = [];
@@ -1018,32 +1278,29 @@
             
             // Clear card element references
             cardElementMap = new WeakMap();
-            
+
             // Clear DOM and render the initial game state
             clearGameBoard();
             renderGame();
-            document.getElementById('high-score').textContent = getHighScore();
-
-            // Rescale board after rendering
-            setTimeout(scaleGameBoard, 50);
+            domCache.highScore.textContent = getHighScore();
         }
         
         // Clear the game board elements before re-rendering
         function clearGameBoard() {
             // Clear stock
-            document.getElementById('stock').innerHTML = '';
-            
+            domCache.stock.innerHTML = '';
+
             // Clear waste
-            document.getElementById('waste').innerHTML = '<div class="card card-placeholder absolute"></div>';
-            
+            domCache.waste.innerHTML = '<div class="card card-placeholder absolute"></div>';
+
             // Clear foundation piles
             for (let i = 0; i < 4; i++) {
-                document.getElementById(`foundation-${i}`).innerHTML = '<div class="card card-placeholder absolute"></div>';
+                domCache.foundations[i].innerHTML = '<div class="card card-placeholder absolute"></div>';
             }
-            
+
             // Clear tableau columns
             for (let i = 0; i < 7; i++) {
-                document.getElementById(`tableau-${i}`).innerHTML = '';
+                domCache.tableaus[i].innerHTML = '';
             }
         }
         
@@ -1061,18 +1318,18 @@
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
-            document.getElementById('timer').textContent = "00:00";
+            domCache.timer.textContent = "00:00";
         }
-        
+
         function updateTimer() {
             const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
             const minutes = Math.floor(elapsedSeconds / 60);
             const seconds = elapsedSeconds % 60;
-            const formattedTime = 
-                (minutes < 10 ? "0" : "") + minutes + ":" + 
+            const formattedTime =
+                (minutes < 10 ? "0" : "") + minutes + ":" +
                 (seconds < 10 ? "0" : "") + seconds;
-            
-            document.getElementById('timer').textContent = formattedTime;
+
+            domCache.timer.textContent = formattedTime;
         }
         
         // Shuffle the deck
@@ -1083,106 +1340,108 @@
             }
         }
         
-        // Render the game board
-        function renderGame() {
-            // Render stock pile
-            const stockElement = document.getElementById('stock');
-            stockElement.innerHTML = '';
+        // Render individual piles for incremental updates
+        function renderStock() {
+            domCache.stock.innerHTML = '';
             if (stock.length > 0) {
                 const cardElement = document.createElement('div');
                 cardElement.className = 'card card-back cursor-pointer';
-                stockElement.appendChild(cardElement);
+                domCache.stock.appendChild(cardElement);
             } else {
                 const cardElement = document.createElement('div');
                 cardElement.className = 'card card-placeholder cursor-pointer';
-                stockElement.appendChild(cardElement);
+                domCache.stock.appendChild(cardElement);
             }
-            
-            // Render waste pile (showing up to 3 cards with overlap)
-            const wasteElement = document.getElementById('waste');
-            wasteElement.innerHTML = '<div class="card card-placeholder absolute"></div>';
-            
+        }
+
+        function renderWaste() {
+            domCache.waste.innerHTML = '<div class="card card-placeholder absolute"></div>';
+
             // Display up to 3 waste cards with offset
             const visibleCount = Math.min(3, waste.length);
             for (let i = 0; i < visibleCount; i++) {
                 const index = waste.length - visibleCount + i;
                 const card = waste[index];
                 const isTop = i === visibleCount - 1;
-                
+
                 const cardElement = createCardElement(card, isTop);
                 cardElement.classList.add('waste-card');
                 cardElement.style.transform = `translateX(${i * 30}px)`;
                 cardElement.style.zIndex = i.toString();
                 cardElement.dataset.index = index.toString();
-                
-                // Store reference to the element
+
                 cardElementMap.set(card, cardElement);
-                
-                wasteElement.appendChild(cardElement);
+                domCache.waste.appendChild(cardElement);
             }
-            
-            // Render foundation piles
-            for (let i = 0; i < 4; i++) {
-                const foundationElement = document.getElementById(`foundation-${i}`);
-                foundationElement.innerHTML = '';
-                
-                // Always add placeholder
-                const placeholderElement = document.createElement('div');
-                placeholderElement.className = 'card card-placeholder absolute';
-                foundationElement.appendChild(placeholderElement);
-                
-                // Show top card if any (on top of placeholder)
-                if (foundation[i].length > 0) {
-                    const card = foundation[i][foundation[i].length - 1];
-                    const cardElement = createCardElement(card, true);
-                    cardElement.classList.add('foundation-card');
-                    
-                    // Store reference to the element
+        }
+
+        function renderTableauPile(pileIndex) {
+            domCache.tableaus[pileIndex].innerHTML = '';
+
+            // Add placeholder for empty piles
+            const placeholderElement = document.createElement('div');
+            placeholderElement.className = 'card card-placeholder absolute';
+            domCache.tableaus[pileIndex].appendChild(placeholderElement);
+
+            // Render cards in cascade
+            let cumulativeOffset = 0;
+            for (let j = 0; j < tableau[pileIndex].length; j++) {
+                const card = tableau[pileIndex][j];
+                const cardElement = card.faceUp
+                    ? createCardElement(card, j === tableau[pileIndex].length - 1)
+                    : createCardBackElement();
+
+                cardElement.classList.add('tableau-card');
+                cardElement.style.transform = `translateY(${cumulativeOffset}px)`;
+                cardElement.style.zIndex = j.toString();
+
+                if (card.faceUp) {
                     cardElementMap.set(card, cardElement);
-                    
-                    foundationElement.appendChild(cardElement);
                 }
+
+                domCache.tableaus[pileIndex].appendChild(cardElement);
+                cumulativeOffset += card.faceUp ? GAME_SETTINGS.revealedCardSpacing : GAME_SETTINGS.hiddenCardSpacing;
             }
-            
-            // Render tableau columns
+
+            domCache.tableaus[pileIndex].style.height = GAME_SETTINGS.tableauColumnHeight + 'px';
+        }
+
+        // Render the game board (can optionally specify which piles to update)
+        function renderGame(options = {}) {
+            const { stockOnly, wasteOnly, foundationOnly, tableauOnly, skipWinCheck } = options;
+
+            // If specific piles are requested, only render those
+            if (stockOnly) {
+                renderStock();
+                return;
+            }
+            if (wasteOnly) {
+                renderWaste();
+                return;
+            }
+            if (foundationOnly !== undefined) {
+                renderFoundationPile(foundationOnly);
+                if (!skipWinCheck) checkWinCondition();
+                return;
+            }
+            if (tableauOnly !== undefined) {
+                renderTableauPile(tableauOnly);
+                return;
+            }
+
+            // Full render if no specific pile requested
+            renderStock();
+            renderWaste();
+
+            for (let i = 0; i < 4; i++) {
+                renderFoundationPile(i);
+            }
+
             for (let i = 0; i < 7; i++) {
-                const tableauElement = document.getElementById(`tableau-${i}`);
-                tableauElement.innerHTML = '';
-                
-                // Add placeholder for empty piles
-                const placeholderElement = document.createElement('div');
-                placeholderElement.className = 'card card-placeholder absolute';
-                tableauElement.appendChild(placeholderElement);
-                
-                // Render cards in cascade
-                let cumulativeOffset = 0;
-                for (let j = 0; j < tableau[i].length; j++) {
-                    const card = tableau[i][j];
-                    const cardElement = card.faceUp
-                        ? createCardElement(card, j === tableau[i].length - 1)
-                        : createCardBackElement();
-
-                    cardElement.classList.add('tableau-card');
-                    cardElement.style.transform = `translateY(${cumulativeOffset}px)`;
-                    cardElement.style.zIndex = j.toString();
-
-                    // Store reference to the element
-                    if (card.faceUp) {
-                        cardElementMap.set(card, cardElement);
-                    }
-
-                    tableauElement.appendChild(cardElement);
-
-                    // Use spacing from settings
-                    cumulativeOffset += card.faceUp ? GAME_SETTINGS.revealedCardSpacing : GAME_SETTINGS.hiddenCardSpacing;
-                }
-
-                // Set fixed height for all columns from settings
-                tableauElement.style.height = GAME_SETTINGS.tableauColumnHeight + 'px';
+                renderTableauPile(i);
             }
-            
-            // Check for win condition
-            checkWinCondition();
+
+            if (!skipWinCheck) checkWinCondition();
         }
         
         // Create a face-up card element
@@ -1222,27 +1481,31 @@
         // Draw three cards from stock to waste
         function drawCards() {
             if (stock.length === 0) return;
-            
+
             const count = Math.min(3, stock.length);
             for (let i = 0; i < count; i++) {
                 const card = stock.pop();
                 card.faceUp = true;
                 waste.push(card);
             }
-            
+
             incrementMoveCount();
-            renderGame();
+            // Only re-render stock and waste (incremental update)
+            renderStock();
+            renderWaste();
         }
-        
+
         // Reset stock from waste
         function resetStock() {
             if (waste.length === 0) return;
-            
+
             stock = waste.map(card => ({...card, faceUp: false})).reverse();
             waste = [];
-            
+
             incrementMoveCount();
-            renderGame();
+            // Only re-render stock and waste (incremental update)
+            renderStock();
+            renderWaste();
         }
         
         // Select a card from waste pile
@@ -1300,14 +1563,15 @@
         // Flip the top card of a tableau pile
         function flipTableauCard(pileIndex) {
             if (tableau[pileIndex].length === 0) return;
-            
+
             const topIndex = tableau[pileIndex].length - 1;
             const topCard = tableau[pileIndex][topIndex];
-            
+
             if (!topCard.faceUp) {
                 topCard.faceUp = true;
                 incrementMoveCount();
-                renderGame();
+                // Incremental render: only update this tableau pile
+                renderTableauPile(pileIndex);
             }
         }
         
@@ -1388,19 +1652,22 @@
         function moveToFoundation(pileIndex) {
             // Get the card(s) to move
             let cardsToMove = [];
-            
+            let sourcePileToRender = null;
+
             if (selectedPile === 'waste') {
                 // Remove from waste
                 cardsToMove = [waste.pop()];
+                sourcePileToRender = 'waste';
             } else if (selectedPile.startsWith('foundation')) {
                 // Remove from foundation
                 const sourcePileIndex = parseInt(selectedPile.split('-')[1]);
                 cardsToMove = [foundation[sourcePileIndex].pop()];
+                sourcePileToRender = `foundation-${sourcePileIndex}`;
             } else if (selectedPile.startsWith('tableau')) {
                 // Remove from tableau (only top card)
                 const sourcePileIndex = parseInt(selectedPile.split('-')[1]);
                 cardsToMove = [tableau[sourcePileIndex].pop()];
-                
+
                 // Flip new top card if needed
                 if (tableau[sourcePileIndex].length > 0) {
                     const newTopCard = tableau[sourcePileIndex][tableau[sourcePileIndex].length - 1];
@@ -1408,34 +1675,50 @@
                         newTopCard.faceUp = true;
                     }
                 }
+                sourcePileToRender = `tableau-${sourcePileIndex}`;
             }
-            
+
             // Add to foundation
             foundation[pileIndex].push(cardsToMove[0]);
-            
+
             // Reset selection and update
             deselectCard();
             incrementMoveCount();
-            renderGame();
+
+            // Incremental render: only update source and destination piles
+            if (sourcePileToRender === 'waste') {
+                renderWaste();
+            } else if (sourcePileToRender.startsWith('foundation')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderFoundationPile(idx);
+            } else if (sourcePileToRender.startsWith('tableau')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderTableauPile(idx);
+            }
+            renderFoundationPile(pileIndex);
+            checkWinCondition();
         }
         
         // Move selected card(s) to tableau
         function moveToTableau(pileIndex) {
             // Get the card(s) to move
             let cardsToMove = [];
-            
+            let sourcePileToRender = null;
+
             if (selectedPile === 'waste') {
                 // Remove from waste
                 cardsToMove = [waste.pop()];
+                sourcePileToRender = 'waste';
             } else if (selectedPile.startsWith('foundation')) {
                 // Remove from foundation
                 const sourcePileIndex = parseInt(selectedPile.split('-')[1]);
                 cardsToMove = [foundation[sourcePileIndex].pop()];
+                sourcePileToRender = `foundation-${sourcePileIndex}`;
             } else if (selectedPile.startsWith('tableau')) {
                 // Remove from tableau (can be multiple cards)
                 const sourcePileIndex = parseInt(selectedPile.split('-')[1]);
                 cardsToMove = tableau[sourcePileIndex].splice(selectedIndex);
-                
+
                 // Flip new top card if needed
                 if (tableau[sourcePileIndex].length > 0) {
                     const newTopCard = tableau[sourcePileIndex][tableau[sourcePileIndex].length - 1];
@@ -1443,15 +1726,27 @@
                         newTopCard.faceUp = true;
                     }
                 }
+                sourcePileToRender = `tableau-${sourcePileIndex}`;
             }
-            
+
             // Add to tableau
             tableau[pileIndex] = [...tableau[pileIndex], ...cardsToMove];
-            
+
             // Reset selection and update
             deselectCard();
             incrementMoveCount();
-            renderGame();
+
+            // Incremental render: only update source and destination piles
+            if (sourcePileToRender === 'waste') {
+                renderWaste();
+            } else if (sourcePileToRender.startsWith('foundation')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderFoundationPile(idx);
+            } else if (sourcePileToRender.startsWith('tableau')) {
+                const idx = parseInt(sourcePileToRender.split('-')[1]);
+                renderTableauPile(idx);
+            }
+            renderTableauPile(pileIndex);
         }
         
         // Calculate score based on time and moves
@@ -1488,22 +1783,190 @@
             const confettiContainer = document.createElement('div');
             confettiContainer.className = 'confetti-container fixed inset-0 w-full h-full pointer-events-none z-50 overflow-hidden';
             document.body.appendChild(confettiContainer);
-            
+
             // Generate confetti elements
             for (let i = 0; i < 150; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.left = `${Math.random() * 100}%`;
-                confetti.style.top = `${Math.random() * 20 - 20}%`;
+                confetti.style.top = `-20px`;
                 confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                confetti.style.animationDelay = `${Math.random() * 3}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+
+                // Add horizontal drift for realistic falling
+                const drift = (Math.random() - 0.5) * 100; // -50px to 50px
+                confetti.style.setProperty('--drift-x', `${drift}px`);
+
                 confettiContainer.appendChild(confetti);
             }
-            
+
             // Remove after animation completes
             setTimeout(() => {
                 document.body.removeChild(confettiContainer);
-            }, 8000);
+            }, 5000);
+        }
+
+        // Animate cards flying out one by one when game is won
+        function celebrateWinWithCards() {
+            // Go through cards by rank: K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2, A
+            let currentRank = 13; // Start with Kings (numValue = 13)
+            let cardIndex = 0;
+
+            function animateNextCard() {
+                if (currentRank < 1) return; // All ranks done
+
+                // Find all cards with the current rank and animate them
+                let foundCard = false;
+                for (let pileIndex = 0; pileIndex < 4; pileIndex++) {
+                    if (foundation[pileIndex].length > 0) {
+                        const topCard = foundation[pileIndex][foundation[pileIndex].length - 1];
+
+                        // Check if this is the rank we're looking for
+                        if (topCard.numValue === currentRank) {
+                            const card = foundation[pileIndex].pop();
+                            const foundationElement = document.getElementById(`foundation-${pileIndex}`);
+                            const foundationRect = foundationElement.getBoundingClientRect();
+
+                            // Render to update the display (card disappears from pile)
+                            renderFoundationPile(pileIndex);
+
+                            // Animate the card flying away
+                            animateCardCelebration({
+                                card: card,
+                                startX: foundationRect.left,
+                                startY: foundationRect.top,
+                                pileIndex: pileIndex
+                            });
+
+                            cardIndex++;
+                            foundCard = true;
+
+                            // Schedule next card after a delay
+                            setTimeout(animateNextCard, 75);
+                            return;
+                        }
+                    }
+                }
+
+                // If no card found with current rank, move to next rank
+                if (!foundCard) {
+                    currentRank--;
+                    animateNextCard();
+                }
+            }
+
+            // Start the animation sequence
+            animateNextCard();
+        }
+
+        // Helper function to render a single foundation pile
+        function renderFoundationPile(pileIndex) {
+            domCache.foundations[pileIndex].innerHTML = '';
+
+            // Always add placeholder
+            const placeholderElement = document.createElement('div');
+            placeholderElement.className = 'card card-placeholder absolute';
+            domCache.foundations[pileIndex].appendChild(placeholderElement);
+
+            // Show top card if any (on top of placeholder)
+            if (foundation[pileIndex].length > 0) {
+                const card = foundation[pileIndex][foundation[pileIndex].length - 1];
+                const cardElement = createCardElement(card, true);
+                cardElement.classList.add('foundation-card');
+                cardElementMap.set(card, cardElement);
+                domCache.foundations[pileIndex].appendChild(cardElement);
+            }
+        }
+
+        // Animate a single card flying off screen
+        function animateCardCelebration(cardData) {
+            // Create a clone of the card for animation
+            const cardClone = createCardElement(cardData.card, false);
+            cardClone.classList.add('card-celebration');
+
+            // Position it at the card's actual current location in the foundation pile
+            cardClone.style.left = cardData.startX + 'px';
+            cardClone.style.top = cardData.startY + 'px';
+            cardClone.style.width = '130px';
+            cardClone.style.height = '182px';
+
+            // Calculate drop distance from current position to bottom of screen
+            const dropDistance = window.innerHeight - cardData.startY - 182; // 182 is card height
+
+            // Random initial rotation angle (cards tip as they fall)
+            const startRotate = (Math.random() - 0.5) * 60; // -30 to 30 degrees
+
+            // Horizontal drift direction and strength (varied drop angles)
+            const driftDirection = Math.random() > 0.5 ? 1 : -1;
+            const driftStrength = 80 + Math.random() * 150; // Variable strength: 80-230px total drift
+
+            // Bounce heights (decreasing with each bounce due to energy loss)
+            // Varied initial drop strength affects first bounce height
+            const dropStrength = 0.5 + Math.random() * 0.4; // 0.5 to 0.9
+            const bounce1 = dropDistance * dropStrength * (0.5 + Math.random() * 0.3); // 50-80% of drop
+            const bounce2 = bounce1 * (0.45 + Math.random() * 0.2); // 45-65% of first bounce
+            const bounce3 = bounce2 * (0.35 + Math.random() * 0.2); // 35-55% of second bounce
+
+            // Rotation speeds (spinning as they fall) - varied
+            const spinSpeed = 40 + Math.random() * 160; // 40-200 degrees per phase
+            const spinDirection = Math.random() > 0.5 ? 1 : -1;
+
+            // Set CSS custom properties for the animation
+            cardClone.style.setProperty('--drop-distance', `${dropDistance}px`);
+            cardClone.style.setProperty('--start-rotate', `${startRotate}deg`);
+
+            // Drift values (cumulative horizontal movement with acceleration)
+            cardClone.style.setProperty('--drift-1', `${driftDirection * driftStrength * 0.4}px`);
+            cardClone.style.setProperty('--drift-2', `${driftDirection * driftStrength * 0.5}px`);
+            cardClone.style.setProperty('--drift-3', `${driftDirection * driftStrength * 0.8}px`);
+            cardClone.style.setProperty('--drift-4', `${driftDirection * driftStrength * 1.0}px`);
+            cardClone.style.setProperty('--drift-5', `${driftDirection * driftStrength * 1.4}px`);
+            cardClone.style.setProperty('--drift-6', `${driftDirection * driftStrength * 1.6}px`);
+            cardClone.style.setProperty('--drift-final', `${driftDirection * driftStrength * 1.8}px`);
+
+            // Bounce heights
+            cardClone.style.setProperty('--bounce-1', `${bounce1}px`);
+            cardClone.style.setProperty('--bounce-2', `${bounce2}px`);
+            cardClone.style.setProperty('--bounce-3', `${bounce3}px`);
+
+            // Spin rotations (cumulative) - more varied spinning
+            cardClone.style.setProperty('--spin-1', `${spinDirection * spinSpeed * 0.8}deg`);
+            cardClone.style.setProperty('--spin-2', `${spinDirection * spinSpeed * 1.3}deg`);
+            cardClone.style.setProperty('--spin-3', `${spinDirection * spinSpeed * 2.2}deg`);
+            cardClone.style.setProperty('--spin-4', `${spinDirection * spinSpeed * 2.8}deg`);
+            cardClone.style.setProperty('--spin-5', `${spinDirection * spinSpeed * 3.6}deg`);
+            cardClone.style.setProperty('--spin-6', `${spinDirection * spinSpeed * 4.2}deg`);
+            cardClone.style.setProperty('--spin-final', `${spinDirection * spinSpeed * 4.8}deg`);
+
+            // Add to document
+            document.body.appendChild(cardClone);
+
+            // Keep cards visible at bottom (don't remove them)
+        }
+
+        // Show victory overlay with styled text
+        function showVictoryOverlay(score, timeDisplay, isNewHighScore) {
+            // Create victory overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'victory-overlay';
+
+            // Main victory text
+            const victoryText = document.createElement('div');
+            victoryText.className = 'victory-text';
+            victoryText.textContent = isNewHighScore ? 'NEW HIGH SCORE!' : 'VICTORY!';
+            overlay.appendChild(victoryText);
+
+            // Subtext with score details
+            const subtext = document.createElement('div');
+            subtext.className = 'victory-subtext';
+            if (isNewHighScore) {
+                subtext.innerHTML = `Score: ${score.toLocaleString()}<br>${moveCount} moves • ${timeDisplay}`;
+            } else {
+                subtext.innerHTML = `Score: ${score.toLocaleString()}<br>${moveCount} moves • ${timeDisplay}<br>High Score: ${getHighScore()}`;
+            }
+            overlay.appendChild(subtext);
+
+            document.body.appendChild(overlay);
         }
 
         // Modify the checkWinCondition function to include scoring
@@ -1512,54 +1975,48 @@
             if (foundation.every(pile => pile.length === 13) && !gameWon) {
                 gameWon = true;
                 clearInterval(timerInterval);
-                
+
                 // Calculate time in seconds
-                const timeDisplay = document.getElementById('timer').textContent;
+                const timeDisplay = domCache.timer.textContent;
                 const [minutes, seconds] = timeDisplay.split(':').map(Number);
                 const timeInSeconds = minutes * 60 + seconds;
-                
+
                 // Calculate score
                 const score = calculateScore(moveCount, timeInSeconds);
-                
+
                 // Check if it's a new high score
                 const isNewHighScore = saveScore(score);
                 const highScore = getHighScore();
-                
+
                 // Show celebration effect for new high score
                 if (isNewHighScore) {
                     showHighScoreEffect();
-                    
+
                     // Add pulse animation to high score display
-                    const highScoreElement = document.getElementById('high-score');
-                    highScoreElement.textContent = score;
-                    highScoreElement.classList.add('animate-pulse');
-                    
+                    domCache.highScore.textContent = score;
+                    domCache.highScore.classList.add('animate-pulse');
+
                     // Remove animation class after it completes
                     setTimeout(() => {
-                        highScoreElement.classList.remove('animate-pulse');
+                        domCache.highScore.classList.remove('animate-pulse');
                     }, 1500);
                 }
-                
+
                 // Update high score display
-                document.getElementById('high-score').textContent = getHighScore();
-                
-                // Show win message with score information
+                domCache.highScore.textContent = getHighScore();
+
+                // Show victory overlay with styled text
+                showVictoryOverlay(score, timeDisplay, isNewHighScore);
+
+                // Start card celebration animation after a brief delay
                 setTimeout(() => {
-                    let message = `Congratulations! You've won in ${moveCount} moves and ${timeDisplay}!\n\nYour score: ${score.toLocaleString()}`;
-                    
-                    if (isNewHighScore) {
-                        message += `\n\n🎉 NEW HIGH SCORE! 🎉`;
-                    } else {
-                        message += `\n\nHigh score: ${parseInt(highScore).toLocaleString()}`;
-                    }
-                    
-                    alert(message);
+                    celebrateWinWithCards();
                 }, 500);
             }
         }
         // Update move counter
         function updateMoveCount() {
-            document.getElementById('move-count').textContent = moveCount;
+            domCache.moveCount.textContent = moveCount;
         }
         
         // Increment move counter
