@@ -572,6 +572,9 @@
         let dragOffsetY = 0;
         let currentDropZone = null;
 
+        // Store current game board scale factor
+        let currentBoardScale = 1;
+
         // Card configuration
         const suits = ['♥', '♦', '♣', '♠'];
         const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -648,6 +651,9 @@
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
             const scale = Math.min(scaleX, scaleY); // Use the smaller scale to ensure it fits
+
+            // Store the scale factor for drag operations
+            currentBoardScale = scale;
 
             // Apply the scale transform
             gameBoard.style.transform = `scale(${scale})`;
@@ -1003,7 +1009,9 @@
             container.style.left = (x - dragOffsetX) + 'px';
             container.style.top = (y - dragOffsetY) + 'px';
             container.style.opacity = '0.9';
-            container.style.transform = 'scale(1.05)';
+            // Apply board scale plus slight enlargement for visual feedback
+            container.style.transform = `scale(${currentBoardScale * 1.05})`;
+            container.style.transformOrigin = 'top left';
             container.style.filter = 'drop-shadow(0 8px 24px rgba(0,0,0,0.6))';
 
             // Create proper card element for each dragged card
