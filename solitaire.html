@@ -42,6 +42,7 @@
         .game-board {
             width: 96vw;
             max-width: 1350px;
+            height: 700px;
             margin: 0 auto;
             transform: scale(1.05);
             transform-origin: center center;
@@ -713,12 +714,15 @@
             container.style.filter = 'drop-shadow(0 8px 24px rgba(0,0,0,0.6))';
 
             // Create proper card element for each dragged card
+            let dragOffset = 0;
             draggedCards.forEach((card, index) => {
                 const cardEl = createCardElement(card, true);
                 cardEl.style.position = 'relative';
-                cardEl.style.top = (index * 20) + 'px';
+                cardEl.style.top = dragOffset + 'px';
                 cardEl.style.marginBottom = index < draggedCards.length - 1 ? '-120px' : '0';
                 container.appendChild(cardEl);
+                // All dragged cards are face-up and visible, so use 20px spacing
+                dragOffset += 20;
             });
 
             dragClone = container;
@@ -1081,30 +1085,31 @@
                 tableauElement.appendChild(placeholderElement);
                 
                 // Render cards in cascade
+                let cumulativeOffset = 0;
                 for (let j = 0; j < tableau[i].length; j++) {
                     const card = tableau[i][j];
-                    const cardElement = card.faceUp 
-                        ? createCardElement(card, j === tableau[i].length - 1) 
+                    const cardElement = card.faceUp
+                        ? createCardElement(card, j === tableau[i].length - 1)
                         : createCardBackElement();
-                    
+
                     cardElement.classList.add('tableau-card');
-                    cardElement.style.transform = `translateY(${j * 20}px)`;
+                    cardElement.style.transform = `translateY(${cumulativeOffset}px)`;
                     cardElement.style.zIndex = j.toString();
-                    
+
                     // Store reference to the element
                     if (card.faceUp) {
                         cardElementMap.set(card, cardElement);
                     }
-                    
+
                     tableauElement.appendChild(cardElement);
+
+                    // Hidden cards use 10px spacing, revealed cards use 20px spacing
+                    cumulativeOffset += card.faceUp ? 20 : 10;
                 }
-                
-                // Adjust column height based on number of cards
-                if (tableau[i].length > 0) {
-                    tableauElement.style.height = `${140 + (tableau[i].length - 1) * 20}px`;
-                } else {
-                    tableauElement.style.height = '140px';
-                }
+
+                // Set fixed height for all columns to accommodate full stack (13 cards)
+                // Max spacing would be 12 cards * 20px = 240px, plus base card height 140px
+                tableauElement.style.height = '380px';
             }
             
             // Check for win condition
