@@ -171,57 +171,117 @@
 
         .building-stack {
             position: absolute;
-            bottom: 0;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
             display: flex;
-            flex-direction: column-reverse;
             align-items: center;
+            justify-content: center;
             pointer-events: none;
         }
 
+        /* Top-down 3D view - each level is a layered square */
+        .building-level-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .building-level {
-            width: 60px;
-            height: 12px;
-            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
-            border-radius: 2px;
-            margin-top: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            border: 1px solid rgba(0,0,0,0.1);
+            position: absolute;
+            background: linear-gradient(135deg, #ffffff 0%, #e8e8e8 100%);
+            border-radius: 3px;
+            box-shadow:
+                0 2px 4px rgba(0,0,0,0.2),
+                inset -1px -1px 3px rgba(0,0,0,0.1),
+                inset 1px 1px 3px rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.15);
         }
 
         .building-level.level-1 {
-            width: 60px;
+            width: 70%;
+            height: 70%;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            z-index: 1;
         }
 
         .building-level.level-2 {
-            width: 55px;
+            width: 55%;
+            height: 55%;
+            background: linear-gradient(135deg, #f5f5f5 0%, #d5d5d5 100%);
+            box-shadow:
+                0 3px 6px rgba(0,0,0,0.25),
+                inset -1px -1px 3px rgba(0,0,0,0.15),
+                inset 1px 1px 3px rgba(255,255,255,0.5);
+            z-index: 2;
         }
 
         .building-level.level-3 {
-            width: 50px;
+            width: 40%;
+            height: 40%;
+            background: linear-gradient(135deg, #eeeeee 0%, #cacaca 100%);
+            box-shadow:
+                0 4px 8px rgba(0,0,0,0.3),
+                inset -1px -1px 4px rgba(0,0,0,0.2),
+                inset 1px 1px 4px rgba(255,255,255,0.5);
+            z-index: 3;
         }
 
         .dome {
-            width: 40px;
-            height: 30px;
-            background: radial-gradient(ellipse at center top, #87CEEB, #4A90E2);
-            border-radius: 50% 50% 0 0;
-            margin-top: 2px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+            width: 35%;
+            height: 35%;
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 20%),
+                radial-gradient(ellipse at 50% 50%, #A8D5F7 0%, #5AA3F0 40%, #2E7ABF 100%);
+            border-radius: 50%;
+            position: absolute;
+            box-shadow:
+                0 6px 14px rgba(0,0,0,0.5),
+                inset -3px -3px 8px rgba(0,0,0,0.3),
+                inset 3px 3px 8px rgba(255,255,255,0.5);
+            border: 2px solid #1E5A8F;
+            z-index: 4;
             position: relative;
-            border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+
+        .dome::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(135deg,
+                    transparent 0%,
+                    transparent 40%,
+                    rgba(30, 90, 143, 0.3) 45%,
+                    transparent 50%,
+                    transparent 100%),
+                linear-gradient(45deg,
+                    rgba(30, 90, 143, 0.3) 0%,
+                    transparent 30%,
+                    transparent 70%,
+                    rgba(30, 90, 143, 0.3) 100%);
+            border-radius: 50%;
         }
 
         .dome::after {
             content: '';
             position: absolute;
-            top: 5px;
-            left: 10px;
-            width: 10px;
-            height: 10px;
-            background: rgba(255,255,255,0.3);
+            top: 15%;
+            left: 20%;
+            width: 35%;
+            height: 35%;
+            background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, transparent 60%);
             border-radius: 50%;
+            filter: blur(3px);
         }
 
         .worker {
@@ -232,19 +292,24 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow:
+                0 6px 16px rgba(0,0,0,0.6),
+                0 2px 4px rgba(0,0,0,0.4),
+                inset -2px -2px 6px rgba(0,0,0,0.3),
+                inset 2px 2px 6px rgba(255,255,255,0.4);
             cursor: grab;
-            z-index: 10;
+            z-index: 100;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 3px solid rgba(255,255,255,0.3);
         }
 
         .worker.blue {
-            background: radial-gradient(circle at 30% 30%, #4A90E2, #2E5A8C);
+            background: radial-gradient(circle at 35% 35%, #5AA3F0, #2E5A8C);
+            border: 2px solid #1E3A5F;
         }
 
         .worker.orange {
-            background: radial-gradient(circle at 30% 30%, #FFA500, #FF8C00);
+            background: radial-gradient(circle at 35% 35%, #FFB732, #E67E00);
+            border: 2px solid #C86700;
         }
 
         .worker.dragging {
@@ -261,12 +326,7 @@
         }
 
         .worker.inactive {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .worker.elevated {
-            transform: translate(-50%, -70%);
+            cursor: default;
         }
 
         .game-controls {
@@ -511,19 +571,14 @@
         let gameState = {
             board: [], // 2D array tracking building heights (0-4, where 4 = dome)
             workers: {
-                player1: [
-                    { row: 0, col: 0, id: 'p1w1' },
-                    { row: 0, col: 1, id: 'p1w2' }
-                ],
-                player2: [
-                    { row: 4, col: 3, id: 'p2w1' },
-                    { row: 4, col: 4, id: 'p2w2' }
-                ]
+                player1: [],
+                player2: []
             },
             player1Color: 'blue',
             player2Color: 'orange',
             currentPlayer: 1,
-            gamePhase: 'move', // 'move' or 'build'
+            gamePhase: 'setup', // 'setup', 'move', or 'build'
+            setupPhase: 'player1-worker1', // Track which worker is being placed
             selectedWorker: null,
             gameOver: false,
             winner: null
@@ -591,16 +646,11 @@
             }
 
             // Reset game state
-            gameState.workers.player1 = [
-                { row: 0, col: 0, id: 'p1w1' },
-                { row: 0, col: 1, id: 'p1w2' }
-            ];
-            gameState.workers.player2 = [
-                { row: 4, col: 3, id: 'p2w1' },
-                { row: 4, col: 4, id: 'p2w2' }
-            ];
+            gameState.workers.player1 = [];
+            gameState.workers.player2 = [];
             gameState.currentPlayer = 1;
-            gameState.gamePhase = 'move';
+            gameState.gamePhase = 'setup';
+            gameState.setupPhase = 'player1-worker1';
             gameState.selectedWorker = null;
             gameState.gameOver = false;
             gameState.winner = null;
@@ -646,10 +696,6 @@
                 const cell = gridContainer.querySelector(`[data-row="${worker.row}"][data-col="${worker.col}"]`);
                 if (cell) {
                     const workerEl = createWorker(worker.id, worker.color, worker.player);
-                    const height = gameState.board[worker.row][worker.col];
-                    if (height > 0) {
-                        workerEl.classList.add('elevated');
-                    }
                     cell.appendChild(workerEl);
                 }
             });
@@ -659,23 +705,28 @@
             document.getElementById('player-2-info').classList.toggle('active', gameState.currentPlayer === 2 && !gameState.gameOver);
         }
 
-        // Create building stack
+        // Create building stack (top-down view)
         function createBuildingStack(height) {
             const stack = document.createElement('div');
             stack.className = 'building-stack';
 
+            const container = document.createElement('div');
+            container.className = 'building-level-container';
+
+            // Add levels from bottom to top (rendered back to front)
             for (let i = 1; i <= Math.min(height, 3); i++) {
                 const level = document.createElement('div');
                 level.className = `building-level level-${i}`;
-                stack.appendChild(level);
+                container.appendChild(level);
             }
 
             if (height === 4) {
                 const dome = document.createElement('div');
                 dome.className = 'dome';
-                stack.appendChild(dome);
+                container.appendChild(dome);
             }
 
+            stack.appendChild(container);
             return stack;
         }
 
@@ -687,7 +738,7 @@
             worker.dataset.player = player;
 
             // Only current player's workers are draggable during move phase
-            if (player !== gameState.currentPlayer || gameState.gamePhase !== 'move' || gameState.gameOver) {
+            if (gameState.gamePhase === 'setup' || player !== gameState.currentPlayer || gameState.gamePhase !== 'move' || gameState.gameOver) {
                 worker.classList.add('inactive');
             }
 
@@ -711,7 +762,7 @@
 
         // Handle drag start
         function handleDragStart(e) {
-            if (gameState.gameOver || gameState.gamePhase !== 'move') return;
+            if (gameState.gameOver || gameState.gamePhase !== 'move' || gameState.gamePhase === 'setup') return;
 
             const touch = e.type.startsWith('touch') ? e.touches[0] : e;
             const target = e.type.startsWith('touch') ?
@@ -952,6 +1003,36 @@
         function handleCellClick(row, col) {
             if (gameState.gameOver) return;
 
+            // Setup phase - place workers
+            if (gameState.gamePhase === 'setup') {
+                // Check if cell is already occupied
+                if (isOccupied(row, col)) return;
+
+                // Place worker based on setup phase
+                if (gameState.setupPhase === 'player1-worker1') {
+                    gameState.workers.player1.push({ row, col, id: 'p1w1' });
+                    gameState.setupPhase = 'player1-worker2';
+                } else if (gameState.setupPhase === 'player1-worker2') {
+                    gameState.workers.player1.push({ row, col, id: 'p1w2' });
+                    gameState.setupPhase = 'player2-worker1';
+                    gameState.currentPlayer = 2;
+                } else if (gameState.setupPhase === 'player2-worker1') {
+                    gameState.workers.player2.push({ row, col, id: 'p2w1' });
+                    gameState.setupPhase = 'player2-worker2';
+                } else if (gameState.setupPhase === 'player2-worker2') {
+                    gameState.workers.player2.push({ row, col, id: 'p2w2' });
+                    // Setup complete, start game
+                    gameState.gamePhase = 'move';
+                    gameState.currentPlayer = 1;
+                    gameState.setupPhase = null;
+                }
+
+                renderGame();
+                updateStatus();
+                return;
+            }
+
+            // Build phase
             if (gameState.gamePhase === 'build' && gameState.selectedWorker) {
                 const validBuilds = getValidBuilds(gameState.selectedWorker);
 
@@ -995,6 +1076,10 @@
             if (gameState.gameOver) {
                 const statusEl = gameState.winner === 1 ? status1 : status2;
                 statusEl.textContent = 'Winner!';
+            } else if (gameState.gamePhase === 'setup') {
+                const statusEl = gameState.currentPlayer === 1 ? status1 : status2;
+                const workerNum = gameState.setupPhase.includes('worker1') ? '1st' : '2nd';
+                statusEl.textContent = `Place ${workerNum} worker`;
             } else {
                 const statusEl = gameState.currentPlayer === 1 ? status1 : status2;
 
@@ -1127,13 +1212,20 @@
                     <p>Be the first player to move one of your workers to the third level of a building!</p>
 
                     <h3>Game Setup</h3>
-                    <p>Each player has two workers placed on opposite corners of a 5x5 grid. Players are randomly assigned colors.</p>
+                    <p>The game starts with an empty 5x5 board. Players are randomly assigned colors (blue or orange).</p>
+                    <ul>
+                        <li>Player 1 places their first worker by clicking any space</li>
+                        <li>Player 1 places their second worker</li>
+                        <li>Player 2 places their first worker</li>
+                        <li>Player 2 places their second worker</li>
+                        <li>Then normal gameplay begins with Player 1</li>
+                    </ul>
 
                     <h3>How to Play</h3>
                     <p>On your turn, you must complete two actions:</p>
                     <ul>
                         <li><strong>Move:</strong> Drag one of your workers to an adjacent space (horizontal, vertical, or diagonal). You can move up one level, stay on the same level, or move down any number of levels. You cannot move up more than one level or onto a dome.</li>
-                        <li><strong>Build:</strong> After moving, click an adjacent space to build. Buildings have 4 levels (1, 2, 3, and dome). You build one level at a time on any adjacent unoccupied space.</li>
+                        <li><strong>Build:</strong> After moving, click an adjacent space to build. Buildings have 4 levels (shown as layered white squares, with blue domes at level 4). You build one level at a time on any adjacent unoccupied space.</li>
                     </ul>
 
                     <h3>Winning</h3>
