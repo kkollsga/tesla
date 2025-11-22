@@ -517,7 +517,7 @@
                         <span id="move-count">0</span> Moves
                     </div>
                     <div class="stat-box stat-container">
-                        High: <span id="high-score">0</span>
+                        Score: <span id="current-score">0</span>
                     </div>
                 </div>
             </div>
@@ -541,6 +541,26 @@
             // Layout
             tableauColumnHeight: 494,    // Fixed height for tableau columns
             gameBoardMarginTop: 80,      // Margin above game board (px)
+
+            // Auto-complete
+            autoCompleteDelay: 0,       // Delay between auto-complete moves (ms) - constant
+            cardAnimationSpeed: 0.3,     // Card flying animation speed (seconds) - base speed
+            cardAnimationSpeedStart: 0.3, // Card animation speed at start (seconds) - slower
+            cardAnimationSpeedMin: 0.2,  // Card animation speed at peak (seconds) - fastest
+            cardAnimationSpeedEnd: 0.35, // Card animation speed at end (seconds) - slowest for dramatic finish
+            autoCompleteEaseInRatio: 0.2, // Portion of cards in ease-in phase (0-1, e.g., 0.25 = first 25%)
+            autoCompleteEaseOutRatio: 0.1, // Portion of cards in ease-out phase (0-1, e.g., 0.25 = last 25%)
+
+            // Scoring
+            startingScore: 0,            // Starting score
+            foundationPoints: 100,       // Points gained per card to foundation
+            revealPoints: 50,           // Points gained per card revealed
+            deckToBoardPoints: 25,       // Points gained for moving card from deck/waste to tableau
+            movePenalty: 10,             // Points lost per move
+            undoPenalty: 500,            // Points lost per undo
+            maxTimeBonus: 3000,          // Maximum time bonus (at 0 seconds)
+            timeBonusThreshold: 600,     // Time in seconds where bonus reaches 0
+            inactivityTimeout: 60,       // Seconds of inactivity before pause display (60s)
         };
         // ============================================
 
@@ -559,6 +579,19 @@
         let startTime = 0;
         let gameStarted = false; // Flag to track if game has started (first move made)
         let moveHistory = []; // Array to store game state history for undo
+        let isAutoCompleting = false; // Flag to track if auto-complete is running
+        let autoCompleteCardsRemaining = 0; // Track cards remaining for auto-complete easing
+        let autoCompleteTotalCards = 0; // Total cards at start of auto-complete
+
+        // Scoring state
+        let cardsToFoundation = 0; // Track cards moved to foundation
+        let cardsRevealed = 0; // Track cards revealed (flipped face-up)
+        let deckToBoardMoves = 0; // Track moves from deck/waste to tableau
+        let undoCount = 0; // Track number of undos for penalty
+        let isPaused = false; // Track if game is paused due to inactivity
+        let pausedTime = 0; // Total time spent paused (in seconds)
+        let pauseStartTime = 0; // When the current pause started
+        let lastActivityTime = 0; // Last time user made a move
 
         // Drag and drop state
         let isDragging = false;
@@ -592,7 +625,7 @@
             tableaus: [],
             timer: null,
             moveCount: null,
-            highScore: null,
+            currentScore: null,
             undoButton: null,
             foundationArea: null,
             tableauContainer: null
@@ -675,7 +708,8 @@
             gameBoard.style.top = topOffset + 'px';
         }
 
-        // Debug function to instantly win the game (for testing celebration)
+        // DISABLED: Debug functions for testing
+        /*
         function instantWin() {
             // Clear all piles
             stock = [];
@@ -702,6 +736,86 @@
             checkWinCondition();
         }
 
+        function makeSolvable() {
+            // Collect all cards from all piles
+            const allCards = [];
+
+            // Get cards from stock
+            allCards.push(...stock);
+
+            // Get cards from waste
+            allCards.push(...waste);
+
+            // Get cards from foundation
+            for (let i = 0; i < 4; i++) {
+                allCards.push(...foundation[i]);
+            }
+
+            // Get cards from tableau
+            for (let i = 0; i < 7; i++) {
+                allCards.push(...tableau[i]);
+            }
+
+            // Organize cards by suit
+            const hearts = allCards.filter(c => c.suit === '♥').sort((a, b) => b.numValue - a.numValue);
+            const diamonds = allCards.filter(c => c.suit === '♦').sort((a, b) => b.numValue - a.numValue);
+            const clubs = allCards.filter(c => c.suit === '♣').sort((a, b) => b.numValue - a.numValue);
+            const spades = allCards.filter(c => c.suit === '♠').sort((a, b) => b.numValue - a.numValue);
+
+            // Clear all piles
+            stock = [];
+            waste = [];
+            foundation = [[], [], [], []];
+            tableau = [[], [], [], [], [], [], []];
+
+            // Build 4 descending sequences with alternating colors
+            // Red King on black Queen on red Jack, etc.
+            const redSuits = [hearts, diamonds];
+            const blackSuits = [clubs, spades];
+
+            // Create 4 piles starting with Kings
+            for (let pile = 0; pile < 4; pile++) {
+                let currentColor = pile % 2 === 0 ? 'red' : 'black'; // Alternate starting color
+                let value = 13; // Start with King
+
+                while (value >= 1) {
+                    let card = null;
+
+                    if (currentColor === 'red') {
+                        // Try to get a red card
+                        card = hearts.find(c => c.numValue === value) || diamonds.find(c => c.numValue === value);
+                        if (card) {
+                            // Remove from source array
+                            const sourceArray = card.suit === '♥' ? hearts : diamonds;
+                            sourceArray.splice(sourceArray.indexOf(card), 1);
+                        }
+                    } else {
+                        // Try to get a black card
+                        card = clubs.find(c => c.numValue === value) || spades.find(c => c.numValue === value);
+                        if (card) {
+                            // Remove from source array
+                            const sourceArray = card.suit === '♣' ? clubs : spades;
+                            sourceArray.splice(sourceArray.indexOf(card), 1);
+                        }
+                    }
+
+                    if (card) {
+                        card.faceUp = true;
+                        tableau[pile].push(card);
+                        value--;
+                        currentColor = currentColor === 'red' ? 'black' : 'red';
+                    } else {
+                        break; // No more cards of this color
+                    }
+                }
+            }
+
+            // Render the game and trigger auto-complete check
+            renderGame();
+            checkWinCondition();
+        }
+        */
+
         // Initialize DOM cache
         function initDOMCache() {
             domCache.gameBoard = document.querySelector('.game-board');
@@ -710,7 +824,7 @@
             domCache.waste = document.getElementById('waste');
             domCache.timer = document.getElementById('timer');
             domCache.moveCount = document.getElementById('move-count');
-            domCache.highScore = document.getElementById('high-score');
+            domCache.currentScore = document.getElementById('current-score');
             domCache.undoButton = document.getElementById('undo');
             domCache.foundationArea = document.querySelector('.foundation-area');
             domCache.tableauContainer = document.getElementById('tableau-container');
@@ -747,10 +861,17 @@
             // Also rescale after a short delay to ensure DOM is fully rendered
             setTimeout(scaleGameBoard, 100);
 
-            // Add keyboard shortcut for testing: Press 'W' key to instantly win
-            // DISABLED: Uncomment to enable instant win cheat code
+            // DISABLED: Cheat codes for testing
             /*
             document.addEventListener('keydown', function(e) {
+                // Press 'S' key to make game solvable (triggers auto-complete)
+                if (e.key === 's' || e.key === 'S') {
+                    if (!gameWon && !isAutoCompleting) {
+                        makeSolvable();
+                    }
+                }
+
+                // Press 'W' key to instantly win
                 if (e.key === 'w' || e.key === 'W') {
                     instantWin();
                 }
@@ -765,6 +886,7 @@
 
             // Stock pile events
             domCache.stock.addEventListener('click', function(event) {
+                if (isAutoCompleting) return; // Prevent interaction during auto-complete
                 if (stock.length > 0) {
                     startGameIfNeeded();
                     saveGameState(); // Save state before making the move
@@ -778,6 +900,7 @@
 
             // Waste pile events
             domCache.waste.addEventListener('click', function(event) {
+                if (isAutoCompleting) return; // Prevent interaction during auto-complete
                 const target = event.target.closest('.waste-card');
                 if (!target) return;
 
@@ -790,6 +913,7 @@
 
             // Foundation events
             domCache.foundationArea.addEventListener('click', function(event) {
+                if (isAutoCompleting) return; // Prevent interaction during auto-complete
                 const target = event.target.closest('.foundation-pile');
                 if (!target) return;
 
@@ -807,6 +931,7 @@
 
             // Tableau events
             domCache.tableauContainer.addEventListener('click', function(event) {
+                if (isAutoCompleting) return; // Prevent interaction during auto-complete
                 const targetCard = event.target.closest('.card');
                 if (!targetCard) return;
                 
@@ -867,25 +992,28 @@
         
         // Restore the previous game state (undo)
         function undoLastMove() {
-            if (moveHistory.length === 0) return;
-            
+            if (moveHistory.length === 0 || isAutoCompleting) return;
+
             // Deselect any selected card
             selectedCard = null;
             selectedPile = null;
             selectedIndex = -1;
-            
+
             // Get the previous state
             const previousState = moveHistory.pop();
-            
+
             // Restore previous state
             stock = previousState.stock;
             waste = previousState.waste;
             foundation = previousState.foundation;
             tableau = previousState.tableau;
-            
+
+            // Track undo for scoring penalty
+            undoCount++;
+
             // Instead of restoring the move count, increment it to count undo as a move
             incrementMoveCount();
-            
+
             // Update UI
             updateUndoButton();
             renderGame();
@@ -913,8 +1041,8 @@
 
         // Handle drag start (mouse and touch)
         function handleDragStart(e) {
-            // Prevent if game is won or already dragging
-            if (gameWon || isDragging) return;
+            // Prevent if game is won, auto-completing, or already dragging
+            if (gameWon || isAutoCompleting || isDragging) return;
 
             const touch = e.type.startsWith('touch') ? e.touches[0] : e;
             const target = e.type.startsWith('touch') ?
@@ -1179,6 +1307,7 @@
                     const newTopCard = tableau[sourcePileIndex][tableau[sourcePileIndex].length - 1];
                     if (!newTopCard.faceUp) {
                         newTopCard.faceUp = true;
+                        cardsRevealed++; // Track scoring: card revealed
                     }
                 }
                 sourcePileToRender = `tableau-${sourcePileIndex}`;
@@ -1187,8 +1316,14 @@
             // Add cards to destination
             if (dropZone.type === 'foundation') {
                 foundation[dropZone.index].push(draggedCards[0]);
+                // Track scoring: card to foundation
+                cardsToFoundation++;
             } else if (dropZone.type === 'tableau') {
                 tableau[dropZone.index].push(...draggedCards);
+                // Track scoring: card from deck/waste to board (tableau)
+                if (draggedFromPile === 'waste') {
+                    deckToBoardMoves++;
+                }
             }
 
             // Update UI
@@ -1210,6 +1345,7 @@
                 checkWinCondition();
             } else if (dropZone.type === 'tableau') {
                 renderTableauPile(dropZone.index);
+                checkWinCondition(); // Check for auto-complete after tableau moves
             }
         }
 
@@ -1218,6 +1354,7 @@
             if (!gameStarted) {
                 gameStarted = true;
                 startTimer();
+                lastActivityTime = Date.now(); // Initialize activity tracking
             }
         }
         
@@ -1228,8 +1365,8 @@
         
         // Initialize the game
         function initGame() {
-            // Clean up any victory elements from previous game
-            document.querySelectorAll('.victory-overlay, .card-celebration, .confetti-container').forEach(el => {
+            // Clean up any victory elements and pause overlay from previous game
+            document.querySelectorAll('.victory-overlay, .card-celebration, .confetti-container, .pause-overlay').forEach(el => {
                 el.remove();
             });
 
@@ -1246,7 +1383,20 @@
             gameWon = false;
             gameStarted = false; // Reset game started flag
             moveHistory = []; // Clear move history
-            
+            isAutoCompleting = false; // Reset auto-complete flag
+            autoCompleteCardsRemaining = 0; // Reset auto-complete counters
+            autoCompleteTotalCards = 0;
+
+            // Reset scoring state
+            cardsToFoundation = 0;
+            cardsRevealed = 0;
+            deckToBoardMoves = 0;
+            undoCount = 0;
+            isPaused = false;
+            pausedTime = 0;
+            pauseStartTime = 0;
+            lastActivityTime = 0;
+
             // Reset timer display but don't start it
             resetTimer();
             
@@ -1290,7 +1440,9 @@
             // Clear DOM and render the initial game state
             clearGameBoard();
             renderGame();
-            domCache.highScore.textContent = getHighScore();
+
+            // Initialize current score to 10000 (starting score)
+            updateCurrentScore();
         }
         
         // Clear the game board elements before re-rendering
@@ -1330,7 +1482,10 @@
         }
 
         function updateTimer() {
-            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            if (isPaused) return; // Don't update timer while paused
+
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - startTime) / 1000) - pausedTime;
             const minutes = Math.floor(elapsedSeconds / 60);
             const seconds = elapsedSeconds % 60;
             const formattedTime =
@@ -1338,8 +1493,111 @@
                 (seconds < 10 ? "0" : "") + seconds;
 
             domCache.timer.textContent = formattedTime;
+
+            // Check for inactivity (60 seconds since last move)
+            if (gameStarted && !isAutoCompleting && lastActivityTime > 0) {
+                const inactiveSeconds = Math.floor((now - lastActivityTime) / 1000);
+                if (inactiveSeconds >= GAME_SETTINGS.inactivityTimeout) {
+                    pauseGame();
+                }
+            }
         }
-        
+
+        // Update the current score display
+        function updateCurrentScore() {
+            if (isPaused || !gameStarted) {
+                // Don't update score while paused or before game starts
+                if (!gameStarted) {
+                    domCache.currentScore.textContent = GAME_SETTINGS.startingScore.toLocaleString();
+                }
+                return;
+            }
+
+            const score = calculateScore(moveCount);
+
+            // Display max(0, score) - never show negative scores
+            domCache.currentScore.textContent = Math.max(0, score).toLocaleString();
+        }
+
+        // Pause the game due to inactivity
+        function pauseGame() {
+            if (isPaused || gameWon || !gameStarted) return;
+
+            isPaused = true;
+            pauseStartTime = Date.now();
+
+            // Show beautiful pause text on the game board
+            const pauseOverlay = document.createElement('div');
+            pauseOverlay.className = 'pause-overlay';
+            pauseOverlay.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 1000;
+                pointer-events: none;
+                animation: fadeIn 0.5s ease-out;
+            `;
+
+            pauseOverlay.innerHTML = `
+                <div style="
+                    font-size: 72px;
+                    font-weight: 700;
+                    color: rgba(255, 255, 255, 0.95);
+                    text-shadow:
+                        0 4px 20px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(74, 144, 226, 0.4);
+                    margin-bottom: 20px;
+                    letter-spacing: 2px;
+                ">PAUSED</div>
+                <div style="
+                    font-size: 24px;
+                    color: rgba(255, 255, 255, 0.8);
+                    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+                    margin-bottom: 10px;
+                ">Make a move to resume</div>
+                <div style="
+                    font-size: 16px;
+                    color: rgba(255, 255, 255, 0.6);
+                    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+                ">No points are lost while paused</div>
+            `;
+
+            // Add CSS animation for fade in
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translate(-50%, -60%); }
+                    to { opacity: 1; transform: translate(-50%, -50%); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            domCache.gameBoard.appendChild(pauseOverlay);
+        }
+
+        // Resume the game
+        function resumeGame() {
+            if (!isPaused) return;
+
+            // Calculate how long we were paused and add to total paused time
+            const pauseDuration = Math.floor((Date.now() - pauseStartTime) / 1000);
+            pausedTime += pauseDuration;
+
+            isPaused = false;
+            pauseStartTime = 0;
+
+            // Remove pause overlay
+            const pauseOverlay = document.querySelector('.pause-overlay');
+            if (pauseOverlay) {
+                pauseOverlay.remove();
+            }
+
+            // Reset activity time
+            lastActivityTime = Date.now();
+        }
+
         // Shuffle the deck
         function shuffleDeck() {
             for (let i = deck.length - 1; i > 0; i--) {
@@ -1580,6 +1838,7 @@
                 incrementMoveCount();
                 // Incremental render: only update this tableau pile
                 renderTableauPile(pileIndex);
+                checkWinCondition(); // Check for auto-complete after flipping card
             }
         }
         
@@ -1681,6 +1940,7 @@
                     const newTopCard = tableau[sourcePileIndex][tableau[sourcePileIndex].length - 1];
                     if (!newTopCard.faceUp) {
                         newTopCard.faceUp = true;
+                        cardsRevealed++; // Track scoring: card revealed
                     }
                 }
                 sourcePileToRender = `tableau-${sourcePileIndex}`;
@@ -1688,6 +1948,12 @@
 
             // Add to foundation
             foundation[pileIndex].push(cardsToMove[0]);
+
+            // Track scoring: card to foundation
+            cardsToFoundation++;
+
+            // Track if card came from deck/waste to tableau (for deck-to-board bonus)
+            // Note: This is handled in moveToTableau, not here
 
             // Reset selection and update
             deselectCard();
@@ -1706,7 +1972,7 @@
             renderFoundationPile(pileIndex);
             checkWinCondition();
         }
-        
+
         // Move selected card(s) to tableau
         function moveToTableau(pileIndex) {
             // Get the card(s) to move
@@ -1717,6 +1983,8 @@
                 // Remove from waste
                 cardsToMove = [waste.pop()];
                 sourcePileToRender = 'waste';
+                // Track scoring: card from deck/waste to board (tableau)
+                deckToBoardMoves++;
             } else if (selectedPile.startsWith('foundation')) {
                 // Remove from foundation
                 const sourcePileIndex = parseInt(selectedPile.split('-')[1]);
@@ -1732,6 +2000,7 @@
                     const newTopCard = tableau[sourcePileIndex][tableau[sourcePileIndex].length - 1];
                     if (!newTopCard.faceUp) {
                         newTopCard.faceUp = true;
+                        cardsRevealed++; // Track scoring: card revealed
                     }
                 }
                 sourcePileToRender = `tableau-${sourcePileIndex}`;
@@ -1755,34 +2024,88 @@
                 renderTableauPile(idx);
             }
             renderTableauPile(pileIndex);
-        }
-        
-        // Calculate score based on time and moves
-        function calculateScore(moves, timeInSeconds) {
-            // Base score of 10000 with penalties for moves and time
-            const movesPenalty = moves * 10;
-            const timePenalty = timeInSeconds * 5;
-            const score = 10000 - movesPenalty - timePenalty;
-            
-            // Ensure score doesn't go below 0
-            return Math.max(score, 0);
+            checkWinCondition(); // Check for auto-complete after tableau moves
         }
 
-        // Save score to local storage and check if it's a new high score
-        function saveScore(score) {
-            const currentHighScore = localStorage.getItem('solitaireHighScore') || 0;
-            const isNewHighScore = score > parseInt(currentHighScore);
-            
-            if (isNewHighScore) {
-                localStorage.setItem('solitaireHighScore', score.toString());
+        // Calculate base score (without time bonus)
+        function calculateScore(moves) {
+            // Start with base score
+            let score = GAME_SETTINGS.startingScore;
+
+            // Add points for progress
+            score += cardsToFoundation * GAME_SETTINGS.foundationPoints;
+            score += cardsRevealed * GAME_SETTINGS.revealPoints;
+            score += deckToBoardMoves * GAME_SETTINGS.deckToBoardPoints;
+
+            // Apply move penalty
+            score -= moves * GAME_SETTINGS.movePenalty;
+
+            // Apply undo penalty
+            score -= undoCount * GAME_SETTINGS.undoPenalty;
+
+            // Return score (time bonus added separately at victory)
+            return Math.round(score);
+        }
+
+        // Calculate time bonus (awarded at end)
+        function calculateTimeBonus(timeInSeconds) {
+            // Linear bonus: 3000 pts at 0s, declining to 0 pts at 600s
+            // Formula: max(0, 3000 × (600 - t) / 600)
+            const maxBonus = GAME_SETTINGS.maxTimeBonus;
+            const threshold = GAME_SETTINGS.timeBonusThreshold;
+
+            if (timeInSeconds >= threshold) {
+                return 0;
             }
-            
-            return isNewHighScore;
+
+            const bonus = maxBonus * (threshold - timeInSeconds) / threshold;
+            return Math.round(bonus);
         }
 
-        // Get high score from local storage
+        // Save records and check if any are new bests
+        function saveRecords(score, moves, timeInSeconds) {
+            const records = {
+                score: false,
+                moves: false,
+                time: false
+            };
+
+            // Check and save best score
+            const currentBestScore = localStorage.getItem('solitaireBestScore') || 0;
+            if (score > parseInt(currentBestScore)) {
+                localStorage.setItem('solitaireBestScore', score.toString());
+                records.score = true;
+            }
+
+            // Check and save fewest moves (lower is better)
+            const currentBestMoves = localStorage.getItem('solitaireBestMoves');
+            if (!currentBestMoves || moves < parseInt(currentBestMoves)) {
+                localStorage.setItem('solitaireBestMoves', moves.toString());
+                records.moves = true;
+            }
+
+            // Check and save fastest time (lower is better)
+            const currentBestTime = localStorage.getItem('solitaireBestTime');
+            if (!currentBestTime || timeInSeconds < parseInt(currentBestTime)) {
+                localStorage.setItem('solitaireBestTime', timeInSeconds.toString());
+                records.time = true;
+            }
+
+            return records;
+        }
+
+        // Get best records from local storage
+        function getBestRecords() {
+            return {
+                score: parseInt(localStorage.getItem('solitaireBestScore')) || 0,
+                moves: parseInt(localStorage.getItem('solitaireBestMoves')) || 0,
+                time: parseInt(localStorage.getItem('solitaireBestTime')) || 0
+            };
+        }
+
+        // Legacy function for backwards compatibility
         function getHighScore() {
-            return localStorage.getItem('solitaireHighScore') || 0;
+            return localStorage.getItem('solitaireBestScore') || 0;
         }
 
         // Create a jubilant confetti effect for new high scores
@@ -1953,7 +2276,10 @@
         }
 
         // Show victory overlay with styled text
-        function showVictoryOverlay(score, timeDisplay, isNewHighScore) {
+        function showVictoryOverlay(score, timeDisplay, newRecords, moves, timeInSeconds) {
+            const bestRecords = getBestRecords();
+            const hasAnyRecord = newRecords.score || newRecords.moves || newRecords.time;
+
             // Create victory overlay
             const overlay = document.createElement('div');
             overlay.className = 'victory-overlay';
@@ -1961,24 +2287,337 @@
             // Main victory text
             const victoryText = document.createElement('div');
             victoryText.className = 'victory-text';
-            victoryText.textContent = isNewHighScore ? 'NEW HIGH SCORE!' : 'VICTORY!';
+            victoryText.textContent = hasAnyRecord ? 'NEW RECORD!' : 'VICTORY!';
             overlay.appendChild(victoryText);
 
-            // Subtext with score details
-            const subtext = document.createElement('div');
-            subtext.className = 'victory-subtext';
-            if (isNewHighScore) {
-                subtext.innerHTML = `Score: ${score.toLocaleString()}<br>${moveCount} moves • ${timeDisplay}`;
-            } else {
-                subtext.innerHTML = `Score: ${score.toLocaleString()}<br>${moveCount} moves • ${timeDisplay}<br>High Score: ${getHighScore()}`;
+            // Record badges (if any new records)
+            if (hasAnyRecord) {
+                const recordBadges = document.createElement('div');
+                recordBadges.style.cssText = `
+                    font-size: 18px;
+                    color: #ffd700;
+                    font-weight: 600;
+                    margin: 10px 0 20px 0;
+                    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+                `;
+                const badges = [];
+                if (newRecords.score) badges.push('🏆 Best Score');
+                if (newRecords.moves) badges.push('🎯 Fewest Moves');
+                if (newRecords.time) badges.push('⚡ Fastest Time');
+                recordBadges.innerHTML = badges.join(' • ');
+                overlay.appendChild(recordBadges);
             }
-            overlay.appendChild(subtext);
+
+            // Stats container with large values
+            const statsContainer = document.createElement('div');
+            statsContainer.style.cssText = `
+                margin: 20px 0;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            `;
+
+            // Score stat
+            const scoreStat = document.createElement('div');
+            scoreStat.innerHTML = `
+                <div style="font-size: 48px; font-weight: 700; color: ${newRecords.score ? '#ffd700' : '#fff'}; line-height: 1;">
+                    ${score.toLocaleString()}
+                </div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 5px;">
+                    ${newRecords.score ? 'BEST SCORE' : bestRecords.score > 0 ? `Best: ${bestRecords.score.toLocaleString()}` : 'SCORE'}
+                </div>
+            `;
+            statsContainer.appendChild(scoreStat);
+
+            // Moves and Time row
+            const detailsRow = document.createElement('div');
+            detailsRow.style.cssText = `
+                display: flex;
+                justify-content: center;
+                gap: 40px;
+                margin-top: 10px;
+            `;
+
+            // Moves stat
+            const movesStat = document.createElement('div');
+            movesStat.innerHTML = `
+                <div style="font-size: 32px; font-weight: 600; color: ${newRecords.moves ? '#ffd700' : '#fff'};">
+                    ${moves}
+                </div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px;">
+                    ${newRecords.moves ? 'BEST MOVES' : bestRecords.moves > 0 ? `Best: ${bestRecords.moves}` : 'MOVES'}
+                </div>
+            `;
+            detailsRow.appendChild(movesStat);
+
+            // Time stat
+            const timeStat = document.createElement('div');
+            timeStat.innerHTML = `
+                <div style="font-size: 32px; font-weight: 600; color: ${newRecords.time ? '#ffd700' : '#fff'};">
+                    ${timeDisplay}
+                </div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px;">
+                    ${newRecords.time ? 'BEST TIME' : bestRecords.time > 0 ? `Best: ${formatTime(bestRecords.time)}` : 'TIME'}
+                </div>
+            `;
+            detailsRow.appendChild(timeStat);
+
+            statsContainer.appendChild(detailsRow);
+            overlay.appendChild(statsContainer);
 
             document.body.appendChild(overlay);
         }
 
+        // Helper function to format seconds as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Check if auto-complete can start
+        function canAutoComplete() {
+            if (isAutoCompleting || gameWon) return false;
+
+            // All tableau cards must be face-up
+            const allTableauFaceUp = tableau.every(pile =>
+                pile.every(card => card.faceUp)
+            );
+
+            // Stock must be empty
+            const stockEmpty = stock.length === 0;
+
+            return allTableauFaceUp && stockEmpty;
+        }
+
+        // Find the next card that can be moved to foundation
+        // Prioritizes by rank: all Aces first, then all 2s, then all 3s, etc.
+        function findNextFoundationMove() {
+            // Find the minimum rank needed across all foundation piles
+            let minRankNeeded = 14; // Start higher than King
+            for (let i = 0; i < 4; i++) {
+                const nextRank = foundation[i].length + 1; // Next rank this pile needs (1=A, 2, 3, etc.)
+                if (nextRank <= 13) {
+                    minRankNeeded = Math.min(minRankNeeded, nextRank);
+                }
+            }
+
+            if (minRankNeeded > 13) return null; // All foundations complete
+
+            // Try to find a card with the minimum rank
+            // Check waste pile
+            if (waste.length > 0) {
+                const wasteCard = waste[waste.length - 1];
+                if (wasteCard.numValue === minRankNeeded) {
+                    for (let i = 0; i < 4; i++) {
+                        if (canPlaceOnFoundation(wasteCard, i)) {
+                            return { source: 'waste', index: waste.length - 1, foundationIndex: i };
+                        }
+                    }
+                }
+            }
+
+            // Check tableau piles
+            for (let i = 0; i < 7; i++) {
+                if (tableau[i].length > 0) {
+                    const topCard = tableau[i][tableau[i].length - 1];
+                    if (topCard.faceUp && topCard.numValue === minRankNeeded) {
+                        for (let j = 0; j < 4; j++) {
+                            if (canPlaceOnFoundation(topCard, j)) {
+                                return { source: 'tableau', index: i, foundationIndex: j };
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // Check if a card can be placed on a foundation pile
+        function canPlaceOnFoundation(card, foundationIndex) {
+            if (foundation[foundationIndex].length === 0) {
+                return card.value === 'A';
+            } else {
+                const topCard = foundation[foundationIndex][foundation[foundationIndex].length - 1];
+                return card.suit === topCard.suit && card.numValue === topCard.numValue + 1;
+            }
+        }
+
+        // Animate card flying to foundation
+        function animateCardToFoundation(cardData, callback, customSpeed = null) {
+            const animSpeed = customSpeed !== null ? customSpeed : GAME_SETTINGS.cardAnimationSpeed;
+            // Get the card element
+            let cardElement = null;
+            let startRect = null;
+
+            if (cardData.source === 'waste') {
+                // Find waste card element
+                const wasteCards = domCache.waste.querySelectorAll('.waste-card');
+                cardElement = wasteCards[wasteCards.length - 1];
+            } else if (cardData.source === 'tableau') {
+                // Find tableau card element
+                const tableauColumn = domCache.tableaus[cardData.index];
+                const tableauCards = tableauColumn.querySelectorAll('.tableau-card');
+                cardElement = tableauCards[tableauCards.length - 1];
+            }
+
+            if (!cardElement) {
+                callback();
+                return;
+            }
+
+            startRect = cardElement.getBoundingClientRect();
+            const foundationRect = domCache.foundations[cardData.foundationIndex].getBoundingClientRect();
+
+            // Get the actual card data
+            let card = null;
+            if (cardData.source === 'waste') {
+                card = waste[waste.length - 1];
+            } else if (cardData.source === 'tableau') {
+                card = tableau[cardData.index][tableau[cardData.index].length - 1];
+            }
+
+            // Create flying card clone
+            const flyingCard = createCardElement(card, false);
+            flyingCard.style.position = 'fixed';
+            flyingCard.style.left = startRect.left + 'px';
+            flyingCard.style.top = startRect.top + 'px';
+            flyingCard.style.width = startRect.width + 'px';
+            flyingCard.style.height = startRect.height + 'px';
+            flyingCard.style.zIndex = '9999';
+            flyingCard.style.transition = `all ${animSpeed}s ease-out`;
+            flyingCard.style.pointerEvents = 'none';
+            document.body.appendChild(flyingCard);
+
+            // Hide original card
+            if (cardElement) {
+                cardElement.style.opacity = '0';
+            }
+
+            // Trigger animation after a small delay
+            setTimeout(() => {
+                flyingCard.style.left = foundationRect.left + 'px';
+                flyingCard.style.top = foundationRect.top + 'px';
+                flyingCard.style.width = foundationRect.width + 'px';
+                flyingCard.style.height = foundationRect.height + 'px';
+            }, 50);
+
+            // After animation completes
+            setTimeout(() => {
+                document.body.removeChild(flyingCard);
+                callback();
+            }, animSpeed * 1000 + 50);
+        }
+
+        // Calculate eased animation speed for auto-complete
+        // Uses ease-in-out curve: slow start, fast middle, slow end
+        function getCardAnimationSpeed() {
+            const cardsCompleted = autoCompleteTotalCards - autoCompleteCardsRemaining;
+            const progress = cardsCompleted / autoCompleteTotalCards; // 0 to 1
+
+            const startSpeed = GAME_SETTINGS.cardAnimationSpeedStart;
+            const minSpeed = GAME_SETTINGS.cardAnimationSpeedMin;
+            const endSpeed = GAME_SETTINGS.cardAnimationSpeedEnd;
+            const easeInRatio = GAME_SETTINGS.autoCompleteEaseInRatio;
+            const easeOutRatio = GAME_SETTINGS.autoCompleteEaseOutRatio;
+
+            // Three phases based on ratios:
+            // 1. Ease-in phase (0 to easeInRatio): slow to fast
+            // 2. Peak phase (easeInRatio to 1-easeOutRatio): constant fast speed
+            // 3. Ease-out phase (1-easeOutRatio to 1): fast to slow
+
+            if (progress < easeInRatio) {
+                // Easing in (speeding up - decreasing animation duration)
+                const t = progress / easeInRatio; // 0 to 1 within ease-in phase
+                const easedT = t * t; // quadratic ease-in
+                return startSpeed + (minSpeed - startSpeed) * easedT;
+            } else if (progress > 1 - easeOutRatio) {
+                // Easing out (slowing down - increasing animation duration)
+                const t = (progress - (1 - easeOutRatio)) / easeOutRatio; // 0 to 1 within ease-out phase
+                const easedT = 1 - (1 - t) * (1 - t); // quadratic ease-out
+                return minSpeed + (endSpeed - minSpeed) * easedT;
+            } else {
+                // Peak phase - constant fast speed
+                return minSpeed;
+            }
+        }
+
+        // Start auto-complete sequence
+        function startAutoComplete() {
+            if (!canAutoComplete()) return;
+
+            // Count total cards remaining to move to foundation
+            let totalCards = 0;
+            for (let i = 0; i < 4; i++) {
+                totalCards += (13 - foundation[i].length);
+            }
+
+            autoCompleteTotalCards = totalCards;
+            autoCompleteCardsRemaining = totalCards;
+            isAutoCompleting = true;
+            autoCompleteNextMove();
+        }
+
+        // Execute next auto-complete move
+        function autoCompleteNextMove() {
+            if (!isAutoCompleting) return;
+
+            const move = findNextFoundationMove();
+
+            if (!move) {
+                // No more moves, check if we won
+                isAutoCompleting = false;
+                checkWinCondition();
+                return;
+            }
+
+            // Calculate animation speed based on progress (slow -> fast -> slow)
+            const animSpeed = getCardAnimationSpeed();
+
+            // Animate the card with variable speed
+            animateCardToFoundation(move, () => {
+                // Execute the move after animation
+                if (move.source === 'waste') {
+                    const card = waste.pop();
+                    foundation[move.foundationIndex].push(card);
+                    renderWaste();
+                } else if (move.source === 'tableau') {
+                    const card = tableau[move.index].pop();
+                    foundation[move.foundationIndex].push(card);
+
+                    // Flip new top card if needed
+                    if (tableau[move.index].length > 0) {
+                        const newTopCard = tableau[move.index][tableau[move.index].length - 1];
+                        if (!newTopCard.faceUp) {
+                            newTopCard.faceUp = true;
+                            cardsRevealed++; // Track scoring: card revealed
+                        }
+                    }
+                    renderTableauPile(move.index);
+                }
+
+                // Track scoring: card to foundation
+                cardsToFoundation++;
+
+                renderFoundationPile(move.foundationIndex);
+
+                // Count autocomplete as normal moves and update score display
+                incrementMoveCount();
+
+                // Decrement cards remaining for next iteration's easing calculation
+                autoCompleteCardsRemaining--;
+
+                // Continue with next move after constant delay
+                setTimeout(() => {
+                    autoCompleteNextMove();
+                }, GAME_SETTINGS.autoCompleteDelay);
+            }, animSpeed);
+        }
+
         // Modify the checkWinCondition function to include scoring
         function checkWinCondition() {
+            // Check win condition FIRST (before auto-complete check)
             // Game is won when all foundation piles have 13 cards
             if (foundation.every(pile => pile.length === 13) && !gameWon) {
                 gameWon = true;
@@ -1989,37 +2628,42 @@
                 const [minutes, seconds] = timeDisplay.split(':').map(Number);
                 const timeInSeconds = minutes * 60 + seconds;
 
-                // Calculate score
-                const score = calculateScore(moveCount, timeInSeconds);
+                // Calculate base score and time bonus
+                const baseScore = calculateScore(moveCount);
+                const timeBonus = calculateTimeBonus(timeInSeconds);
+                const score = baseScore + timeBonus;
 
-                // Check if it's a new high score
-                const isNewHighScore = saveScore(score);
-                const highScore = getHighScore();
+                // Update score display with final score (including time bonus)
+                domCache.currentScore.textContent = Math.max(0, score).toLocaleString();
 
-                // Show celebration effect for new high score
-                if (isNewHighScore) {
+                // Save records and check if any are new bests
+                const newRecords = saveRecords(score, moveCount, timeInSeconds);
+                const hasAnyRecord = newRecords.score || newRecords.moves || newRecords.time;
+
+                // Show celebration effect for any new record
+                if (hasAnyRecord) {
                     showHighScoreEffect();
 
-                    // Add pulse animation to high score display
-                    domCache.highScore.textContent = score;
-                    domCache.highScore.classList.add('animate-pulse');
+                    // Add pulse animation to current score display
+                    domCache.currentScore.classList.add('animate-pulse');
 
                     // Remove animation class after it completes
                     setTimeout(() => {
-                        domCache.highScore.classList.remove('animate-pulse');
+                        domCache.currentScore.classList.remove('animate-pulse');
                     }, 1500);
                 }
 
-                // Update high score display
-                domCache.highScore.textContent = getHighScore();
-
                 // Show victory overlay with styled text
-                showVictoryOverlay(score, timeDisplay, isNewHighScore);
+                showVictoryOverlay(score, timeDisplay, newRecords, moveCount, timeInSeconds);
 
-                // Start card celebration animation after a brief delay
-                setTimeout(() => {
-                    celebrateWinWithCards();
-                }, 500);
+                // Start card celebration animation immediately
+                celebrateWinWithCards();
+                return;
+            }
+
+            // Check if auto-complete can start (only if game not won)
+            if (canAutoComplete() && !isAutoCompleting) {
+                startAutoComplete();
             }
         }
         // Update move counter
@@ -2029,8 +2673,19 @@
         
         // Increment move counter
         function incrementMoveCount() {
+            // Resume game if paused
+            if (isPaused) {
+                resumeGame();
+            }
+
             moveCount++;
             updateMoveCount();
+
+            // Track activity time
+            lastActivityTime = Date.now();
+
+            // Update score immediately when moves change
+            updateCurrentScore();
         }
         
         // Set up event listeners
