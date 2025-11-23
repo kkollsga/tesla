@@ -44,7 +44,10 @@ let dragState = {
     dragClone: null,
     dragOffsetX: 0,
     dragOffsetY: 0,
-    originalPiece: null
+    originalPiece: null,
+    validMoves: [], // Cache valid moves when drag starts
+    currentHighlightedCell: null, // Track currently highlighted cell
+    rafId: null // RequestAnimationFrame ID for throttling
 };
 
 let dragAndDropInitialized = false;
@@ -242,6 +245,13 @@ function handleDragStart(e) {
     dragState.isDragging = true;
     dragState.originalPiece = piece;
 
+    // Pre-calculate valid moves for performance
+    const fromRow = parseInt(piece.dataset.row);
+    const fromCol = parseInt(piece.dataset.col);
+    const pieceData = gameState.board[fromRow][fromCol];
+    dragState.validMoves = pieceData ? getValidMoves(fromRow, fromCol, pieceData) : [];
+    dragState.currentHighlightedCell = null;
+
     createDragClone(piece, touch.clientX, touch.clientY);
     piece.classList.add('piece-ghost');
 }
@@ -276,37 +286,55 @@ function handleDragMove(e) {
 
     const touch = e.type.startsWith('touch') ? e.touches[0] : e;
 
-    // Update clone position (instant, no throttle)
+    // Update clone position immediately (no throttle for smooth dragging)
     dragState.dragClone.style.left = (touch.clientX - dragState.dragOffsetX) + 'px';
     dragState.dragClone.style.top = (touch.clientY - dragState.dragOffsetY) + 'px';
 
-    // Update drop zone highlighting (instant, no throttle)
-    updateDropZoneHighlight(touch.clientX, touch.clientY);
+    // Throttle drop zone highlighting with requestAnimationFrame
+    if (!dragState.rafId) {
+        dragState.rafId = requestAnimationFrame(() => {
+            updateDropZoneHighlight(touch.clientX, touch.clientY);
+            dragState.rafId = null;
+        });
+    }
 }
 
 // Update drop zone highlighting - only highlights the cell under cursor
 function updateDropZoneHighlight(x, y) {
-    // Clear all previous highlights
-    const allCells = document.querySelectorAll('.grid-cell');
-    allCells.forEach(cell => {
-        cell.classList.remove('valid-move');
-    });
-
     // Get element under cursor
     const elementBelow = document.elementFromPoint(x, y);
     const cell = elementBelow?.closest('.grid-cell');
 
-    if (!cell) return;
+    if (!cell) {
+        // Remove highlight from previous cell if we're not over any cell
+        if (dragState.currentHighlightedCell) {
+            dragState.currentHighlightedCell.classList.remove('valid-move');
+            dragState.currentHighlightedCell = null;
+        }
+        return;
+    }
 
-    // Check if this cell is a valid move
+    // Check if this is the same cell we're already highlighting
+    if (cell === dragState.currentHighlightedCell) {
+        return; // No update needed
+    }
+
+    // Check if this cell is a valid move (use cached validMoves)
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
-    const fromRow = parseInt(dragState.originalPiece.dataset.row);
-    const fromCol = parseInt(dragState.originalPiece.dataset.col);
+    const isValid = dragState.validMoves.some(move => move.row === row && move.col === col);
 
-    // Highlight only if it's a valid move
-    if (isValidMove(fromRow, fromCol, row, col)) {
+    // Remove highlight from previous cell
+    if (dragState.currentHighlightedCell) {
+        dragState.currentHighlightedCell.classList.remove('valid-move');
+    }
+
+    // Highlight new cell if it's valid
+    if (isValid) {
         cell.classList.add('valid-move');
+        dragState.currentHighlightedCell = cell;
+    } else {
+        dragState.currentHighlightedCell = null;
     }
 }
 
@@ -341,13 +369,22 @@ function handleDragEnd(e) {
         dragState.originalPiece.classList.remove('piece-ghost');
     }
 
-    // Clear highlights
-    document.querySelectorAll('.grid-cell').forEach(c => {
-        c.classList.remove('valid-move');
-    });
+    // Clear highlight from currently highlighted cell only
+    if (dragState.currentHighlightedCell) {
+        dragState.currentHighlightedCell.classList.remove('valid-move');
+        dragState.currentHighlightedCell = null;
+    }
 
+    // Cancel any pending RAF callback
+    if (dragState.rafId) {
+        cancelAnimationFrame(dragState.rafId);
+        dragState.rafId = null;
+    }
+
+    // Reset drag state
     dragState.isDragging = false;
     dragState.originalPiece = null;
+    dragState.validMoves = [];
 }
 
 // Highlight valid moves
