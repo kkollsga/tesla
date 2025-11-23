@@ -204,6 +204,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
+            position: relative;
         }
 
         .game-option:hover {
@@ -229,6 +230,24 @@
             box-shadow: 0 0 30px rgba(74, 144, 226, 0.6);
         }
 
+        .game-option.chess-option {
+            border-color: #3D3D3D;
+        }
+
+        .game-option.chess-option:hover {
+            border-color: #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .game-option.solitaire-option {
+            border-color: #2563eb;
+        }
+
+        .game-option.solitaire-option:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+        }
+
         .game-icon {
             width: 100px;
             height: 100px;
@@ -241,6 +260,32 @@
             font-weight: 500;
             text-align: center;
         }
+
+        .favorite-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 1;
+        }
+
+        .favorite-indicator.active {
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .favorite-indicator.inactive {
+            color: #444;
+        }
+
+        .favorite-indicator:hover {
+            transform: scale(1.2);
+        }
+
+        .favorite-game { border-color: #FFD700; }
+        .favorite-game:hover { border-color: #FFA500; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
 
         .close-modal {
             position: absolute;
@@ -313,10 +358,9 @@
             </a>
 
             <!-- Row 4 -->
-            <a href="https://kkollsga.github.io/tesla/solitaire.html" class="service-link solitaire" data-url="https://kkollsga.github.io/tesla/solitaire.html">
-                <img src="icons/solitaire.svg" class="icon" alt="Solitaire">
-                <div class="service-name">Solitaire</div>
-            </a>
+            <div class="service-link favorite-game" id="favorite-game-link">
+                <!-- Icon will be dynamically inserted -->
+            </div>
             <a href="https://kkollsga.github.io/tesla" class="service-link fullscreen-btn" data-url="https://kkollsga.github.io/tesla">
                 <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M25 25 L25 40 M25 25 L40 25" stroke="#888" stroke-width="4" stroke-linecap="round"/>
@@ -354,7 +398,13 @@
             <button class="close-modal" id="close-modal">&times;</button>
             <div class="modal-header">Select a Game</div>
             <div class="game-grid">
-                <a href="https://kkollsga.github.io/tesla/isola.html" class="game-option isola-option" data-url="https://kkollsga.github.io/tesla/isola.html">
+                <a href="https://kkollsga.github.io/tesla/solitaire.html" class="game-option solitaire-option" data-url="https://kkollsga.github.io/tesla/solitaire.html" data-game="solitaire">
+                    <span class="favorite-indicator" data-game="solitaire">★</span>
+                    <img src="icons/solitaire.svg" class="game-icon" alt="Solitaire">
+                    <div class="game-name">Solitaire</div>
+                </a>
+                <a href="https://kkollsga.github.io/tesla/isola.html" class="game-option isola-option" data-url="https://kkollsga.github.io/tesla/isola.html" data-game="isola">
+                    <span class="favorite-indicator" data-game="isola">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- Game board grid -->
                         <rect x="15" y="25" width="70" height="50" fill="none" stroke="#8B1538" stroke-width="2"/>
@@ -374,7 +424,8 @@
                     </svg>
                     <div class="game-name">Isola</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/santorini.html" class="game-option santorini-option" data-url="https://kkollsga.github.io/tesla/santorini.html">
+                <a href="https://kkollsga.github.io/tesla/santorini.html" class="game-option santorini-option" data-url="https://kkollsga.github.io/tesla/santorini.html" data-game="santorini">
+                    <span class="favorite-indicator" data-game="santorini">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- 5x5 Grid -->
                         <rect x="20" y="30" width="60" height="60" fill="none" stroke="#4A90E2" stroke-width="2"/>
@@ -387,17 +438,48 @@
                         <line x1="44" y1="30" x2="44" y2="90" stroke="#4A90E2" stroke-width="1"/>
                         <line x1="56" y1="30" x2="56" y2="90" stroke="#4A90E2" stroke-width="1"/>
                         <line x1="68" y1="30" x2="68" y2="90" stroke="#4A90E2" stroke-width="1"/>
-                        <!-- Building (3 levels) -->
-                        <rect x="38" y="64" width="8" height="2" fill="#fff" stroke="#4A90E2" stroke-width="0.5"/>
-                        <rect x="39" y="62" width="6" height="2" fill="#fff" stroke="#4A90E2" stroke-width="0.5"/>
-                        <rect x="40" y="60" width="4" height="2" fill="#fff" stroke="#4A90E2" stroke-width="0.5"/>
-                        <!-- Dome -->
-                        <ellipse cx="62" cy="60" rx="4" ry="3" fill="#87CEEB" stroke="#4A90E2" stroke-width="0.5"/>
+                        <!-- Building (3 levels - top-down concentric squares) -->
+                        <rect x="34.5" y="60.5" width="7" height="7" fill="#fff" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                        <rect x="35.5" y="61.5" width="5.5" height="5.5" fill="#f5f5f5" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                        <rect x="36.5" y="62.5" width="4" height="4" fill="#eee" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                        <!-- Dome (top-down blue circle) -->
+                        <circle cx="62" cy="60" r="3.5" fill="#5AA3F0" stroke="#1E5A8F" stroke-width="0.8"/>
+                        <ellipse cx="61" cy="59" rx="1.5" ry="1" fill="rgba(255,255,255,0.5)"/>
                         <!-- Workers -->
                         <circle cx="26" cy="36" r="3" fill="#4A90E2" stroke="#fff" stroke-width="1"/>
                         <circle cx="74" cy="84" r="3" fill="#FFA500" stroke="#fff" stroke-width="1"/>
                     </svg>
                     <div class="game-name">Santorini</div>
+                </a>
+                <a href="https://kkollsga.github.io/tesla/chess.html" class="game-option chess-option" data-url="https://kkollsga.github.io/tesla/chess.html" data-game="chess">
+                    <span class="favorite-indicator" data-game="chess">★</span>
+                    <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Chess board -->
+                        <rect x="20" y="20" width="60" height="60" fill="none" stroke="#3D3D3D" stroke-width="2"/>
+                        <!-- Checkerboard pattern -->
+                        <rect x="20" y="20" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="35" y="20" width="15" height="15" fill="#B58863"/>
+                        <rect x="50" y="20" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="65" y="20" width="15" height="15" fill="#B58863"/>
+                        <rect x="20" y="35" width="15" height="15" fill="#B58863"/>
+                        <rect x="35" y="35" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="50" y="35" width="15" height="15" fill="#B58863"/>
+                        <rect x="65" y="35" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="20" y="50" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="35" y="50" width="15" height="15" fill="#B58863"/>
+                        <rect x="50" y="50" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="65" y="50" width="15" height="15" fill="#B58863"/>
+                        <rect x="20" y="65" width="15" height="15" fill="#B58863"/>
+                        <rect x="35" y="65" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="50" y="65" width="15" height="15" fill="#B58863"/>
+                        <rect x="65" y="65" width="15" height="15" fill="#F0D9B5"/>
+                        <!-- Chess pieces -->
+                        <text x="27.5" y="78" font-size="12" fill="#fff" text-anchor="middle">♙</text>
+                        <text x="42.5" y="63" font-size="12" fill="#000" text-anchor="middle">♟</text>
+                        <text x="57.5" y="48" font-size="12" fill="#fff" text-anchor="middle">♖</text>
+                        <text x="72.5" y="33" font-size="12" fill="#000" text-anchor="middle">♚</text>
+                    </svg>
+                    <div class="game-name">Chess</div>
                 </a>
             </div>
         </div>
@@ -477,14 +559,143 @@
             }
         });
 
+        // Favorite game management
+        const GAMES = {
+            solitaire: {
+                name: 'Solitaire',
+                url: 'https://kkollsga.github.io/tesla/solitaire.html',
+                icon: '<img src="icons/solitaire.svg" class="icon" alt="Solitaire">'
+            },
+            isola: {
+                name: 'Isola',
+                url: 'https://kkollsga.github.io/tesla/isola.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="25" width="70" height="50" fill="none" stroke="#8B1538" stroke-width="2"/>
+                    <line x1="15" y1="35" x2="85" y2="35" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="15" y1="45" x2="85" y2="45" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="15" y1="55" x2="85" y2="55" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="15" y1="65" x2="85" y2="65" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="27" y1="25" x2="27" y2="75" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="39" y1="25" x2="39" y2="75" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="51" y1="25" x2="51" y2="75" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="63" y1="25" x2="63" y2="75" stroke="#8B1538" stroke-width="1"/>
+                    <line x1="75" y1="25" x2="75" y2="75" stroke="#8B1538" stroke-width="1"/>
+                    <circle cx="27" cy="50" r="4" fill="#DC2626"/>
+                    <circle cx="75" cy="50" r="4" fill="#111"/>
+                </svg>`
+            },
+            santorini: {
+                name: 'Santorini',
+                url: 'https://kkollsga.github.io/tesla/santorini.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="30" width="60" height="60" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                    <line x1="20" y1="42" x2="80" y2="42" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="20" y1="54" x2="80" y2="54" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="20" y1="66" x2="80" y2="66" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="20" y1="78" x2="80" y2="78" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="32" y1="30" x2="32" y2="90" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="44" y1="30" x2="44" y2="90" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="56" y1="30" x2="56" y2="90" stroke="#4A90E2" stroke-width="1"/>
+                    <line x1="68" y1="30" x2="68" y2="90" stroke="#4A90E2" stroke-width="1"/>
+                    <rect x="34.5" y="60.5" width="7" height="7" fill="#fff" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                    <rect x="35.5" y="61.5" width="5.5" height="5.5" fill="#f5f5f5" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                    <rect x="36.5" y="62.5" width="4" height="4" fill="#eee" stroke="#4A90E2" stroke-width="0.5" rx="0.5"/>
+                    <circle cx="62" cy="60" r="3.5" fill="#5AA3F0" stroke="#1E5A8F" stroke-width="0.8"/>
+                    <ellipse cx="61" cy="59" rx="1.5" ry="1" fill="rgba(255,255,255,0.5)"/>
+                    <circle cx="26" cy="36" r="3" fill="#4A90E2" stroke="#fff" stroke-width="1"/>
+                    <circle cx="74" cy="84" r="3" fill="#FFA500" stroke="#fff" stroke-width="1"/>
+                </svg>`
+            },
+            chess: {
+                name: 'Chess',
+                url: 'https://kkollsga.github.io/tesla/chess.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="20" width="60" height="60" fill="none" stroke="#3D3D3D" stroke-width="2"/>
+                    <rect x="20" y="20" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="35" y="20" width="15" height="15" fill="#B58863"/>
+                    <rect x="50" y="20" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="65" y="20" width="15" height="15" fill="#B58863"/>
+                    <rect x="20" y="35" width="15" height="15" fill="#B58863"/>
+                    <rect x="35" y="35" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="50" y="35" width="15" height="15" fill="#B58863"/>
+                    <rect x="65" y="35" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="20" y="50" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="35" y="50" width="15" height="15" fill="#B58863"/>
+                    <rect x="50" y="50" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="65" y="50" width="15" height="15" fill="#B58863"/>
+                    <rect x="20" y="65" width="15" height="15" fill="#B58863"/>
+                    <rect x="35" y="65" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="50" y="65" width="15" height="15" fill="#B58863"/>
+                    <rect x="65" y="65" width="15" height="15" fill="#F0D9B5"/>
+                    <text x="27.5" y="78" font-size="12" fill="#fff" text-anchor="middle">♙</text>
+                    <text x="42.5" y="63" font-size="12" fill="#000" text-anchor="middle">♟</text>
+                    <text x="57.5" y="48" font-size="12" fill="#fff" text-anchor="middle">♖</text>
+                    <text x="72.5" y="33" font-size="12" fill="#000" text-anchor="middle">♚</text>
+                </svg>`
+            }
+        };
+
+        // Get or set favorite game
+        function getFavoriteGame() {
+            return localStorage.getItem('favoriteGame') || 'solitaire';
+        }
+
+        function setFavoriteGame(gameName) {
+            localStorage.setItem('favoriteGame', gameName);
+            updateFavoriteDisplay();
+        }
+
+        // Update the favorite game display
+        function updateFavoriteDisplay() {
+            const favoriteGame = getFavoriteGame();
+            const favoriteLinkEl = document.getElementById('favorite-game-link');
+            const game = GAMES[favoriteGame];
+
+            if (game) {
+                favoriteLinkEl.innerHTML = game.icon + '<div class="service-name">' + game.name + '</div>';
+                favoriteLinkEl.setAttribute('data-url', game.url);
+            }
+
+            // Update favorite indicators in modal
+            document.querySelectorAll('.favorite-indicator').forEach(indicator => {
+                const gameName = indicator.getAttribute('data-game');
+                if (gameName === favoriteGame) {
+                    indicator.classList.add('active');
+                    indicator.classList.remove('inactive');
+                } else {
+                    indicator.classList.remove('active');
+                    indicator.classList.add('inactive');
+                }
+            });
+        }
+
+        // Handle favorite star clicks
+        document.querySelectorAll('.favorite-indicator').forEach(star => {
+            star.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const gameName = this.getAttribute('data-game');
+                setFavoriteGame(gameName);
+            });
+        });
+
         // Handle game option clicks
         document.querySelectorAll('.game-option').forEach(option => {
             option.addEventListener('click', function(e) {
+                // Don't navigate if clicking on the star
+                if (e.target.classList.contains('favorite-indicator')) {
+                    return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 const url = this.getAttribute('data-url');
                 navigateToService(url, e);
             });
+        });
+
+        // Initialize favorite game on load
+        window.addEventListener('load', () => {
+            updateFavoriteDisplay();
         });
     </script>
 </body>
