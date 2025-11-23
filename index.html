@@ -231,12 +231,12 @@
         }
 
         .game-option.chess-option {
-            border-color: #3D3D3D;
+            border-color: #5A5A5A;
         }
 
         .game-option.chess-option:hover {
-            border-color: #FFD700;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            border-color: #E8E8E8;
+            box-shadow: 0 0 30px rgba(232, 232, 232, 0.4);
         }
 
         .game-option.solitaire-option {
@@ -246,6 +246,15 @@
         .game-option.solitaire-option:hover {
             border-color: #3b82f6;
             box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .game-option.damme-option {
+            border-color: #DC2626;
+        }
+
+        .game-option.damme-option:hover {
+            border-color: #EF4444;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
         }
 
         .game-icon {
@@ -457,22 +466,22 @@
                         <!-- Chess board -->
                         <rect x="20" y="20" width="60" height="60" fill="none" stroke="#3D3D3D" stroke-width="2"/>
                         <!-- Checkerboard pattern -->
-                        <rect x="20" y="20" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="35" y="20" width="15" height="15" fill="#B58863"/>
-                        <rect x="50" y="20" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="65" y="20" width="15" height="15" fill="#B58863"/>
-                        <rect x="20" y="35" width="15" height="15" fill="#B58863"/>
-                        <rect x="35" y="35" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="50" y="35" width="15" height="15" fill="#B58863"/>
-                        <rect x="65" y="35" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="20" y="50" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="35" y="50" width="15" height="15" fill="#B58863"/>
-                        <rect x="50" y="50" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="65" y="50" width="15" height="15" fill="#B58863"/>
-                        <rect x="20" y="65" width="15" height="15" fill="#B58863"/>
-                        <rect x="35" y="65" width="15" height="15" fill="#F0D9B5"/>
-                        <rect x="50" y="65" width="15" height="15" fill="#B58863"/>
-                        <rect x="65" y="65" width="15" height="15" fill="#F0D9B5"/>
+                        <rect x="20" y="20" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="35" y="20" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="50" y="20" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="65" y="20" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="20" y="35" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="35" y="35" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="50" y="35" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="65" y="35" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="20" y="50" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="35" y="50" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="50" y="50" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="65" y="50" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="20" y="65" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="35" y="65" width="15" height="15" fill="#E8E8E8"/>
+                        <rect x="50" y="65" width="15" height="15" fill="#4A4A4A"/>
+                        <rect x="65" y="65" width="15" height="15" fill="#E8E8E8"/>
                         <!-- Chess pieces -->
                         <text x="27.5" y="78" font-size="12" fill="#fff" text-anchor="middle">♙</text>
                         <text x="42.5" y="63" font-size="12" fill="#000" text-anchor="middle">♟</text>
@@ -480,6 +489,34 @@
                         <text x="72.5" y="33" font-size="12" fill="#000" text-anchor="middle">♚</text>
                     </svg>
                     <div class="game-name">Chess</div>
+                </a>
+                <a href="https://kkollsga.github.io/tesla/damme.html" class="game-option damme-option" data-url="https://kkollsga.github.io/tesla/damme.html" data-game="damme">
+                    <span class="favorite-indicator" data-game="damme">★</span>
+                    <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Checkers board -->
+                        <rect x="20" y="20" width="60" height="60" fill="none" stroke="#DC2626" stroke-width="2"/>
+                        <!-- Checkerboard pattern (dark squares only) -->
+                        <rect x="35" y="20" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="65" y="20" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="20" y="35" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="50" y="35" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="35" y="50" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="65" y="50" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="20" y="65" width="15" height="15" fill="#2D2D2D"/>
+                        <rect x="50" y="65" width="15" height="15" fill="#2D2D2D"/>
+                        <!-- Red pieces (top) -->
+                        <circle cx="42.5" cy="27.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                        <circle cx="72.5" cy="27.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                        <circle cx="27.5" cy="42.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                        <!-- White pieces (bottom) -->
+                        <circle cx="42.5" cy="57.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                        <circle cx="72.5" cy="57.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                        <circle cx="27.5" cy="72.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                        <!-- King piece with crown -->
+                        <circle cx="57.5" cy="42.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                        <text x="57.5" y="46" font-size="8" fill="#FFD700" text-anchor="middle" font-weight="bold">♔</text>
+                    </svg>
+                    <div class="game-name">Damme</div>
                 </a>
             </div>
         </div>
@@ -611,26 +648,49 @@
                 url: 'https://kkollsga.github.io/tesla/chess.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="20" y="20" width="60" height="60" fill="none" stroke="#3D3D3D" stroke-width="2"/>
-                    <rect x="20" y="20" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="35" y="20" width="15" height="15" fill="#B58863"/>
-                    <rect x="50" y="20" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="65" y="20" width="15" height="15" fill="#B58863"/>
-                    <rect x="20" y="35" width="15" height="15" fill="#B58863"/>
-                    <rect x="35" y="35" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="50" y="35" width="15" height="15" fill="#B58863"/>
-                    <rect x="65" y="35" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="20" y="50" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="35" y="50" width="15" height="15" fill="#B58863"/>
-                    <rect x="50" y="50" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="65" y="50" width="15" height="15" fill="#B58863"/>
-                    <rect x="20" y="65" width="15" height="15" fill="#B58863"/>
-                    <rect x="35" y="65" width="15" height="15" fill="#F0D9B5"/>
-                    <rect x="50" y="65" width="15" height="15" fill="#B58863"/>
-                    <rect x="65" y="65" width="15" height="15" fill="#F0D9B5"/>
+                    <rect x="20" y="20" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="35" y="20" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="50" y="20" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="65" y="20" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="20" y="35" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="35" y="35" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="50" y="35" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="65" y="35" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="20" y="50" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="35" y="50" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="50" y="50" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="65" y="50" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="20" y="65" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="35" y="65" width="15" height="15" fill="#E8E8E8"/>
+                    <rect x="50" y="65" width="15" height="15" fill="#4A4A4A"/>
+                    <rect x="65" y="65" width="15" height="15" fill="#E8E8E8"/>
                     <text x="27.5" y="78" font-size="12" fill="#fff" text-anchor="middle">♙</text>
                     <text x="42.5" y="63" font-size="12" fill="#000" text-anchor="middle">♟</text>
                     <text x="57.5" y="48" font-size="12" fill="#fff" text-anchor="middle">♖</text>
                     <text x="72.5" y="33" font-size="12" fill="#000" text-anchor="middle">♚</text>
+                </svg>`
+            },
+            damme: {
+                name: 'Damme',
+                url: 'https://kkollsga.github.io/tesla/damme.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="20" width="60" height="60" fill="none" stroke="#DC2626" stroke-width="2"/>
+                    <rect x="35" y="20" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="65" y="20" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="20" y="35" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="50" y="35" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="35" y="50" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="65" y="50" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="20" y="65" width="15" height="15" fill="#2D2D2D"/>
+                    <rect x="50" y="65" width="15" height="15" fill="#2D2D2D"/>
+                    <circle cx="42.5" cy="27.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                    <circle cx="72.5" cy="27.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                    <circle cx="27.5" cy="42.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                    <circle cx="42.5" cy="57.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                    <circle cx="72.5" cy="57.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                    <circle cx="27.5" cy="72.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
+                    <circle cx="57.5" cy="42.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+                    <text x="57.5" y="46" font-size="8" fill="#FFD700" text-anchor="middle" font-weight="bold">♔</text>
                 </svg>`
             }
         };
