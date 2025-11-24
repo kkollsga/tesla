@@ -257,6 +257,15 @@
             box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
         }
 
+        .game-option.backgammon-option {
+            border-color: #8B5A2B;
+        }
+
+        .game-option.backgammon-option:hover {
+            border-color: #C45C26;
+            box-shadow: 0 0 30px rgba(196, 92, 38, 0.6);
+        }
+
         .game-icon {
             width: 100px;
             height: 100px;
@@ -518,6 +527,38 @@
                     </svg>
                     <div class="game-name">Damme</div>
                 </a>
+                <a href="https://kkollsga.github.io/tesla/backgammon.html" class="game-option backgammon-option" data-url="https://kkollsga.github.io/tesla/backgammon.html" data-game="backgammon">
+                    <span class="favorite-indicator" data-game="backgammon">★</span>
+                    <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Backgammon board -->
+                        <rect x="15" y="20" width="70" height="60" fill="#1a1512" stroke="#3d3428" stroke-width="2" rx="3"/>
+                        <!-- Bar -->
+                        <rect x="47" y="20" width="6" height="60" fill="#0d0a08"/>
+                        <!-- Triangles top -->
+                        <polygon points="18,22 25,45 32,22" fill="#8B5A2B"/>
+                        <polygon points="32,22 39,45 46,22" fill="#4a3f30"/>
+                        <polygon points="54,22 61,45 68,22" fill="#8B5A2B"/>
+                        <polygon points="68,22 75,45 82,22" fill="#4a3f30"/>
+                        <!-- Triangles bottom -->
+                        <polygon points="18,78 25,55 32,78" fill="#4a3f30"/>
+                        <polygon points="32,78 39,55 46,78" fill="#8B5A2B"/>
+                        <polygon points="54,78 61,55 68,78" fill="#4a3f30"/>
+                        <polygon points="68,78 75,55 82,78" fill="#8B5A2B"/>
+                        <!-- Orange pieces -->
+                        <circle cx="25" cy="30" r="5" fill="#C45C26" stroke="#5A2010" stroke-width="1"/>
+                        <circle cx="25" cy="38" r="5" fill="#C45C26" stroke="#5A2010" stroke-width="1"/>
+                        <!-- White pieces -->
+                        <circle cx="75" cy="70" r="5" fill="#E8DCC4" stroke="#8A8060" stroke-width="1"/>
+                        <circle cx="75" cy="62" r="5" fill="#E8DCC4" stroke="#8A8060" stroke-width="1"/>
+                        <!-- Dice -->
+                        <rect x="38" y="44" width="10" height="10" fill="#fff" rx="2"/>
+                        <circle cx="43" cy="49" r="1.5" fill="#1a1a1a"/>
+                        <rect x="52" y="44" width="10" height="10" fill="#fff" rx="2"/>
+                        <circle cx="55" cy="47" r="1.5" fill="#1a1a1a"/>
+                        <circle cx="59" cy="51" r="1.5" fill="#1a1a1a"/>
+                    </svg>
+                    <div class="game-name">Backgammon</div>
+                </a>
             </div>
         </div>
     </div>
@@ -691,6 +732,31 @@
                     <circle cx="27.5" cy="72.5" r="5" fill="#F5F5F5" stroke="#9CA3AF" stroke-width="1.5"/>
                     <circle cx="57.5" cy="42.5" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
                     <text x="57.5" y="46" font-size="8" fill="#FFD700" text-anchor="middle" font-weight="bold">♔</text>
+                </svg>`
+            },
+            backgammon: {
+                name: 'Backgammon',
+                url: 'https://kkollsga.github.io/tesla/backgammon.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="20" width="70" height="60" fill="#1a1512" stroke="#3d3428" stroke-width="2" rx="3"/>
+                    <rect x="47" y="20" width="6" height="60" fill="#0d0a08"/>
+                    <polygon points="18,22 25,45 32,22" fill="#8B5A2B"/>
+                    <polygon points="32,22 39,45 46,22" fill="#4a3f30"/>
+                    <polygon points="54,22 61,45 68,22" fill="#8B5A2B"/>
+                    <polygon points="68,22 75,45 82,22" fill="#4a3f30"/>
+                    <polygon points="18,78 25,55 32,78" fill="#4a3f30"/>
+                    <polygon points="32,78 39,55 46,78" fill="#8B5A2B"/>
+                    <polygon points="54,78 61,55 68,78" fill="#4a3f30"/>
+                    <polygon points="68,78 75,55 82,78" fill="#8B5A2B"/>
+                    <circle cx="25" cy="30" r="5" fill="#C45C26" stroke="#5A2010" stroke-width="1"/>
+                    <circle cx="25" cy="38" r="5" fill="#C45C26" stroke="#5A2010" stroke-width="1"/>
+                    <circle cx="75" cy="70" r="5" fill="#E8DCC4" stroke="#8A8060" stroke-width="1"/>
+                    <circle cx="75" cy="62" r="5" fill="#E8DCC4" stroke="#8A8060" stroke-width="1"/>
+                    <rect x="38" y="44" width="10" height="10" fill="#fff" rx="2"/>
+                    <circle cx="43" cy="49" r="1.5" fill="#1a1a1a"/>
+                    <rect x="52" y="44" width="10" height="10" fill="#fff" rx="2"/>
+                    <circle cx="55" cy="47" r="1.5" fill="#1a1a1a"/>
+                    <circle cx="59" cy="51" r="1.5" fill="#1a1a1a"/>
                 </svg>`
             }
         };
