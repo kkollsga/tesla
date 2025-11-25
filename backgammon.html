@@ -727,7 +727,8 @@
 
             const padding = 15;
             const barWidth = Math.min(60, w * 0.05);
-            
+            const pointNumberMargin = 16; // Extra space for point numbers above/below
+
             boardDimensions = {
                 x: padding,
                 y: padding,
@@ -736,7 +737,9 @@
                 barWidth: barWidth,
                 pointWidth: (w - padding * 2 - barWidth) / 12,
                 pointHeight: (h - padding * 2) * 0.42,
-                pieceRadius: Math.min(22, (w - padding * 2 - barWidth) / 12 * 0.4)
+                pieceRadius: Math.min(22, (w - padding * 2 - barWidth) / 12 * 0.4),
+                outlineMargin: padding,
+                pointNumberMarginVertical: pointNumberMargin
             };
         }
 
@@ -801,8 +804,13 @@
             ctx.fillStyle = '#1a1512';
             ctx.strokeStyle = '#3d3428';
             ctx.lineWidth = 2;
-            // Extend outline to encompass point numbers (12px on all sides)
-            roundRect(ctx, bd.x - 12, bd.y - 16, bd.width + 24, bd.height + 32, 10);
+            // Extend outline to encompass point numbers
+            roundRect(ctx,
+                bd.x - bd.outlineMargin,
+                bd.y - bd.pointNumberMarginVertical,
+                bd.width + bd.outlineMargin * 2,
+                bd.height + bd.pointNumberMarginVertical * 2,
+                10);
             
             // Draw playing surface
             const surfacePadding = 8;
@@ -811,11 +819,11 @@
                      bd.width - surfacePadding * 2, bd.height - surfacePadding * 2, 6);
             
             // Draw bar
-            const barX = bd.x + bd.width / 2 - bd.barWidth / 2;
+            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
             ctx.fillStyle = '#1a1512';
-            ctx.fillRect(barX, bd.y - 16, bd.barWidth, bd.height + 32);
+            ctx.fillRect(barX, bd.y - bd.pointNumberMarginVertical, bd.barWidth, bd.height + bd.pointNumberMarginVertical * 2);
             ctx.strokeStyle = '#3d3428';
-            ctx.strokeRect(barX, bd.y - 16, bd.barWidth, bd.height + 32);
+            ctx.strokeRect(barX, bd.y - bd.pointNumberMarginVertical, bd.barWidth, bd.height + bd.pointNumberMarginVertical * 2);
             
             // Draw points (triangles)
             drawPoints();
@@ -925,19 +933,18 @@
 
         function drawPoints() {
             const bd = boardDimensions;
-            const barX = bd.x + bd.width / 2 - bd.barWidth / 2;
-            
+            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
+
             // Colors for alternating triangles
             const darkTriangle = '#4a3f30';
             const lightTriangle = '#8B5A2B';
-            
+
             // Top row: Points 13-24 (indices 12-23) - left to right: 13-18, bar, 19-24
             // Bottom row: Points 12-1 (indices 11-0) - left to right: 12-7, bar, 6-1
-            
+
             for (let i = 0; i < 12; i++) {
                 const isLeft = i < 6;
-                const xOffset = isLeft ? i : i + 1; // Account for bar gap
-                const baseX = bd.x + surfacePadding + xOffset * bd.pointWidth + (isLeft ? 0 : bd.barWidth);
+                const baseX = bd.x + surfacePadding + i * bd.pointWidth + (isLeft ? 0 : bd.barWidth);
                 
                 // Top triangles (points up)
                 const topPointIndex = 12 + i; // 12-17 left, 18-23 right
@@ -1082,37 +1089,27 @@
 
         function getPointPosition(pointIndex) {
             const bd = boardDimensions;
-            const barX = bd.x + bd.width / 2 - bd.barWidth / 2;
-            
+            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
+
             let x, y;
             const isTop = pointIndex >= 12;
-            
+
             if (isTop) {
                 // Points 13-24 (indices 12-23) along top
                 const i = pointIndex - 12;
                 const isLeft = i < 6;
-                const localI = isLeft ? i : i - 6;
-                
-                if (isLeft) {
-                    x = bd.x + surfacePadding + localI * bd.pointWidth + bd.pointWidth / 2;
-                } else {
-                    x = barX + bd.barWidth + localI * bd.pointWidth + bd.pointWidth / 2;
-                }
+
+                x = bd.x + surfacePadding + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
                 y = bd.y + surfacePadding + bd.pieceRadius + 5;
             } else {
                 // Points 1-12 (indices 0-11) along bottom
                 const i = 11 - pointIndex;
                 const isLeft = i < 6;
-                const localI = isLeft ? i : i - 6;
-                
-                if (isLeft) {
-                    x = bd.x + surfacePadding + localI * bd.pointWidth + bd.pointWidth / 2;
-                } else {
-                    x = barX + bd.barWidth + localI * bd.pointWidth + bd.pointWidth / 2;
-                }
+
+                x = bd.x + surfacePadding + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
                 y = bd.y + bd.height - surfacePadding - bd.pieceRadius - 5;
             }
-            
+
             return { x, y };
         }
 
