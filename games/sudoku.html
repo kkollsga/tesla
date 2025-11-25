@@ -515,6 +515,7 @@
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            position: relative;
         }
 
         .stats {
@@ -616,6 +617,86 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        .victory-text {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                4px 4px 8px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: victory-glow 2s ease-in-out infinite alternate;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .victory-text.show {
+            opacity: 1;
+            animation: victory-glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes victory-glow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            to {
+                text-shadow:
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 60px rgba(255, 215, 0, 0.8),
+                    0 0 90px rgba(255, 215, 0, 0.6),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .elapsed-time {
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            color: #fff;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .elapsed-time.show {
+            opacity: 1;
+        }
+
+        .cell.user-provided.solved {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            font-weight: 700;
+            animation: sparkling 0.6s ease-in-out;
+        }
+
+        @keyframes sparkling {
+            0% {
+                box-shadow: 0 0 0 rgba(255, 215, 0, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 165, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 0 rgba(255, 215, 0, 0.8);
             }
         }
 
@@ -806,6 +887,8 @@
         </div>
 
         <div class="board-wrapper">
+            <div class="victory-text" id="victoryText">Puzzle Solved!</div>
+            <div class="elapsed-time" id="elapsedTime">00:00</div>
             <div class="game-board" id="gameBoard"></div>
             <div class="stats">
                 <div class="difficulty-display">
@@ -902,7 +985,7 @@
             });
 
             document.getElementById('hintBtn').addEventListener('click', giveHint);
-            document.getElementById('clearBtn').addEventListener('click', clearSelected);
+            document.getElementById('clearBtn').addEventListener('click', clearBoard);
             document.getElementById('playAgainBtn').addEventListener('click', startNewGame);
 
             document.querySelectorAll('.number-btn').forEach(btn => {
@@ -1014,6 +1097,35 @@
             gameDifficulty = currentDifficulty;
             document.getElementById('hintCount').textContent = '3';
             document.getElementById('winModal').classList.remove('active');
+
+            // Reset victory text and elapsed time
+            const victoryText = document.getElementById('victoryText');
+            victoryText.classList.remove('show');
+            const elapsedTimeEl = document.getElementById('elapsedTime');
+            elapsedTimeEl.classList.remove('show');
+            elapsedTimeEl.textContent = '00:00';
+
+            // Re-enable hint button
+            document.getElementById('hintBtn').disabled = false;
+            document.getElementById('hintBtn').style.opacity = '1';
+
+            // Reset Again button styling
+            const clearBtn = document.getElementById('clearBtn');
+            clearBtn.style.background = '';
+            clearBtn.style.color = '';
+            clearBtn.style.fontWeight = '';
+
+            // Disable quarters button (no cell selected initially)
+            const quartersBtn = document.querySelector('.quarters-toggle');
+            if (quartersBtn) {
+                quartersBtn.disabled = true;
+            }
+
+            // Disable backspace button (no cell selected initially)
+            const backspaceBtn = document.getElementById('backspaceBtn');
+            if (backspaceBtn) {
+                backspaceBtn.disabled = true;
+            }
 
             if (timerInterval) clearInterval(timerInterval);
             startTime = Date.now();
@@ -1221,6 +1333,16 @@
                     c.querySelectorAll('.quarter.active').forEach(q => q.classList.remove('active'));
                 });
                 selectedCell = null;
+                // Disable quarters button when no cell is selected
+                const quartersBtn = document.querySelector('.quarters-toggle');
+                if (quartersBtn) {
+                    quartersBtn.disabled = true;
+                }
+                // Disable backspace button when no cell is selected
+                const backspaceBtn = document.getElementById('backspaceBtn');
+                if (backspaceBtn) {
+                    backspaceBtn.disabled = true;
+                }
                 return;
             }
 
@@ -1269,14 +1391,16 @@
                 }
             }
 
-            // Enable/disable quarters button based on whether cell is empty
+            // Enable quarters button whenever a cell is selected
             const quartersBtn = document.querySelector('.quarters-toggle');
             if (quartersBtn) {
-                if (board[row][col] === EMPTY) {
-                    quartersBtn.disabled = false;
-                } else {
-                    quartersBtn.disabled = true;
-                }
+                quartersBtn.disabled = false;
+            }
+
+            // Enable backspace button whenever a cell is selected
+            const backspaceBtn = document.getElementById('backspaceBtn');
+            if (backspaceBtn) {
+                backspaceBtn.disabled = false;
             }
         }
 
@@ -1381,7 +1505,7 @@
             return 0;
         }
 
-        function clearSelected() {
+        function clearSelectedCell() {
             if (!selectedCell || initialBoard[selectedCell.row][selectedCell.col] !== 0) {
                 return;
             }
@@ -1405,6 +1529,77 @@
             }
         }
 
+        function clearBoard() {
+            // If game is over, restart same board
+            if (gameOver) {
+                restartSameBoard();
+                return;
+            }
+
+            // Clear all user-provided numbers
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (initialBoard[row][col] === 0) {
+                        board[row][col] = EMPTY;
+                    }
+                }
+            }
+
+            // Clear all quarters
+            quarters = {};
+            quarterMode = null;
+            selectedCell = null;
+
+            renderBoard();
+        }
+
+        function restartSameBoard() {
+            gameOver = false;
+            selectedCell = null;
+            quarters = {};
+            quarterMode = null;
+
+            // Reset board to initial state
+            board = initialBoard.map(row => [...row]);
+
+            // Hide victory text and elapsed time
+            const victoryText = document.getElementById('victoryText');
+            victoryText.classList.remove('show');
+            const elapsedTimeEl = document.getElementById('elapsedTime');
+            elapsedTimeEl.classList.remove('show');
+            elapsedTimeEl.textContent = '00:00';
+
+            // Re-enable hint button
+            document.getElementById('hintBtn').disabled = false;
+            document.getElementById('hintBtn').style.opacity = '1';
+
+            // Reset Again button styling back to normal
+            const clearBtn = document.getElementById('clearBtn');
+            clearBtn.style.background = '';
+            clearBtn.style.color = '';
+            clearBtn.style.fontWeight = '';
+
+            // Disable quarters button (no cell selected)
+            const quartersBtn = document.querySelector('.quarters-toggle');
+            if (quartersBtn) {
+                quartersBtn.disabled = true;
+            }
+
+            // Disable backspace button (no cell selected)
+            const backspaceBtn = document.getElementById('backspaceBtn');
+            if (backspaceBtn) {
+                backspaceBtn.disabled = true;
+            }
+
+            // Reset timer
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Render the cleared board
+            renderBoard();
+        }
+
         function checkWin() {
             let isFilled = true;
             for (let row = 0; row < 9; row++) {
@@ -1422,9 +1617,44 @@
             if (isFilled) {
                 gameOver = true;
                 if (timerInterval) clearInterval(timerInterval);
+
+                // Hide any cell selection highlights
+                document.querySelectorAll('.cell.selected, .cell.related, .cell.same-block').forEach(c => {
+                    c.classList.remove('selected', 'related', 'same-block', 'quarters-mode');
+                    c.querySelectorAll('.quarter.active').forEach(q => q.classList.remove('active'));
+                });
+                selectedCell = null;
+
+                // Show victory text
+                const victoryText = document.getElementById('victoryText');
+                victoryText.classList.add('show');
+
+                // Show elapsed time
                 const time = document.getElementById('timer').textContent;
-                document.getElementById('winText').textContent = `Great job! You completed the sudoku in ${time}.`;
-                document.getElementById('winModal').classList.add('active');
+                const elapsedTimeEl = document.getElementById('elapsedTime');
+                elapsedTimeEl.textContent = `${time}`;
+                elapsedTimeEl.classList.add('show');
+
+                // Apply solved state to user-provided cells
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (initialBoard[row][col] === 0) {
+                            const cellEl = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            if (cellEl) {
+                                cellEl.classList.add('user-provided', 'solved');
+                            }
+                        }
+                    }
+                }
+
+                // Disable hint button
+                document.getElementById('hintBtn').disabled = true;
+                document.getElementById('hintBtn').style.opacity = '0.5';
+
+                // Color Again button gold
+                document.getElementById('clearBtn').style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
+                document.getElementById('clearBtn').style.color = '#000';
+                document.getElementById('clearBtn').style.fontWeight = '700';
             }
         }
 
