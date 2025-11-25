@@ -61,19 +61,22 @@
 
         .player-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
         }
 
         .player-avatar {
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
+            flex-shrink: 0;
+            position: relative;
         }
 
         .player1 .player-avatar {
@@ -87,38 +90,84 @@
             color: #1a1a1a;
         }
 
+        .player-starter-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FFD700;
+            color: #1a1a1a;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-panel.starter .player-starter-badge {
+            opacity: 1;
+        }
+
+        .player-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
         .player-name {
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             color: #fff;
             letter-spacing: 0.5px;
+            line-height: 1.2;
         }
 
         .player-label {
-            font-size: 11px;
-            color: #666;
+            font-size: 12px;
+            color: #aaa;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .player-status {
+        .player-instruction {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
             font-size: 12px;
-            color: #888;
-            margin-top: 4px;
-            min-height: 16px;
-            transition: color 0.3s ease;
+            font-weight: 500;
+            margin-top: 8px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            color: #ccc;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .player-panel.active .player-status {
-            color: #fff;
+        .player-panel.active .player-instruction {
+            opacity: 1;
         }
 
-        .player1.active .player-status {
+        .player1.active .player-instruction {
             color: #E8A060;
+            background: rgba(196, 92, 38, 0.1);
         }
 
-        .player2.active .player-status {
+        .player2.active .player-instruction {
             color: #E8DCC4;
+            background: rgba(232, 220, 196, 0.1);
         }
 
         .stats-container {
@@ -165,12 +214,14 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            opacity: 0.3;
-            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
         .turn-indicator.active {
             opacity: 1;
+            pointer-events: auto;
         }
 
         .player1 .turn-indicator {
@@ -317,6 +368,129 @@
             box-shadow: 0 8px 30px rgba(196, 92, 38, 0.4);
         }
 
+        /* Info button */
+        .info-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #444;
+            color: #aaa;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-button:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: #666;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Info overlay and modal */
+        .info-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .info-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .info-panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #ddd;
+            position: relative;
+        }
+
+        .info-panel h2 {
+            color: #E8A060;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-panel h3 {
+            color: #E8A060;
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        .info-panel ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        .info-panel li {
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .info-panel strong {
+            color: #fff;
+        }
+
+        .info-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            color: #aaa;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-close-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
         /* Back button */
         .back-btn {
             position: fixed;
@@ -352,15 +526,21 @@
         Back
     </a>
 
+    <button class="info-button" id="infoButton">ℹ</button>
+
     <div class="game-container">
         <!-- Player 1 Panel (Left - Orange/Brown pieces) -->
         <div class="player-panel player1" id="player1Panel">
             <div class="player-header">
-                <div class="player-avatar">🔶</div>
-                <div>
+                <div class="player-avatar">
+                    🔶
+                    <div class="player-starter-badge">★</div>
+                </div>
+                <div class="player-header-info">
                     <div class="player-name">Player 1</div>
-                    <div class="player-label">Orange</div>
-                    <div class="player-status" id="p1-status">Waiting...</div>
+                    <div class="player-label">
+                        <span>Orange</span>
+                    </div>
                 </div>
             </div>
             <div class="stats-container">
@@ -373,6 +553,7 @@
                     <div class="stat-value" id="p1-bar">0</div>
                 </div>
                 <div class="turn-indicator" id="p1-turn">Your Turn</div>
+                <div class="player-instruction" id="p1-instruction"></div>
             </div>
             <div class="bearoff-tray">
                 <div class="bearoff-label">Borne Off</div>
@@ -390,11 +571,15 @@
         <!-- Player 2 Panel (Right - White/Cream pieces) -->
         <div class="player-panel player2" id="player2Panel">
             <div class="player-header">
-                <div class="player-avatar">⬜</div>
-                <div>
+                <div class="player-avatar">
+                    ⬜
+                    <div class="player-starter-badge">★</div>
+                </div>
+                <div class="player-header-info">
                     <div class="player-name">Player 2</div>
-                    <div class="player-label">White</div>
-                    <div class="player-status" id="p2-status">Waiting...</div>
+                    <div class="player-label">
+                        <span>White</span>
+                    </div>
                 </div>
             </div>
             <div class="stats-container">
@@ -407,6 +592,7 @@
                     <div class="stat-value" id="p2-bar">0</div>
                 </div>
                 <div class="turn-indicator" id="p2-turn">Your Turn</div>
+                <div class="player-instruction" id="p2-instruction"></div>
             </div>
             <div class="bearoff-tray">
                 <div class="bearoff-label">Borne Off</div>
@@ -424,6 +610,60 @@
         </div>
     </div>
 
+    <!-- Info Modal -->
+    <div class="info-overlay" id="infoOverlay">
+        <div class="info-panel">
+            <button class="info-close-btn" id="infoCloseBtn">✕</button>
+            <h2>How to Play Backgammon</h2>
+
+            <h3>Objective</h3>
+            <p>Be the first player to move all 15 pieces around the board and bear them off (remove them from play). The game ends when one player has successfully borne off all their pieces.</p>
+
+            <h3>The Board</h3>
+            <p>The backgammon board is divided into four sections (quadrants) by the bar in the middle. Each player has a home board (their finishing section) and an outer board. The board has 24 points, numbered 1-24.</p>
+
+            <h3>Starting Position</h3>
+            <p>Each player begins with 15 pieces arranged on specific points. The player with the <strong>★ (star badge)</strong> moves first.</p>
+
+            <h3>How to Roll</h3>
+            <ul>
+                <li>Grab and throw the dice to determine your move allowance</li>
+                <li>If you roll a <strong>double</strong> (two equal numbers), you get to make 4 moves using that number</li>
+                <li>For different numbers, you can move one piece by the first die and another by the second, or move one piece twice</li>
+                <li>The minimum rolling speed is enforced to prevent cheating through gentle drops</li>
+            </ul>
+
+            <h3>Moving Your Pieces</h3>
+            <ul>
+                <li>Drag a piece to see where you can move it (highlighted in green)</li>
+                <li>The die number used for that move is shown in the center of the highlighted spot</li>
+                <li>You can only move to open points (empty or occupied by your pieces) or capture opponent blots (single opposing pieces)</li>
+                <li>If you can't move, your turn automatically passes</li>
+            </ul>
+
+            <h3>Hitting and the Bar</h3>
+            <ul>
+                <li>When you land on a point with a single opponent piece (a "blot"), you capture it</li>
+                <li>Captured pieces go to the bar and must re-enter from the beginning</li>
+                <li>Pieces on the bar must enter the board before making other moves</li>
+            </ul>
+
+            <h3>Bearing Off</h3>
+            <ul>
+                <li>Once all your pieces are in your home board, you can begin bearing them off</li>
+                <li>Drag pieces out of your home board area to bear them off</li>
+                <li>First player to bear off all 15 pieces wins!</li>
+            </ul>
+
+            <h3>Tips</h3>
+            <ul>
+                <li>Build a prime (consecutive blocked points) to control the board</li>
+                <li>Leave as few blots as possible to minimize being hit</li>
+                <li>Don't rush bearing off—secure your position first</li>
+            </ul>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // GAME STATE
@@ -438,13 +678,14 @@
             currentPlayer: PLAYER1,
             dice: [0, 0],
             diceUsed: [false, false],
-            doublesCount: 0,  // For doubles (4 moves)
+            doublesMovesUsed: 0,  // Tracks how many of the 4 doubles moves have been used
             hasRolled: false,
             selectedPoint: -1,
             validMoves: [],
             p1BorneOff: 0,
             p2BorneOff: 0,
-            gameOver: false
+            gameOver: false,
+            starterPlayer: PLAYER1  // Track which player starts each game
         };
 
         // ============================================
@@ -483,7 +724,7 @@
         function calculateBoardDimensions() {
             const w = canvas.clientWidth;
             const h = canvas.clientHeight;
-            
+
             const padding = 15;
             const barWidth = Math.min(60, w * 0.05);
             
@@ -505,39 +746,40 @@
         function initGame() {
             // Reset board
             gameState.board = new Array(26).fill(0);
-            
+
             // Standard backgammon starting position
             // Player 1 (positive) moves 24->1, Player 2 (negative) moves 1->24
             // Point indices are 0-23 (representing points 1-24)
-            
+
             // Player 1 setup (orange)
             gameState.board[23] = 2;   // 2 on point 24
             gameState.board[12] = 5;   // 5 on point 13
             gameState.board[7] = 3;    // 3 on point 8
             gameState.board[5] = 5;    // 5 on point 6
-            
+
             // Player 2 setup (white) - negative numbers
             gameState.board[0] = -2;   // 2 on point 1
             gameState.board[11] = -5;  // 5 on point 12
             gameState.board[16] = -3;  // 3 on point 17
             gameState.board[18] = -5;  // 5 on point 19
-            
+
             // Bar (index 24 = P1 bar, 25 = P2 bar)
             gameState.board[24] = 0;
             gameState.board[25] = 0;
-            
+
             // Random starting player
-            gameState.currentPlayer = Math.random() < 0.5 ? PLAYER1 : PLAYER2;
+            gameState.starterPlayer = Math.random() < 0.5 ? PLAYER1 : PLAYER2;
+            gameState.currentPlayer = gameState.starterPlayer;
             gameState.dice = [0, 0];
             gameState.diceUsed = [false, false];
-            gameState.doublesCount = 0;
+            gameState.doublesMovesUsed = 0;
             gameState.hasRolled = false;
             gameState.selectedPoint = -1;
             gameState.validMoves = [];
             gameState.p1BorneOff = 0;
             gameState.p2BorneOff = 0;
             gameState.gameOver = false;
-            
+
             updateUI();
             initDicePositions();
             render();
@@ -559,7 +801,8 @@
             ctx.fillStyle = '#1a1512';
             ctx.strokeStyle = '#3d3428';
             ctx.lineWidth = 2;
-            roundRect(ctx, bd.x, bd.y, bd.width, bd.height, 10);
+            // Extend outline to encompass point numbers (12px on all sides)
+            roundRect(ctx, bd.x - 12, bd.y - 16, bd.width + 24, bd.height + 32, 10);
             
             // Draw playing surface
             const surfacePadding = 8;
@@ -570,9 +813,9 @@
             // Draw bar
             const barX = bd.x + bd.width / 2 - bd.barWidth / 2;
             ctx.fillStyle = '#1a1512';
-            ctx.fillRect(barX, bd.y, bd.barWidth, bd.height);
+            ctx.fillRect(barX, bd.y - 16, bd.barWidth, bd.height + 32);
             ctx.strokeStyle = '#3d3428';
-            ctx.strokeRect(barX, bd.y, bd.barWidth, bd.height);
+            ctx.strokeRect(barX, bd.y - 16, bd.barWidth, bd.height + 32);
             
             // Draw points (triangles)
             drawPoints();
@@ -931,18 +1174,18 @@
         // ============================================
         function getAvailableDice() {
             const available = [];
-            
+
             if (gameState.dice[0] === gameState.dice[1]) {
                 // Doubles - can use up to 4 times
-                const usedCount = gameState.diceUsed.filter(u => u).length;
-                for (let i = usedCount; i < 4; i++) {
+                const remaining = 4 - gameState.doublesMovesUsed;
+                for (let i = 0; i < remaining; i++) {
                     available.push(gameState.dice[0]);
                 }
             } else {
                 if (!gameState.diceUsed[0]) available.push(gameState.dice[0]);
                 if (!gameState.diceUsed[1]) available.push(gameState.dice[1]);
             }
-            
+
             return available;
         }
 
@@ -1142,14 +1385,8 @@
 
         function useDie(value) {
             if (gameState.dice[0] === gameState.dice[1]) {
-                // Doubles
-                const usedCount = gameState.diceUsed.filter(u => u).length;
-                if (usedCount < 2) {
-                    gameState.diceUsed[usedCount] = true;
-                } else {
-                    // Track additional uses for doubles
-                    gameState.doublesCount++;
-                }
+                // Doubles - increment the moves used counter
+                gameState.doublesMovesUsed++;
             } else {
                 if (gameState.dice[0] === value && !gameState.diceUsed[0]) {
                     gameState.diceUsed[0] = true;
@@ -1157,7 +1394,7 @@
                     gameState.diceUsed[1] = true;
                 }
             }
-            
+
             updateDiceDisplay();
         }
 
@@ -1184,10 +1421,10 @@
             gameState.hasRolled = false;
             gameState.dice = [0, 0];
             gameState.diceUsed = [false, false];
-            gameState.doublesCount = 0;
+            gameState.doublesMovesUsed = 0;
             gameState.selectedPoint = -1;
             gameState.validMoves = [];
-            
+
             updateUI();
             initDicePositions();
             render();
@@ -1210,9 +1447,9 @@
         // ============================================
         const DICE_SIZE = 54;
         const DICE_RADIUS = 12;
-        const FRICTION = 0.965;
+        const FRICTION = 0.96;  // Slightly more friction for realistic deceleration
         const BOUNCE = 0.55;
-        const MIN_VELOCITY = 0.6;
+        const MIN_VELOCITY = 0.5;  // Lower threshold to detect settling
         const SHAKE_THRESHOLD = 8;
         
         let dice = [
@@ -1267,12 +1504,12 @@
             // Determine which dice are used
             const available = getAvailableDice();
             const isUsed = [false, false];
-            
+
             if (gameState.hasRolled) {
                 if (gameState.dice[0] === gameState.dice[1]) {
-                    const usedCount = 4 - available.length;
-                    isUsed[0] = usedCount >= 2;
-                    isUsed[1] = usedCount >= 4;
+                    // For doubles, dim both dice if all 4 moves used
+                    isUsed[0] = gameState.doublesMovesUsed >= 4;
+                    isUsed[1] = gameState.doublesMovesUsed >= 4;
                 } else {
                     isUsed[0] = !available.includes(gameState.dice[0]);
                     isUsed[1] = !available.includes(gameState.dice[1]);
@@ -1454,56 +1691,60 @@
         
         function updateDicePhysics() {
             if (!dicePhysicsActive) return;
-            
+
             const bd = boardDimensions;
             let allSettled = true;
-            
+
             dice.forEach((d, index) => {
                 if (d.held) {
                     // Follow pointer with slight lag for natural feel
                     const offsetX = index === 0 ? -DICE_SIZE * 0.7 : DICE_SIZE * 0.7;
                     d.x += (pointerX + offsetX - d.x) * 0.6;
                     d.y += (pointerY - d.y) * 0.6;
-                    
+
                     // Wobble based on movement
                     d.rotation += shakeIntensity * 0.015 * (index === 0 ? 1 : -1);
                     d.tiltX = shakeIntensity * 0.3 * Math.sin(Date.now() * 0.02);
                     d.tiltY = shakeIntensity * 0.3 * Math.cos(Date.now() * 0.025);
-                    
+
                     // Randomize value while shaking
                     if (shakeIntensity > SHAKE_THRESHOLD) {
                         d.value = Math.ceil(Math.random() * 6);
                     }
-                    
+
                     allSettled = false;
                     return;
                 }
-                
+
                 if (d.settled) return;
-                
+
                 // Apply velocity
                 d.x += d.vx;
                 d.y += d.vy;
-                
+
                 // Calculate speed
                 const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
-                
+
                 // Rolling effect - tilt based on velocity direction
                 const targetTiltX = d.vy * 0.15;
                 const targetTiltY = -d.vx * 0.15;
                 d.tiltX += (targetTiltX - d.tiltX) * 0.3;
                 d.tiltY += (targetTiltY - d.tiltY) * 0.3;
-                
-                // Rotation based on movement
-                d.rotation += (d.vx + d.vy) * 0.02;
-                
-                // Change value while rolling fast
-                if (speed > 2) {
-                    if (Math.random() < 0.1) {
+
+                // Rotation based on movement - more rotation for more realistic effect
+                const absVx = Math.abs(d.vx);
+                const absVy = Math.abs(d.vy);
+                d.rotation += (absVx + absVy) * 0.025;
+
+                // Change value while rolling - increased frequency
+                if (speed > 1.5) {
+                    // Probability increases with speed
+                    const changeChance = Math.min(0.4, speed * 0.08);
+                    if (Math.random() < changeChance) {
                         d.value = Math.ceil(Math.random() * 6);
                     }
                 }
-                
+
                 // Apply friction
                 d.vx *= FRICTION;
                 d.vy *= FRICTION;
@@ -1609,19 +1850,19 @@
             gameState.dice[1] = dice[1].value;
             gameState.hasRolled = true;
             gameState.diceUsed = [false, false];
-            gameState.doublesCount = 0;
-            
+            gameState.doublesMovesUsed = 0;
+
             // Check for doubles
             if (gameState.dice[0] === gameState.dice[1]) {
                 showMessage("Doubles! You get 4 moves");
             }
-            
+
             // Check if any moves available
             if (!hasAnyValidMove()) {
                 showMessage("No valid moves - turn passes");
                 setTimeout(endTurn, 1500);
             }
-            
+
             updateDiceDisplay();
             updatePlayerStatus();
             render();
@@ -1816,33 +2057,33 @@
                     avgVx /= velocityHistory.length;
                     avgVy /= velocityHistory.length;
                 }
-                
-                const velocityMultiplier = 2.0;
-                
+
+                const velocityMultiplier = 2.5;  // Increased for more realistic rolling
+
                 dice.forEach((d, index) => {
                     d.held = false;
-                    
-                    // Horizontal velocity
-                    d.vx = avgVx * velocityMultiplier + (Math.random() - 0.5) * 4;
-                    d.vy = avgVy * velocityMultiplier + (Math.random() - 0.5) * 4;
-                    
+
+                    // Apply velocity with some randomness
+                    d.vx = avgVx * velocityMultiplier + (Math.random() - 0.5) * 3;
+                    d.vy = avgVy * velocityMultiplier + (Math.random() - 0.5) * 3;
+
                     // Initial tilt based on throw direction
-                    d.tiltX = avgVy * 0.2;
-                    d.tiltY = -avgVx * 0.2;
-                    
-                    // Minimum velocity to ensure dice roll
-                    const minSpeed = 8;
+                    d.tiltX = avgVy * 0.25;
+                    d.tiltY = -avgVx * 0.25;
+
+                    // Minimum velocity to ensure dice roll (prevents cheating)
+                    const minSpeed = 10;  // Increased minimum speed
                     const currentSpeed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
                     if (currentSpeed < minSpeed) {
                         const angle = Math.random() * Math.PI * 2;
                         d.vx = Math.cos(angle) * minSpeed;
                         d.vy = Math.sin(angle) * minSpeed;
                     }
-                    
+
                     // Random initial face
                     d.value = Math.ceil(Math.random() * 6);
                 });
-                
+
                 heldDiceIndex = -1;
                 velocityHistory = [];
                 shakeIntensity = 0;
@@ -1960,68 +2201,70 @@
             // Pip counts
             document.getElementById('p1-pip').textContent = calculatePipCount(PLAYER1);
             document.getElementById('p2-pip').textContent = calculatePipCount(PLAYER2);
-            
+
             // Bar counts
             document.getElementById('p1-bar').textContent = gameState.board[24];
             document.getElementById('p2-bar').textContent = Math.abs(gameState.board[25]);
-            
+
             // Turn indicators
             const p1Turn = document.getElementById('p1-turn');
             const p2Turn = document.getElementById('p2-turn');
-            
+
             p1Turn.classList.toggle('active', gameState.currentPlayer === PLAYER1);
             p2Turn.classList.toggle('active', gameState.currentPlayer === PLAYER2);
-            
+
             // Active panel styling
             const p1Panel = document.getElementById('player1Panel');
             const p2Panel = document.getElementById('player2Panel');
-            
+
             p1Panel.classList.toggle('active', gameState.currentPlayer === PLAYER1);
             p2Panel.classList.toggle('active', gameState.currentPlayer === PLAYER2);
-            
+
+            // Starter badges
+            p1Panel.classList.toggle('starter', gameState.starterPlayer === PLAYER1);
+            p2Panel.classList.toggle('starter', gameState.starterPlayer === PLAYER2);
+
             // Update status messages
             updatePlayerStatus();
-            
+
             // Borne off pieces
             updateBearoffDisplay();
         }
 
         function updatePlayerStatus() {
-            const p1Status = document.getElementById('p1-status');
-            const p2Status = document.getElementById('p2-status');
-            
+            const p1Instruction = document.getElementById('p1-instruction');
+            const p2Instruction = document.getElementById('p2-instruction');
+
             if (gameState.currentPlayer === PLAYER1) {
-                p2Status.textContent = 'Waiting...';
-                
+                // Player 1's turn
                 if (!gameState.hasRolled) {
-                    p1Status.textContent = '🎲 Grab dice and throw!';
+                    p1Instruction.textContent = '🎲 Grab dice and throw!';
                 } else if (dragState.isDragging) {
-                    p1Status.textContent = '🎯 Drop on highlighted spot';
+                    p1Instruction.textContent = '🎯 Drop on highlighted spot';
                 } else {
                     const barCount = gameState.board[24];
                     if (barCount > 0) {
-                        p1Status.textContent = '⚠️ Drag from bar to enter';
+                        p1Instruction.textContent = '⚠️ Drag from bar to enter';
                     } else if (canBearOff(PLAYER1)) {
-                        p1Status.textContent = '🏠 Drag to bear off';
+                        p1Instruction.textContent = '🏠 Drag to bear off';
                     } else {
-                        p1Status.textContent = '✋ Drag a piece to move';
+                        p1Instruction.textContent = '✋ Drag a piece to move';
                     }
                 }
             } else {
-                p1Status.textContent = 'Waiting...';
-                
+                // Player 2's turn
                 if (!gameState.hasRolled) {
-                    p2Status.textContent = '🎲 Grab dice and throw!';
+                    p2Instruction.textContent = '🎲 Grab dice and throw!';
                 } else if (dragState.isDragging) {
-                    p2Status.textContent = '🎯 Drop on highlighted spot';
+                    p2Instruction.textContent = '🎯 Drop on highlighted spot';
                 } else {
                     const barCount = Math.abs(gameState.board[25]);
                     if (barCount > 0) {
-                        p2Status.textContent = '⚠️ Drag from bar to enter';
+                        p2Instruction.textContent = '⚠️ Drag from bar to enter';
                     } else if (canBearOff(PLAYER2)) {
-                        p2Status.textContent = '🏠 Drag to bear off';
+                        p2Instruction.textContent = '🏠 Drag to bear off';
                     } else {
-                        p2Status.textContent = '✋ Drag a piece to move';
+                        p2Instruction.textContent = '✋ Drag a piece to move';
                     }
                 }
             }
@@ -2089,6 +2332,27 @@
             text.textContent = player === PLAYER1 ? 'Player 1 (Orange) Wins!' : 'Player 2 (White) Wins!';
             modal.classList.add('visible');
         }
+
+        // ============================================
+        // INFO MODAL HANDLER
+        // ============================================
+        const infoButton = document.getElementById('infoButton');
+        const infoOverlay = document.getElementById('infoOverlay');
+        const infoCloseBtn = document.getElementById('infoCloseBtn');
+
+        infoButton.addEventListener('click', () => {
+            infoOverlay.classList.add('active');
+        });
+
+        infoCloseBtn.addEventListener('click', () => {
+            infoOverlay.classList.remove('active');
+        });
+
+        infoOverlay.addEventListener('click', (e) => {
+            if (e.target === infoOverlay) {
+                infoOverlay.classList.remove('active');
+            }
+        });
 
         // ============================================
         // INITIALIZATION
