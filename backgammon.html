@@ -725,19 +725,22 @@
             const w = canvas.clientWidth;
             const h = canvas.clientHeight;
 
-            const padding = 15;
+            const padding = Math.max(10, w * 0.015); // 1.5% of width, min 10px
+            const surfacePadding = Math.max(6, w * 0.008); // 0.8% of width, min 6px
             const barWidth = Math.min(60, w * 0.05);
-            const pointNumberMargin = 16; // Extra space for point numbers above/below
+            const pointNumberMargin = Math.max(12, w * 0.016); // 1.6% of width, min 12px
+            const availableWidth = w - padding * 2 - surfacePadding * 2;
 
             boardDimensions = {
                 x: padding,
                 y: padding,
                 width: w - padding * 2,
                 height: h - padding * 2,
+                surfacePadding: surfacePadding,
                 barWidth: barWidth,
-                pointWidth: (w - padding * 2 - barWidth) / 12,
+                pointWidth: (availableWidth - barWidth) / 12,
                 pointHeight: (h - padding * 2) * 0.42,
-                pieceRadius: Math.min(22, (w - padding * 2 - barWidth) / 12 * 0.4),
+                pieceRadius: Math.min(22, (availableWidth - barWidth) / 12 * 0.4),
                 outlineMargin: padding,
                 pointNumberMarginVertical: pointNumberMargin
             };
@@ -813,9 +816,9 @@
                 10);
             
             // Draw playing surface
-            const surfacePadding = 8;
+            const surfacePadding = bd.surfacePadding;
             ctx.fillStyle = '#2d2820';
-            roundRect(ctx, bd.x + surfacePadding, bd.y + surfacePadding, 
+            roundRect(ctx, bd.x + surfacePadding, bd.y + surfacePadding,
                      bd.width - surfacePadding * 2, bd.height - surfacePadding * 2, 6);
             
             // Draw bar
@@ -933,7 +936,8 @@
 
         function drawPoints() {
             const bd = boardDimensions;
-            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
+            const sp = bd.surfacePadding;
+            const barX = bd.x + sp + (bd.width - sp * 2) / 2 - bd.barWidth / 2;
 
             // Colors for alternating triangles
             const darkTriangle = '#4a3f30';
@@ -944,21 +948,19 @@
 
             for (let i = 0; i < 12; i++) {
                 const isLeft = i < 6;
-                const baseX = bd.x + surfacePadding + i * bd.pointWidth + (isLeft ? 0 : bd.barWidth);
-                
+                const baseX = bd.x + sp + i * bd.pointWidth + (isLeft ? 0 : bd.barWidth);
+
                 // Top triangles (points up)
                 const topPointIndex = 12 + i; // 12-17 left, 18-23 right
                 const topColor = i % 2 === 0 ? darkTriangle : lightTriangle;
-                drawTriangle(baseX, bd.y + surfacePadding, bd.pointWidth, bd.pointHeight, true, topColor, topPointIndex);
-                
-                // Bottom triangles (points down) 
+                drawTriangle(baseX, bd.y + sp, bd.pointWidth, bd.pointHeight, true, topColor, topPointIndex);
+
+                // Bottom triangles (points down)
                 const bottomPointIndex = 11 - i; // 11-6 left, 5-0 right
                 const bottomColor = i % 2 === 0 ? lightTriangle : darkTriangle;
-                drawTriangle(baseX, bd.y + bd.height - surfacePadding, bd.pointWidth, bd.pointHeight, false, bottomColor, bottomPointIndex);
+                drawTriangle(baseX, bd.y + bd.height - sp, bd.pointWidth, bd.pointHeight, false, bottomColor, bottomPointIndex);
             }
         }
-
-        const surfacePadding = 8;
 
         function drawTriangle(x, y, width, height, pointsUp, color, pointIndex) {
             ctx.fillStyle = color;
@@ -981,7 +983,7 @@
             ctx.fillStyle = '#555';
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            const numY = pointsUp ? y - 4 : y + 12;
+            const numY = pointsUp ? y - 8 : y + 12;
             ctx.fillText((pointIndex + 1).toString(), x + width / 2, numY);
         }
 
@@ -1089,7 +1091,8 @@
 
         function getPointPosition(pointIndex) {
             const bd = boardDimensions;
-            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
+            const sp = bd.surfacePadding;
+            const barX = bd.x + sp + (bd.width - sp * 2) / 2 - bd.barWidth / 2;
 
             let x, y;
             const isTop = pointIndex >= 12;
@@ -1099,15 +1102,15 @@
                 const i = pointIndex - 12;
                 const isLeft = i < 6;
 
-                x = bd.x + surfacePadding + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
-                y = bd.y + surfacePadding + bd.pieceRadius + 5;
+                x = bd.x + sp + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
+                y = bd.y + sp + bd.pieceRadius + 5;
             } else {
                 // Points 1-12 (indices 0-11) along bottom
                 const i = 11 - pointIndex;
                 const isLeft = i < 6;
 
-                x = bd.x + surfacePadding + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
-                y = bd.y + bd.height - surfacePadding - bd.pieceRadius - 5;
+                x = bd.x + sp + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
+                y = bd.y + bd.height - sp - bd.pieceRadius - 5;
             }
 
             return { x, y };
