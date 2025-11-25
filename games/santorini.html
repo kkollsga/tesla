@@ -48,14 +48,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -65,25 +63,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .game-board {
@@ -597,9 +596,48 @@
 
     <div class="info-modal" id="infoModal">
         <div class="info-panel">
-            <div class="modal-title">Santorini</div>
+            <div class="modal-title">How to Play Santorini</div>
             <div class="modal-text">
-                Build towers and move workers up to the third floor to win. Opponent must build before you move
+                <h3>Objective</h3>
+                <p>Move one of your workers to the third floor (level 3) to win! Outsmart your opponent by controlling the board and building towers strategically.</p>
+
+                <h3>The Game Setup</h3>
+                <p>You play on a 5x5 grid. Each player controls 2 workers. Place your workers strategically at the start of the game.</p>
+
+                <h3>Game Flow - Each Turn Has 2 Steps</h3>
+                <ul>
+                    <li><strong>Step 1 - Opponent Builds:</strong> Your opponent must build one level (or dome) on an empty square next to their workers</li>
+                    <li><strong>Step 2 - You Move & Build:</strong> Move one of your workers to an adjacent square, then build on another adjacent square</li>
+                </ul>
+
+                <h3>Movement Rules</h3>
+                <ul>
+                    <li>Your workers can move to adjacent squares (up, down, left, right, or diagonally)</li>
+                    <li>Workers can move UP one level, stay at the same level, or move DOWN any number of levels</li>
+                    <li>Workers CANNOT move to squares occupied by opponent workers</li>
+                    <li>Workers CANNOT move to domed squares (completed towers)</li>
+                    <li>Workers CANNOT move UP more than 1 level</li>
+                </ul>
+
+                <h3>Building Rules</h3>
+                <ul>
+                    <li>Towers have 4 levels: 0 (ground), 1, 2, 3</li>
+                    <li>After level 3, you place a DOME on top, which blocks further building</li>
+                    <li>You can only build on empty squares adjacent to the worker you just moved</li>
+                    <li>You build one level UP from the current level (unless it's already at level 3, then add a dome)</li>
+                </ul>
+
+                <h3>Winning</h3>
+                <p>You win immediately when one of your workers moves up to level 3! That's the winning condition - get there first!</p>
+
+                <h3>Strategy Tips</h3>
+                <ul>
+                    <li>Plan ahead - build towers to create higher paths for your workers</li>
+                    <li>Block your opponent by building near their workers</li>
+                    <li>Use domes strategically to restrict movement</li>
+                    <li>Spread your workers to control more territory</li>
+                    <li>Always remember: opponent builds first, then you move and build</li>
+                </ul>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>

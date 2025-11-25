@@ -48,14 +48,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -65,25 +63,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .game-board {
@@ -658,9 +657,45 @@
 
     <div class="info-modal" id="infoModal">
         <div class="info-panel">
-            <div class="modal-title">Chess</div>
+            <div class="modal-title">How to Play Chess</div>
             <div class="modal-text">
-                Learn how to move pieces, capture opponents, and achieve checkmate
+                <h3>Objective</h3>
+                <p>Checkmate your opponent's king by attacking it in a way that it cannot escape capture.</p>
+
+                <h3>Piece Movements</h3>
+                <ul>
+                    <li><strong>Pawn:</strong> Moves forward 1 square (or 2 on first move), captures diagonally forward</li>
+                    <li><strong>Rook:</strong> Moves any distance horizontally or vertically</li>
+                    <li><strong>Knight:</strong> Moves in an L-shape (2 squares one direction, 1 perpendicular)</li>
+                    <li><strong>Bishop:</strong> Moves any distance diagonally</li>
+                    <li><strong>Queen:</strong> Moves any distance in any direction (combines rook + bishop)</li>
+                    <li><strong>King:</strong> Moves 1 square in any direction</li>
+                </ul>
+
+                <h3>Capturing</h3>
+                <p>Each piece (except the pawn) captures the same way it moves. Pawns capture diagonally. Remove captured pieces from the board.</p>
+
+                <h3>Special Moves</h3>
+                <ul>
+                    <li><strong>Castling:</strong> Move your king 2 squares and the rook moves to the other side (special conditions apply)</li>
+                    <li><strong>En Passant:</strong> Pawn capture move that can happen when opponent moves their pawn 2 squares</li>
+                    <li><strong>Pawn Promotion:</strong> When a pawn reaches the opposite end, it becomes a queen, rook, bishop, or knight</li>
+                </ul>
+
+                <h3>Check and Checkmate</h3>
+                <ul>
+                    <li><strong>Check:</strong> The king is under direct attack</li>
+                    <li><strong>Checkmate:</strong> The king is in check and has no legal moves to escape</li>
+                    <li><strong>Stalemate:</strong> You're not in check but have no legal moves (draw)</li>
+                </ul>
+
+                <h3>Tips for Beginners</h3>
+                <ul>
+                    <li>Control the center of the board</li>
+                    <li>Develop your pieces early in the game</li>
+                    <li>Protect your king with castling</li>
+                    <li>Don't move the same piece twice without developing others</li>
+                </ul>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>

@@ -46,14 +46,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -63,25 +61,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .info-modal {
@@ -582,9 +581,52 @@
     <!-- Game Info Modal -->
     <div class="info-modal" id="infoModal">
         <div class="info-panel">
-            <div class="modal-title">Solitaire</div>
+            <div class="modal-title">How to Play Solitaire (Klondike)</div>
             <div class="modal-text">
-                Click cards to draw and build sequences in the foundation piles. Use the stock pile strategically
+                <h3>Objective</h3>
+                <p>Move all cards to the Foundation piles (the four piles on the right) in order from Ace to King by suit. If you get all cards there, you win!</p>
+
+                <h3>The Layout</h3>
+                <ul>
+                    <li><strong>Stock Pile:</strong> The deck of remaining cards on the left</li>
+                    <li><strong>Waste Pile:</strong> Next to stock - cards you've drawn but can't use yet</li>
+                    <li><strong>Foundation Piles:</strong> The four piles on the right where you build sequences</li>
+                    <li><strong>Tableau:</strong> The seven columns in the middle where you play</li>
+                </ul>
+
+                <h3>Building in the Tableau</h3>
+                <ul>
+                    <li>Build DOWN by alternating colors (red and black)</li>
+                    <li>Move a King to an empty column</li>
+                    <li>Move any card on top of a card that's 1 rank higher and opposite color</li>
+                    <li>You can move a group of cards together if they're in correct sequence</li>
+                    <li>Example: Place a red 5 on a black 6</li>
+                </ul>
+
+                <h3>Foundation Piles</h3>
+                <ul>
+                    <li>Build UP from Ace to King in the same suit</li>
+                    <li>Only Aces can start a foundation pile</li>
+                    <li>Once a card is in the foundation, you're done with it</li>
+                    <li>Each foundation pile ends with a King</li>
+                </ul>
+
+                <h3>Using the Stock Pile</h3>
+                <ul>
+                    <li>Click the Stock pile to draw cards</li>
+                    <li>You can draw 1 or 3 cards at a time (check your game settings)</li>
+                    <li>Only the top card in the Waste pile is available to play</li>
+                    <li>When you run out of stock, click it again to recycle - you get limited passes through!</li>
+                </ul>
+
+                <h3>Strategy Tips</h3>
+                <ul>
+                    <li>Try to uncover face-down cards in the tableau</li>
+                    <li>Move cards to the foundation only when necessary</li>
+                    <li>Keep columns open for moving sequences around</li>
+                    <li>Don't move cards to foundations too early if you might need them</li>
+                    <li>Use the stock pile wisely since you have limited passes</li>
+                </ul>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>

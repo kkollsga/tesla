@@ -48,14 +48,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -65,25 +63,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .game-board {
@@ -530,9 +529,41 @@
 
     <div class="info-modal" id="infoModal">
         <div class="info-panel">
-            <div class="modal-title">Isola</div>
+            <div class="modal-title">How to Play Isola</div>
             <div class="modal-text">
-                Block your opponent by removing squares while moving your piece to victory
+                <h3>Objective</h3>
+                <p>Move your piece while removing squares from the board. The last player with a legal move wins! Your opponent will eventually be trapped.</p>
+
+                <h3>The Board</h3>
+                <p>You play on a 6x8 grid. Each player starts on opposite corners. You can only move to adjacent squares (up, down, left, right, or diagonally). Diagonal moves are allowed!</p>
+
+                <h3>How to Play</h3>
+                <ul>
+                    <li><strong>Step 1 - Move:</strong> Click an adjacent square to move your piece there</li>
+                    <li><strong>Step 2 - Remove:</strong> After moving, click a square to remove it permanently</li>
+                    <li>You cannot move to or remove a square that's already been removed</li>
+                    <li>You cannot move to a square occupied by your opponent</li>
+                </ul>
+
+                <h3>Important Rules</h3>
+                <ul>
+                    <li>You MUST move every turn (if you have any legal moves)</li>
+                    <li>After moving, you MUST remove a square</li>
+                    <li>You cannot remove the square you just moved to</li>
+                    <li>Strategic removing: Remove squares to trap your opponent!</li>
+                </ul>
+
+                <h3>Winning</h3>
+                <p>You win when your opponent has no legal squares to move to. This usually happens when you've strategically removed squares around them.</p>
+
+                <h3>Strategy Tips</h3>
+                <ul>
+                    <li>Don't just move randomly - think about limiting your opponent's options</li>
+                    <li>Remove squares near your opponent to trap them</li>
+                    <li>Try to keep multiple escape routes open for yourself</li>
+                    <li>Control the center of the board when possible</li>
+                    <li>Think ahead - your removed squares can't be used for escape later</li>
+                </ul>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>

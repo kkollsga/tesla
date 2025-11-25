@@ -33,14 +33,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -50,25 +48,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .info-modal {
@@ -617,9 +616,36 @@
     <!-- Game Info Modal -->
     <div class="info-modal" id="infoModal">
         <div class="info-panel">
-            <div class="modal-title">Backgammon</div>
+            <div class="modal-title">How to Play Backgammon</div>
             <div class="modal-text">
-                Race your pieces around the board, block opponents, and be first to bear off all pieces
+                <h3>Objective</h3>
+                <p>Race your 15 pieces around the board and be the first to remove all your pieces (bear off). You must roll higher than your opponent to win.</p>
+
+                <h3>The Board</h3>
+                <p>The board has 24 points arranged in 4 sections of 6 points each. You start with pieces at specific points and move them in a specific direction around the board.</p>
+
+                <h3>Rolling the Dice</h3>
+                <p>On your turn, click the dice area to roll. You get two dice. Move your pieces according to the numbers shown. You can split the movement between different pieces or move one piece the total distance.</p>
+
+                <h3>Basic Movement</h3>
+                <ul>
+                    <li>Pieces move in one direction around the board</li>
+                    <li>You can only land on points with your own pieces or opponent points with only 1 enemy piece</li>
+                    <li>If you roll doubles, you get to move twice the amount</li>
+                </ul>
+
+                <h3>Capturing Opponent Pieces</h3>
+                <p>If you land on a point with only 1 opponent piece, you capture it! The captured piece is removed from the board and must be brought back in from the start.</p>
+
+                <h3>Bearing Off</h3>
+                <p>Once all your pieces are in your home section, you can start removing them based on dice rolls. Roll the exact number or higher to remove a piece.</p>
+
+                <h3>Quick Tips</h3>
+                <ul>
+                    <li>Build blocking points (multiple pieces) to prevent opponent movement</li>
+                    <li>Try to keep your pieces together for safety</li>
+                    <li>Block your opponent's home section if possible</li>
+                </ul>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>

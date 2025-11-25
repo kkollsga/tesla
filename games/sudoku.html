@@ -59,14 +59,12 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
             z-index: 500;
+            pointer-events: none;
         }
 
         .navbar-left, .navbar-right {
@@ -76,25 +74,26 @@
         }
 
         .navbar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
             color: #888;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
+            font-style: italic;
             transition: all 0.2s ease;
             text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .navbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .controls {
@@ -433,17 +432,52 @@
     <!-- Game Info Modal -->
     <div class="modal info-modal" id="infoModal">
         <div class="modal-content">
-            <div class="modal-title">Sudoku</div>
+            <div class="modal-title">How to Play Sudoku</div>
             <div class="modal-text">
-                <p><strong>Objective:</strong> Fill the 9x9 grid so that each row, column, and 3x3 box contains the numbers 1-9 without repetition.</p>
-                <p><strong>How to Play:</strong></p>
-                <ul style="text-align: left; margin: 15px auto; max-width: 300px;">
-                    <li>Click a cell to select it</li>
-                    <li>Use the number pad to enter a value (1-9)</li>
-                    <li>Press the delete button to clear a cell</li>
-                    <li>Use hints to reveal numbers (3 available)</li>
+                <h3>Objective</h3>
+                <p>Fill the 9x9 grid so that each row, column, and 3x3 box contains the numbers 1-9 exactly once. No repetition allowed!</p>
+
+                <h3>The Rules</h3>
+                <ul>
+                    <li>Each row must contain digits 1-9 with no repeats</li>
+                    <li>Each column must contain digits 1-9 with no repeats</li>
+                    <li>Each of the nine 3x3 boxes must contain digits 1-9 with no repeats</li>
+                    <li>Some cells are pre-filled - you cannot change these</li>
                 </ul>
-                <p><strong>Difficulty:</strong> Easy, Medium, or Hard</p>
+
+                <h3>How to Play</h3>
+                <ul>
+                    <li><strong>Click a cell:</strong> Select any empty cell to fill</li>
+                    <li><strong>Enter a number:</strong> Use the number pad (1-9) to enter your guess</li>
+                    <li><strong>Delete a number:</strong> Press the delete button to clear a cell you filled</li>
+                    <li><strong>Check for errors:</strong> The game will highlight wrong entries in red</li>
+                </ul>
+
+                <h3>Using Hints</h3>
+                <ul>
+                    <li>You get 3 hints per game</li>
+                    <li>Press the HINT button to reveal one correct number</li>
+                    <li>Use hints strategically when you're stuck</li>
+                </ul>
+
+                <h3>Difficulty Levels</h3>
+                <ul>
+                    <li><strong>Easy:</strong> 45 clues - perfect for beginners, fewer cells to fill</li>
+                    <li><strong>Medium:</strong> 36 clues - a good challenge, more cells to figure out</li>
+                    <li><strong>Hard:</strong> 27 clues - for experienced players, lots of deduction needed</li>
+                </ul>
+
+                <h3>Strategy Tips</h3>
+                <ul>
+                    <li>Look for cells where only one number is possible</li>
+                    <li>Check rows, columns, and 3x3 boxes to eliminate possibilities</li>
+                    <li>Start with areas that have many given numbers</li>
+                    <li>Don't guess randomly - use logic to deduce the answer</li>
+                    <li>If you make a mistake, use the delete button and try again</li>
+                </ul>
+
+                <h3>How to Start</h3>
+                <p>Click "New Game" to start, choose a difficulty level, and begin solving!</p>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>
