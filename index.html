@@ -576,27 +576,45 @@
     <script>
         const YOUTUBE_REDIRECT_BASE = 'https://www.youtube.com/redirect?q=';
 
+        // Tesla browser distributions that should use YouTube redirect hack
+        const TESLA_DISTRIBUTIONS = [
+            { width: 1180, height: 919 }
+            // Add more distributions as needed: { width: 1920, height: 1080 }
+        ];
+
+        function isTeslaDistribution() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            return TESLA_DISTRIBUTIONS.some(dist =>
+                width === dist.width && height === dist.height
+            );
+        }
+
         function isFullscreen() {
             if (document.fullscreenElement || document.webkitFullscreenElement) {
                 return true;
             }
-            
+
             const width = window.innerWidth;
             const height = window.innerHeight;
-            const isLikelyTeslaFullscreen = (width >= 1800 && height >= 1000) || 
-                                             (width >= window.screen.width * 0.95 && 
+            const isLikelyTeslaFullscreen = (width >= 1800 && height >= 1000) ||
+                                             (width >= window.screen.width * 0.95 &&
                                               height >= window.screen.height * 0.95);
-            
+
             return isLikelyTeslaFullscreen;
         }
 
         function navigateToService(url, event) {
             event.preventDefault();
-            
-            if (isFullscreen()) {
+
+            // Use YouTube redirect hack only for Tesla browser distributions
+            if (isTeslaDistribution()) {
+                window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(url);
+            } else if (isFullscreen()) {
                 window.location.href = url;
             } else {
-                window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(url);
+                window.location.href = url;
             }
         }
 
