@@ -856,6 +856,12 @@ function updatePlayerStatus() {
         gameState.currentPlayer === gameState.player1Color && !gameState.gameOver);
     document.getElementById('player-2-info').classList.toggle('active',
         gameState.currentPlayer === gameState.player2Color && !gameState.gameOver);
+
+    // Update resign button visibility based on whose turn it is
+    if (gameState.gameStarted && !gameState.gameOver) {
+        document.getElementById('player-1-resign').disabled = gameState.currentPlayer !== gameState.player1Color;
+        document.getElementById('player-2-resign').disabled = gameState.currentPlayer !== gameState.player2Color;
+    }
 }
 
 // Timer functions
@@ -1040,66 +1046,6 @@ function setTimeControl(seconds) {
     }
 }
 
-document.getElementById('info-button').addEventListener('click', (e) => {
-    e.stopPropagation();
-    showGameInfo();
-});
-
-function showGameInfo() {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-
-    overlay.innerHTML = `
-        <div class="info-panel">
-            <h2>How to Play Chess</h2>
-
-            <h3>Objective</h3>
-            <p>Checkmate your opponent's king - trap it so it cannot escape capture!</p>
-
-            <h3>Setup</h3>
-            <p>Players are randomly assigned white or black pieces. White always moves first.</p>
-            <p>Click the timer before the first move to set a time limit (1 min, 3 min, 10 min, 30 min, or unlimited).</p>
-
-            <h3>How to Play</h3>
-            <p>Drag and drop pieces or click to select and move. Each piece moves differently:</p>
-            <ul>
-                <li><strong>Pawn (♙):</strong> Moves forward one square (two on first move). Captures diagonally.</li>
-                <li><strong>Rook (♖):</strong> Moves any distance horizontally or vertically.</li>
-                <li><strong>Knight (♘):</strong> Moves in an L-shape (2 squares + 1 perpendicular).</li>
-                <li><strong>Bishop (♗):</strong> Moves any distance diagonally.</li>
-                <li><strong>Queen (♕):</strong> Combines rook and bishop movement.</li>
-                <li><strong>King (♔):</strong> Moves one square in any direction.</li>
-            </ul>
-
-            <h3>Special Moves</h3>
-            <ul>
-                <li><strong>Castling:</strong> King and rook move simultaneously (only if neither has moved and path is clear).</li>
-                <li><strong>En Passant:</strong> Special pawn capture of an enemy pawn that just moved two squares.</li>
-                <li><strong>Promotion:</strong> When a pawn reaches the opposite end, it becomes a queen, rook, bishop, or knight.</li>
-            </ul>
-
-            <h3>Winning</h3>
-            <ul>
-                <li><strong>Checkmate:</strong> Opponent's king is in check and cannot escape.</li>
-                <li><strong>Resignation:</strong> Click "Resign" to admit defeat.</li>
-                <li><strong>Time Out:</strong> If using a timer, running out of time loses.</li>
-                <li><strong>Stalemate:</strong> No legal moves available (draw).</li>
-            </ul>
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.remove();
-        }
-    });
-
-    overlay.querySelector('.info-panel').addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
-}
 
 // Initialize on load
 window.addEventListener('load', () => {

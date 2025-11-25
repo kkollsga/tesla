@@ -30,27 +30,38 @@
             width: 100%;
             height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: row;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
-            gap: 20px;
+            gap: 30px;
+            padding-top: 80px;
         }
 
         .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 10px;
+            display: none;
         }
 
         .title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 1px;
+            display: none;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        .sidebar > div:first-child {
+            flex: 0;
+        }
+
+        .number-pad {
+            margin-top: auto;
+            margin-bottom: 0;
         }
 
         .navbar {
@@ -98,10 +109,23 @@
 
         .controls {
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
-            max-width: 500px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .control-row.actions {
+            gap: 8px;
         }
 
         .btn {
@@ -116,7 +140,86 @@
             transition: all 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            width: 140px;
+            text-align: center;
         }
+
+        #newGameBtn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        #newGameBtn.easy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        #newGameBtn.medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        #newGameBtn.hard {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .difficulty-icon-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 8px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #444;
+            color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .difficulty-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #666;
+        }
+
+        .difficulty-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 140px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .difficulty-dropdown.show {
+            display: flex;
+        }
+
+        .difficulty-dropdown-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            background: none;
+            border: none;
+            color: #ddd;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .difficulty-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .difficulty-dropdown-item.easy { color: #10b981; }
+        .difficulty-dropdown-item.medium { color: #f59e0b; }
+        .difficulty-dropdown-item.hard { color: #ef4444; }
 
         .btn:hover {
             transform: scale(1.05);
@@ -131,6 +234,7 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid #444;
             color: #ddd;
+            flex: 1;
         }
 
         .btn-secondary:hover {
@@ -138,17 +242,16 @@
             box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
         }
 
+        #hintBtn, #clearBtn {
+            width: 100%;
+        }
+
         .difficulty-buttons {
             display: none;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            max-width: 500px;
-            animation: slideDown 0.3s ease;
         }
 
         .difficulty-buttons.show {
-            display: flex;
+            display: none;
         }
 
         @keyframes slideDown {
@@ -181,106 +284,220 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            gap: 0;
-            padding: 2px;
-            background: #1a1a1a;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            padding: 4px;
+            background: #333;
             border-radius: 8px;
-            border: 2px solid #333;
-            max-width: 500px;
-            width: 100%;
-            aspect-ratio: 1;
+            border: 4px solid #333;
+            width: 540px;
+            height: 540px;
+        }
+
+        .box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 0;
+            border: 1px solid #666;
         }
 
         .cell {
-            background: #0a0a0a;
-            border: 1px solid #444;
+            background: #fff;
+            border: 1px solid #999;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             font-weight: 600;
-            color: #fff;
+            color: #888;
             cursor: pointer;
             transition: all 0.1s ease;
             user-select: none;
+            position: relative;
         }
 
         .cell:hover {
-            background: #1a1a1a;
+            background: #f5f5f5;
         }
 
         .cell.fixed {
-            background: #111;
-            color: #ccc;
+            background: #fff;
+            color: #1a1a1a;
             cursor: default;
+            font-weight: 700;
         }
 
         .cell.fixed:hover {
-            background: #111;
+            background: #f5f5f5;
         }
 
-        .cell.selected {
+        .cell.selected:not(.quarters-mode) {
             background: #2563eb;
-            color: #fff;
             box-shadow: inset 0 0 10px rgba(37, 99, 235, 0.3);
+            color: #fff;
+        }
+
+        .cell.selected.quarters-mode {
+            background: #fff;
+            color: #888;
+        }
+
+        .cell:not(.fixed).selected:not(.quarters-mode) {
+            color: #fff;
+        }
+
+        .cell:not(.fixed).selected:not(.quarters-mode).error {
+            color: #dc2626;
         }
 
         .cell.related {
-            background: rgba(37, 99, 235, 0.2);
+            background: #e3f2fd;
+        }
+
+        .cell.related.fixed {
+            color: #333;
+        }
+
+        .cell.related:not(.fixed) {
+            color: #999;
+        }
+
+        .cell.same-block {
+            background: #f0f7ff;
+        }
+
+        .cell.same-block.fixed {
+            color: #333;
+        }
+
+        .cell.same-block:not(.fixed) {
+            color: #999;
         }
 
         .cell.error {
-            background: rgba(239, 68, 68, 0.3);
-            color: #ff9999;
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .cell.related.error {
+            color: #dc2626;
+        }
+
+        .cell.same-block.error {
+            color: #dc2626;
+        }
+
+        .cell.selected.error {
+            color: #dc2626;
+        }
+
+        .cell:not(.fixed).selected:not(.quarters-mode).error {
+            color: #dc2626;
+        }
+
+        .cell.error:not(.fixed) {
+            text-decoration: underline;
+            text-decoration-color: #dc2626;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 2px;
         }
 
         .cell.hint {
-            background: rgba(16, 185, 129, 0.3);
+            color: #FFD700;
         }
 
-        /* 3x3 box borders */
-        .cell:nth-child(3n+1) {
-            border-left: 2px solid #666;
+        .quarters {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 0;
+            font-size: 10px;
+            pointer-events: none;
         }
 
-        .cell:nth-child(9n+1) {
-            border-left: 2px solid #666;
+        .quarter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            padding: 1px;
+            font-size: 9px;
         }
 
-        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(3) {
-            border-top: 2px solid #666;
+        .cell.selected:not(.quarters-mode) .quarter {
+            color: #fff;
         }
 
-        .cell:nth-child(19), .cell:nth-child(20), .cell:nth-child(21),
-        .cell:nth-child(28), .cell:nth-child(29), .cell:nth-child(30) {
-            border-bottom: 2px solid #666;
+        .cell.selected.quarters-mode .quarter.active {
+            background: #2563eb;
+            color: #fff;
+            border-radius: 2px;
         }
 
-        .cell:nth-child(27), .cell:nth-child(36), .cell:nth-child(45),
-        .cell:nth-child(54), .cell:nth-child(63), .cell:nth-child(72),
-        .cell:nth-child(81) {
-            border-right: 2px solid #666;
+        .cell.selected:not(.quarters-mode) .quarter.active::before {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            border: 1.5px solid #2563eb;
+            border-radius: 1px;
+            pointer-events: none;
+        }
+
+        .quarters-toggle {
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            position: relative;
+            aspect-ratio: 1;
+            grid-column: 3 / 4;
+        }
+
+        .quarters-toggle:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .number-pad {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-width: 500px;
-            width: 100%;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            width: 180px;
         }
 
         .number-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid #444;
             color: #ddd;
-            padding: 12px;
+            padding: 0;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .number-btn:nth-child(10) {
+            grid-column: 1 / 3;
+            aspect-ratio: auto;
+            padding: 10px;
         }
 
         .number-btn:hover {
@@ -292,12 +509,17 @@
             transform: scale(0.95);
         }
 
+        .board-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
         .stats {
             display: flex;
+            flex-direction: row;
             gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            max-width: 500px;
             font-size: 14px;
             color: #aaa;
         }
@@ -315,6 +537,34 @@
         .stat-value {
             color: #fff;
             font-weight: 600;
+        }
+
+        .difficulty-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 20px;
+            border-right: 1px solid #555;
+        }
+
+        .difficulty-display .stat-label {
+            color: #666;
+        }
+
+        .difficulty-display .stat-value {
+            font-weight: 700;
+        }
+
+        .difficulty-display .stat-value.easy {
+            color: #10b981;
+        }
+
+        .difficulty-display .stat-value.medium {
+            color: #f59e0b;
+        }
+
+        .difficulty-display .stat-value.hard {
+            color: #ef4444;
         }
 
         .modal {
@@ -349,8 +599,11 @@
             border: 2px solid #2563eb;
             border-radius: 16px;
             padding: 40px;
-            max-width: 500px;
-            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
             animation: slideUp 0.3s ease;
         }
 
@@ -373,10 +626,46 @@
         }
 
         .modal-text {
-            font-size: 18px;
+            font-size: 14px;
             color: #aaa;
+            line-height: 1.8;
+            overflow-y: auto;
+            flex: 1;
             margin-bottom: 30px;
-            line-height: 1.6;
+            padding-right: 15px;
+        }
+
+        .modal-text h3 {
+            font-size: 18px;
+            color: #2563eb;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-text h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-text p {
+            margin: 0 0 16px 0;
+            color: #bbb;
+        }
+
+        .modal-text ul {
+            margin: 0 0 16px 20px;
+            padding: 0;
+            list-style-position: inside;
+        }
+
+        .modal-text li {
+            margin-bottom: 10px;
+            color: #bbb;
+        }
+
+        .modal-text li strong {
+            color: #fff;
         }
 
         .modal-buttons {
@@ -384,6 +673,8 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
+            flex-shrink: 0;
+            margin-top: 20px;
         }
 
         .modal-btn {
@@ -490,35 +781,44 @@
             <div class="title">Sudoku</div>
         </div>
 
-        <div class="controls">
-            <button class="btn" id="newGameBtn">New Game</button>
-            <button class="btn btn-secondary" id="difficultyBtn">Difficulty</button>
-            <button class="btn btn-secondary" id="hintBtn">Hint</button>
-            <button class="btn btn-secondary" id="clearBtn">Clear</button>
+        <div class="sidebar">
+            <div class="controls">
+                <div class="control-row">
+                    <button class="btn" id="newGameBtn">New Game</button>
+                    <div class="difficulty-icon-btn" id="difficultyBtn">⚙️
+                        <div class="difficulty-dropdown" id="difficultyDropdown">
+                            <button class="difficulty-dropdown-item easy" data-difficulty="easy">Easy</button>
+                            <button class="difficulty-dropdown-item medium" data-difficulty="medium">Medium</button>
+                            <button class="difficulty-dropdown-item hard" data-difficulty="hard">Hard</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-row actions">
+                    <button class="btn btn-secondary" id="hintBtn">Hint</button>
+                    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+                </div>
+            </div>
+
+            <div class="difficulty-buttons" id="difficultyButtons"></div>
+
+            <div class="number-pad" id="numberPad"></div>
         </div>
 
-        <div class="difficulty-buttons" id="difficultyButtons">
-            <button class="difficulty-btn easy" data-difficulty="easy">Easy</button>
-            <button class="difficulty-btn medium" data-difficulty="medium">Medium</button>
-            <button class="difficulty-btn hard" data-difficulty="hard">Hard</button>
-        </div>
-
-        <div class="game-board" id="gameBoard"></div>
-
-        <div class="number-pad" id="numberPad"></div>
-
-        <div class="stats">
-            <div class="stat">
-                <span class="stat-label">Errors:</span>
-                <span class="stat-value" id="errorCount">0</span>
-            </div>
-            <div class="stat">
-                <span class="stat-label">Time:</span>
-                <span class="stat-value" id="timer">00:00</span>
-            </div>
-            <div class="stat">
-                <span class="stat-label">Hints:</span>
-                <span class="stat-value" id="hintCount">3</span>
+        <div class="board-wrapper">
+            <div class="game-board" id="gameBoard"></div>
+            <div class="stats">
+                <div class="difficulty-display">
+                    <span class="stat-label">Difficulty:</span>
+                    <span class="stat-value medium" id="difficultyDisplay">Medium</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Time:</span>
+                    <span class="stat-value" id="timer">00:00</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Hints:</span>
+                    <span class="stat-value" id="hintCount">3</span>
+                </div>
             </div>
         </div>
     </div>
@@ -538,14 +838,17 @@
     <script>
         const EMPTY = 0;
         let currentDifficulty = 'medium';
+        let gameDifficulty = 'medium';
         let board = [];
         let initialBoard = [];
         let selectedCell = null;
-        let errors = 0;
         let hintsRemaining = 3;
         let startTime = null;
         let timerInterval = null;
         let gameOver = false;
+        let hintCells = new Set(); // Track hint cell positions
+        let quarters = {}; // Store quarter notes: "row,col,quarter" -> number
+        let quarterMode = null; // Current quarter mode: null (full), 'ul', 'ur', 'lr', 'll'
 
         const difficultyConfig = {
             easy: { clues: 45, label: 'Easy' },
@@ -575,26 +878,66 @@
             });
 
             document.getElementById('newGameBtn').addEventListener('click', startNewGame);
-            document.getElementById('difficultyBtn').addEventListener('click', toggleDifficultyPanel);
+
+            // Difficulty dropdown
+            document.getElementById('difficultyBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = document.getElementById('difficultyDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            document.querySelectorAll('.difficulty-dropdown-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentDifficulty = e.target.dataset.difficulty;
+                    updateNewGameButtonColor();
+                    updateDifficultyDisplay();
+                    document.getElementById('difficultyDropdown').classList.remove('show');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                document.getElementById('difficultyDropdown').classList.remove('show');
+            });
+
             document.getElementById('hintBtn').addEventListener('click', giveHint);
             document.getElementById('clearBtn').addEventListener('click', clearSelected);
             document.getElementById('playAgainBtn').addEventListener('click', startNewGame);
 
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            document.querySelectorAll('.number-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    currentDifficulty = e.target.dataset.difficulty;
-                    toggleDifficultyPanel();
-                    startNewGame();
+                    if (selectedCell !== null && !e.target.classList.contains('quarters-toggle')) {
+                        const num = parseInt(e.target.textContent);
+                        if (!isNaN(num)) {
+                            setNumber(selectedCell, num);
+                        }
+                    }
                 });
             });
 
-            document.querySelectorAll('.number-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    if (selectedCell !== null) {
-                        const num = parseInt(e.target.textContent);
+            // Keyboard input for numbers 1-9 and backspace/delete
+            document.addEventListener('keydown', (e) => {
+                if (selectedCell !== null && !gameOver) {
+                    const num = parseInt(e.key);
+                    if (num >= 1 && num <= 9) {
+                        e.preventDefault();
                         setNumber(selectedCell, num);
+                    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                        e.preventDefault();
+                        // If in quarter mode, delete the quarter note
+                        if (quarterMode !== null) {
+                            delete quarters[`${selectedCell.row},${selectedCell.col},${quarterMode}`];
+                            const row = selectedCell.row;
+                            const col = selectedCell.col;
+                            renderBoard();
+                            selectedCell = null; // Clear so selectCell won't toggle unselect
+                            const cellEl = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            selectCell(row, col, cellEl);
+                        } else {
+                            setNumber(selectedCell, EMPTY);
+                        }
                     }
-                });
+                }
             });
         }
 
@@ -616,14 +959,58 @@
                 }
             });
             pad.appendChild(deleteBtn);
+
+            // Add quarters toggle button
+            const quartersBtn = document.createElement('button');
+            quartersBtn.className = 'number-btn quarters-toggle';
+            quartersBtn.textContent = '⊞';
+            quartersBtn.title = 'Toggle quarters/candidates mode';
+            quartersBtn.addEventListener('click', () => {
+                if (quarterMode === null) {
+                    quarterMode = 'ul';
+                } else if (quarterMode === 'ul') {
+                    quarterMode = 'ur';
+                } else if (quarterMode === 'ur') {
+                    quarterMode = 'lr';
+                } else if (quarterMode === 'lr') {
+                    quarterMode = 'll';
+                } else {
+                    quarterMode = null;
+                }
+                // Update quarter indicator on the selected cell
+                if (selectedCell !== null) {
+                    const cellEl = document.querySelector(`[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+                    if (cellEl) {
+                        // Remove active class from all quarters
+                        cellEl.querySelectorAll('.quarter.active').forEach(q => q.classList.remove('active'));
+                        // Add/remove quarters-mode class based on quarterMode
+                        if (quarterMode !== null) {
+                            cellEl.classList.add('quarters-mode');
+                            const quartersDiv = cellEl.querySelector('.quarters');
+                            if (quartersDiv) {
+                                const activeQuarter = quartersDiv.querySelector(`.quarter-${quarterMode}`);
+                                if (activeQuarter) {
+                                    activeQuarter.classList.add('active');
+                                }
+                            }
+                        } else {
+                            cellEl.classList.remove('quarters-mode');
+                        }
+                    }
+                }
+            });
+            pad.appendChild(quartersBtn);
         }
+
 
         function startNewGame() {
             gameOver = false;
-            errors = 0;
             hintsRemaining = 3;
             selectedCell = null;
-            document.getElementById('errorCount').textContent = '0';
+            hintCells = new Set();
+            quarters = {};
+            quarterMode = null;
+            gameDifficulty = currentDifficulty;
             document.getElementById('hintCount').textContent = '3';
             document.getElementById('winModal').classList.remove('active');
 
@@ -634,6 +1021,22 @@
             board = generateSudoku(difficultyConfig[currentDifficulty].clues);
             initialBoard = board.map(row => [...row]);
             renderBoard();
+            updateNewGameButtonColor();
+            updateDifficultyDisplay();
+        }
+
+        function updateNewGameButtonColor() {
+            const newGameBtn = document.getElementById('newGameBtn');
+            newGameBtn.classList.remove('easy', 'medium', 'hard');
+            newGameBtn.classList.add(currentDifficulty);
+        }
+
+        function updateDifficultyDisplay() {
+            const difficultyDisplay = document.getElementById('difficultyDisplay');
+            const label = difficultyConfig[gameDifficulty].label;
+            difficultyDisplay.textContent = label;
+            difficultyDisplay.classList.remove('easy', 'medium', 'hard');
+            difficultyDisplay.classList.add(gameDifficulty);
         }
 
         function generateSudoku(clues) {
@@ -641,21 +1044,67 @@
             const solved = Array(9).fill().map(() => Array(9).fill(0));
             fillBoard(solved);
 
-            // Create puzzle by removing numbers
+            // Create puzzle by removing numbers with uniqueness check
             const puzzle = solved.map(row => [...row]);
             let cellsToRemove = 81 - clues;
+            let attempts = 0;
+            const maxAttempts = 5; // Limit attempts to avoid infinite loops
 
-            while (cellsToRemove > 0) {
+            while (cellsToRemove > 0 && attempts < maxAttempts) {
                 const row = Math.floor(Math.random() * 9);
                 const col = Math.floor(Math.random() * 9);
 
                 if (puzzle[row][col] !== 0) {
+                    const backup = puzzle[row][col];
                     puzzle[row][col] = 0;
-                    cellsToRemove--;
+
+                    // Check if puzzle still has exactly one solution
+                    const solutionCount = countSolutions(puzzle, 2); // Stop after finding 2 solutions
+                    if (solutionCount === 1) {
+                        cellsToRemove--;
+                        attempts = 0; // Reset attempts on success
+                    } else {
+                        // Restore the cell if it creates multiple solutions
+                        puzzle[row][col] = backup;
+                        attempts++;
+                    }
                 }
             }
 
             return puzzle;
+        }
+
+        function countSolutions(board, maxCount = 2) {
+            // Count the number of solutions, stopping at maxCount for efficiency
+            let count = [0]; // Use array to allow modification in nested function
+            const boardCopy = board.map(row => [...row]);
+            countSolutionsRecursive(boardCopy, count, maxCount);
+            return count[0];
+        }
+
+        function countSolutionsRecursive(board, count, maxCount) {
+            // Stop if we've found enough solutions
+            if (count[0] >= maxCount) return;
+
+            // Find next empty cell
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (board[row][col] === 0) {
+                        // Try each number
+                        for (let num = 1; num <= 9; num++) {
+                            if (isValid(board, row, col, num)) {
+                                board[row][col] = num;
+                                countSolutionsRecursive(board, count, maxCount);
+                                board[row][col] = 0;
+                            }
+                        }
+                        return; // Backtrack
+                    }
+                }
+            }
+
+            // No empty cells found - we have a solution
+            count[0]++;
         }
 
         function fillBoard(board) {
@@ -704,25 +1153,59 @@
             const gameBoard = document.getElementById('gameBoard');
             gameBoard.innerHTML = '';
 
-            for (let row = 0; row < 9; row++) {
-                for (let col = 0; col < 9; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    const value = board[row][col];
+            // Create 9 box containers (3x3 grid of 3x3 boxes)
+            for (let boxRow = 0; boxRow < 3; boxRow++) {
+                for (let boxCol = 0; boxCol < 3; boxCol++) {
+                    const box = document.createElement('div');
+                    box.className = 'box';
 
-                    if (initialBoard[row][col] !== 0) {
-                        cell.classList.add('fixed');
+                    // Create 9 cells within each box
+                    for (let row = 0; row < 3; row++) {
+                        for (let col = 0; col < 3; col++) {
+                            const actualRow = boxRow * 3 + row;
+                            const actualCol = boxCol * 3 + col;
+
+                            const cell = document.createElement('div');
+                            cell.className = 'cell';
+                            const value = board[actualRow][actualCol];
+
+                            if (initialBoard[actualRow][actualCol] !== 0) {
+                                cell.classList.add('fixed');
+                            }
+
+                            // Check if this cell is a hint
+                            if (hintCells.has(`${actualRow},${actualCol}`)) {
+                                cell.classList.add('hint');
+                            }
+
+                            if (value !== 0) {
+                                cell.textContent = value;
+                            } else {
+                                // Add quarters container for empty cells
+                                const quartersDiv = document.createElement('div');
+                                quartersDiv.className = 'quarters';
+                                const quarterNames = ['ul', 'ur', 'll', 'lr'];
+                                quarterNames.forEach(qname => {
+                                    const quarter = document.createElement('div');
+                                    quarter.className = `quarter quarter-${qname}`;
+                                    const qNum = quarters[`${actualRow},${actualCol},${qname}`];
+                                    if (qNum) {
+                                        quarter.textContent = qNum;
+                                    }
+                                    quartersDiv.appendChild(quarter);
+                                });
+                                cell.appendChild(quartersDiv);
+                            }
+
+                            cell.addEventListener('click', () => selectCell(actualRow, actualCol, cell));
+                            cell.dataset.row = actualRow;
+                            cell.dataset.col = actualCol;
+
+                            box.appendChild(cell);
+                        }
                     }
 
-                    if (value !== 0) {
-                        cell.textContent = value;
-                    }
-
-                    cell.addEventListener('click', () => selectCell(row, col, cell));
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-
-                    gameBoard.appendChild(cell);
+                    gameBoard.appendChild(box);
                 }
             }
         }
@@ -730,15 +1213,41 @@
         function selectCell(row, col, element) {
             if (initialBoard[row][col] !== 0) return;
 
+            // Check if clicking the already selected cell - toggle unselect
+            if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+                document.querySelectorAll('.cell.selected, .cell.related, .cell.same-block').forEach(c => {
+                    c.classList.remove('selected', 'related', 'same-block', 'quarters-mode');
+                    c.querySelectorAll('.quarter.active').forEach(q => q.classList.remove('active'));
+                });
+                selectedCell = null;
+                return;
+            }
+
+            // Exit quarter mode when selecting a different cell
+            quarterMode = null;
+
             // Remove previous selection
-            document.querySelectorAll('.cell.selected, .cell.related').forEach(c => {
-                c.classList.remove('selected', 'related');
+            document.querySelectorAll('.cell.selected, .cell.related, .cell.same-block').forEach(c => {
+                c.classList.remove('selected', 'related', 'same-block', 'quarters-mode');
+                c.querySelectorAll('.quarter.active').forEach(q => q.classList.remove('active'));
             });
 
             selectedCell = { row, col };
             element.classList.add('selected');
 
-            // Highlight related cells
+            // Highlight active quarter if in quarter mode
+            if (quarterMode !== null) {
+                element.classList.add('quarters-mode');
+                const quartersDiv = element.querySelector('.quarters');
+                if (quartersDiv) {
+                    const activeQuarter = quartersDiv.querySelector(`.quarter-${quarterMode}`);
+                    if (activeQuarter) {
+                        activeQuarter.classList.add('active');
+                    }
+                }
+            }
+
+            // Highlight related cells (same row/column)
             for (let i = 0; i < 9; i++) {
                 if (i !== col) {
                     document.querySelector(`[data-row="${row}"][data-col="${i}"]`)?.classList.add('related');
@@ -748,13 +1257,24 @@
                 }
             }
 
+            // Highlight cells in same 3x3 block (but not same row/column)
             const startRow = row - (row % 3);
             const startCol = col - (col % 3);
             for (let i = startRow; i < startRow + 3; i++) {
                 for (let j = startCol; j < startCol + 3; j++) {
-                    if (i !== row || j !== col) {
-                        document.querySelector(`[data-row="${i}"][data-col="${j}"]`)?.classList.add('related');
+                    if (i !== row && j !== col) {
+                        document.querySelector(`[data-row="${i}"][data-col="${j}"]`)?.classList.add('same-block');
                     }
+                }
+            }
+
+            // Enable/disable quarters button based on whether cell is empty
+            const quartersBtn = document.querySelector('.quarters-toggle');
+            if (quartersBtn) {
+                if (board[row][col] === EMPTY) {
+                    quartersBtn.disabled = false;
+                } else {
+                    quartersBtn.disabled = true;
                 }
             }
         }
@@ -762,24 +1282,49 @@
         function setNumber(cell, num) {
             if (initialBoard[cell.row][cell.col] !== 0) return;
 
-            board[cell.row][cell.col] = num;
-
-            // Validate move
-            if (num !== EMPTY && !isValidPlacement(cell.row, cell.col, num)) {
-                errors++;
-                document.getElementById('errorCount').textContent = errors;
-                document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`)?.classList.add('error');
-                setTimeout(() => {
-                    document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`)?.classList.remove('error');
-                }, 500);
+            // Handle quarter mode
+            if (quarterMode !== null && num !== EMPTY) {
+                quarters[`${cell.row},${cell.col},${quarterMode}`] = num;
+                renderBoard();
+                selectedCell = null; // Clear so selectCell won't toggle unselect
+                const cellEl = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
+                selectCell(cell.row, cell.col, cellEl);
+                return;
             }
 
+            // Set main number
+            board[cell.row][cell.col] = num;
+
+            // Clear all quarters for this cell when setting a number or clearing the cell
+            const quarterNames = ['ul', 'ur', 'll', 'lr'];
+            quarterNames.forEach(qname => {
+                delete quarters[`${cell.row},${cell.col},${qname}`];
+            });
+
             renderBoard();
+            updateErrorHighlighting();
             checkWin();
 
             // Restore selection
+            selectedCell = null; // Clear so selectCell won't toggle unselect
             const cellEl = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
             selectCell(cell.row, cell.col, cellEl);
+        }
+
+        function updateErrorHighlighting() {
+            // Clear all error classes
+            document.querySelectorAll('.cell.error').forEach(cell => {
+                cell.classList.remove('error');
+            });
+
+            // Find all cells with conflicts
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (board[row][col] !== EMPTY && !isValidPlacement(row, col, board[row][col])) {
+                        document.querySelector(`[data-row="${row}"][data-col="${col}"]`)?.classList.add('error');
+                    }
+                }
+            }
         }
 
         function isValidPlacement(row, col, num) {
@@ -815,11 +1360,11 @@
                 for (let col = 0; col < 9; col++) {
                     if (board[row][col] === 0 && initialBoard[row][col] === 0) {
                         board[row][col] = findSolution(row, col);
-                        document.querySelector(`[data-row="${row}"][data-col="${col}"]`)?.classList.add('hint');
+                        hintCells.add(`${row},${col}`);
+                        renderBoard();
                         emptyFound = true;
                         hintsRemaining--;
                         document.getElementById('hintCount').textContent = hintsRemaining;
-                        renderBoard();
                         return;
                     }
                 }
@@ -836,11 +1381,26 @@
         }
 
         function clearSelected() {
-            if (selectedCell && initialBoard[selectedCell.row][selectedCell.col] === 0) {
-                board[selectedCell.row][selectedCell.col] = EMPTY;
-                renderBoard();
-                const cellEl = document.querySelector(`[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
-                selectCell(selectedCell.row, selectedCell.col, cellEl);
+            if (!selectedCell || initialBoard[selectedCell.row][selectedCell.col] !== 0) {
+                return;
+            }
+
+            const row = selectedCell.row;
+            const col = selectedCell.col;
+            board[row][col] = EMPTY;
+
+            // Clear all quarters for this cell
+            const quarterNames = ['ul', 'ur', 'll', 'lr'];
+            quarterNames.forEach(qname => {
+                delete quarters[`${row},${col},${qname}`];
+            });
+
+            renderBoard();
+            selectedCell = null; // Clear so selectCell won't toggle unselect
+
+            const cellEl = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cellEl) {
+                selectCell(row, col, cellEl);
             }
         }
 
@@ -865,10 +1425,6 @@
                 document.getElementById('winText').textContent = `Great job! You completed the sudoku in ${time}.`;
                 document.getElementById('winModal').classList.add('active');
             }
-        }
-
-        function toggleDifficultyPanel() {
-            document.getElementById('difficultyButtons').classList.toggle('show');
         }
 
         function updateTimer() {

@@ -36,22 +36,25 @@ function initGame() {
 
     // Event listeners (only add once using named functions)
     const newGameBtn = document.getElementById('new-game');
-    const backBtn = document.getElementById('back-button');
-    const infoBtn = document.getElementById('info-button');
-    const infoOverlay = document.getElementById('info-overlay');
+    const infoBtn = document.getElementById('infoBtn');
+    const infoModal = document.getElementById('infoModal');
 
     // Remove old listeners and add new ones to avoid duplicates
-    newGameBtn.removeEventListener('click', initGame);
-    newGameBtn.addEventListener('click', initGame);
+    if (newGameBtn) {
+        newGameBtn.removeEventListener('click', initGame);
+        newGameBtn.addEventListener('click', initGame);
+    }
 
-    backBtn.removeEventListener('click', handleBack);
-    backBtn.addEventListener('click', handleBack);
+    if (infoBtn) {
+        infoBtn.removeEventListener('click', showInfo);
+        infoBtn.addEventListener('click', showInfo);
+    }
 
-    infoBtn.removeEventListener('click', showInfo);
-    infoBtn.addEventListener('click', showInfo);
-
-    infoOverlay.removeEventListener('click', hideInfo);
-    infoOverlay.addEventListener('click', hideInfo);
+    const closeInfoBtn = document.getElementById('closeInfoBtn');
+    if (closeInfoBtn) {
+        closeInfoBtn.removeEventListener('click', hideInfo);
+        closeInfoBtn.addEventListener('click', hideInfo);
+    }
 
     // Victory overlay click to restart
     if (victoryOverlay) {
@@ -647,14 +650,12 @@ function updatePieceCounts() {
 
 // Show info overlay
 function showInfo() {
-    document.getElementById('info-overlay').classList.add('active');
+    document.getElementById('infoModal').classList.add('active');
 }
 
 // Hide info overlay
-function hideInfo(e) {
-    if (e.target.id === 'info-overlay') {
-        document.getElementById('info-overlay').classList.remove('active');
-    }
+function hideInfo() {
+    document.getElementById('infoModal').classList.remove('active');
 }
 
 // Initialize on load

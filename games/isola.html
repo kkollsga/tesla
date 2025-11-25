@@ -97,6 +97,10 @@
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 40px;
         }
 
         .game-header {
@@ -104,6 +108,23 @@
             justify-content: center;
             align-items: center;
             gap: 40px;
+        }
+
+        .player-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            gap: 20px;
+        }
+
+        .player-column #new-game {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
         }
 
         .player-info {
@@ -118,7 +139,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: auto 0;
         }
+
 
         .player-info.active {
             border-color: #FFD700;
@@ -178,6 +201,7 @@
             box-shadow:
                 inset 0 4px 12px rgba(0,0,0,0.5),
                 0 8px 24px rgba(0,0,0,0.3);
+            align-self: center;
         }
 
         .grid-cell {
@@ -275,46 +299,25 @@
         }
 
         .game-button {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
-            background-size: 200% 200%;
-            border: 2px solid #444;
+            background: linear-gradient(135deg, #5a1f32 0%, #3a0f20 100%);
+            border: 1px solid rgba(220, 53, 69, 0.3);
             border-radius: 8px;
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-size: 14px;
             font-weight: 600;
-            color: white;
+            color: #e0e0e0;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
             transition: all 0.2s ease;
         }
 
-        .game-button::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            right: -50%;
-            bottom: -50%;
-            background: linear-gradient(
-                45deg,
-                transparent 30%,
-                rgba(255, 255, 255, 0.1) 50%,
-                transparent 70%
-            );
-            transform: rotate(45deg);
-            z-index: 0;
-        }
-
-        .game-button > * {
-            position: relative;
-            z-index: 1;
-        }
-
         .game-button:hover {
-            background: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
-            background-size: 200% 200%;
+            background: linear-gradient(135deg, #7a2f42 0%, #4a1f30 100%);
+            border-color: rgba(220, 53, 69, 0.6);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.2);
+            color: #fff;
         }
 
         .game-button:active {
@@ -420,40 +423,98 @@
             border-radius: 14px;
             padding: 40px;
             max-width: 600px;
+            width: 90%;
             max-height: 80vh;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             color: white;
         }
 
-        .info-panel h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #FFD700;
+        .modal-title {
             font-size: 32px;
-            text-align: center;
-        }
-
-        .info-panel h3 {
-            margin-top: 24px;
-            margin-bottom: 12px;
+            font-weight: 700;
             color: #FFD700;
-            font-size: 20px;
+            margin-bottom: 20px;
+            margin-top: 0;
         }
 
-        .info-panel p {
-            line-height: 1.6;
-            margin-bottom: 16px;
+        .modal-text {
+            font-size: 14px;
+            color: #ddd;
+            line-height: 1.8;
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 30px;
+            padding-right: 15px;
         }
 
-        .info-panel ul {
-            margin: 12px 0;
-            padding-left: 24px;
+        .modal-text h3 {
+            font-size: 18px;
+            color: #FFD700;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .info-panel li {
-            margin-bottom: 8px;
-            line-height: 1.6;
+        .modal-text h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-text p {
+            margin: 0 0 16px 0;
+            color: #ddd;
+        }
+
+        .modal-text ul {
+            margin: 0 0 16px 20px;
+            padding: 0;
+            list-style-position: inside;
+        }
+
+        .modal-text li {
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        .modal-text li strong {
+            color: #FFD700;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+        }
+
+        .modal-btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .modal-btn-primary:active {
+            transform: scale(0.98);
         }
 
         @keyframes confetti-fall {
@@ -498,31 +559,31 @@
                 Game Starting...
             </div>
 
-            <!-- Game Header with Player Info and Board -->
-            <div class="game-header">
+            <!-- Left Column: Left Player -->
+            <div class="player-column">
+                <!-- New Game Button -->
+                <button class="game-button" id="new-game">New Game</button>
                 <div class="player-info" id="player-left-info">
                     <div class="player-name">Left</div>
                     <div class="pawn-preview" id="player-left-preview"></div>
                     <div class="player-color" id="player-left-color"></div>
                     <div class="player-status" id="player-left-status"></div>
                 </div>
+            </div>
 
-                <!-- Game Board Grid (6 rows x 8 columns) -->
-                <div class="grid-container" id="grid-container">
-                    <!-- Grid cells will be generated by JavaScript -->
-                </div>
+            <!-- Game Board Grid (6 rows x 8 columns) -->
+            <div class="grid-container" id="grid-container">
+                <!-- Grid cells will be generated by JavaScript -->
+            </div>
 
+            <!-- Right Column: Right Player -->
+            <div class="player-column">
                 <div class="player-info" id="player-right-info">
                     <div class="player-name">Right</div>
                     <div class="pawn-preview" id="player-right-preview"></div>
                     <div class="player-color" id="player-right-color"></div>
                     <div class="player-status" id="player-right-status"></div>
                 </div>
-            </div>
-
-            <!-- Game Controls -->
-            <div class="game-controls">
-                <button class="game-button" id="new-game">New Game</button>
             </div>
         </div>
     </div>
@@ -1131,6 +1192,10 @@
             if (e.target === document.getElementById('infoModal')) {
                 document.getElementById('infoModal').classList.remove('active');
             }
+        });
+
+        document.getElementById('closeInfoBtn').addEventListener('click', () => {
+            document.getElementById('infoModal').classList.remove('active');
         });
     </script>
 </body>
