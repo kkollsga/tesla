@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Backgammon - Tesla</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background: #0a0a0a;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 500;
+        }
+
+        .navbar-left, .navbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .navbar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .navbar-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .info-modal.active {
+            display: flex;
+        }
+
+        .info-panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff;
+        }
+
+        .modal-btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+
+
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Player Info Panels */
+        .player-panel {
+            width: 180px;
+            height: 90%;
+            max-height: 700px;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+            border: 1px solid #222;
+        }
+
+        .player-panel.player1 {
+            border-color: #C45C26;
+            box-shadow: 0 0 30px rgba(196, 92, 38, 0.15);
+        }
+
+        .player-panel.player2 {
+            border-color: #E8DCC4;
+            box-shadow: 0 0 30px rgba(232, 220, 196, 0.1);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .player-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .player1 .player-avatar {
+            background: linear-gradient(135deg, #C45C26 0%, #8B3A1D 100%);
+            box-shadow: 0 4px 15px rgba(196, 92, 38, 0.4);
+        }
+
+        .player2 .player-avatar {
+            background: linear-gradient(135deg, #E8DCC4 0%, #C4B896 100%);
+            box-shadow: 0 4px 15px rgba(232, 220, 196, 0.3);
+            color: #1a1a1a;
+        }
+
+        .player-starter-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FFD700;
+            color: #1a1a1a;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-panel.starter .player-starter-badge {
+            opacity: 1;
+        }
+
+        .player-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .player-label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .player-instruction {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            color: #ccc;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .player-panel.active .player-instruction {
+            opacity: 1;
+        }
+
+        .player1.active .player-instruction {
+            color: #E8A060;
+            background: rgba(196, 92, 38, 0.1);
+        }
+
+        .player2.active .player-instruction {
+            color: #E8DCC4;
+            background: rgba(232, 220, 196, 0.1);
+        }
+
+        .stats-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: #0d0d0d;
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .player1 .stat-value.highlight {
+            color: #C45C26;
+        }
+
+        .player2 .stat-value.highlight {
+            color: #E8DCC4;
+        }
+
+        .turn-indicator {
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .turn-indicator.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .player1 .turn-indicator {
+            background: linear-gradient(135deg, #C45C26 0%, #8B3A1D 100%);
+            color: #fff;
+        }
+
+        .player2 .turn-indicator {
+            background: linear-gradient(135deg, #E8DCC4 0%, #C4B896 100%);
+            color: #1a1a1a;
+        }
+
+        /* Bear-off tray */
+        .bearoff-tray {
+            margin-top: auto;
+            padding: 15px;
+            background: #0d0d0d;
+            border-radius: 10px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .bearoff-label {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .bearoff-pieces {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            min-height: 30px;
+        }
+
+        .bearoff-piece {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .player1 .bearoff-piece {
+            background: linear-gradient(135deg, #C45C26 0%, #8B3A1D 100%);
+        }
+
+        .player2 .bearoff-piece {
+            background: linear-gradient(135deg, #E8DCC4 0%, #C4B896 100%);
+        }
+
+        /* Game Board */
+        .board-container {
+            flex: 1;
+            max-width: 1100px;
+            height: 90%;
+            max-height: 700px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            touch-action: none;
+        }
+
+        /* Message overlay */
+        .message-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            border: 1px solid #333;
+        }
+
+        .message-overlay.visible {
+            opacity: 1;
+        }
+
+        /* Winner modal */
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .winner-modal.visible {
+            display: flex;
+        }
+
+        .winner-content {
+            text-align: center;
+            padding: 60px;
+        }
+
+        .winner-content h1 {
+            font-size: 48px;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .winner-content p {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 40px;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(135deg, #C45C26 0%, #8B3A1D 100%);
+            color: #fff;
+            border: none;
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .play-again-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(196, 92, 38, 0.4);
+        }
+
+        /* Info button */
+        
+
+        .info-button:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: #666;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Info overlay and modal */
+        
+
+        .info-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .info-panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #ddd;
+            position: relative;
+        }
+
+        .info-panel h2 {
+            color: #E8A060;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-panel h3 {
+            color: #E8A060;
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        .info-panel ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        .info-panel li {
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .info-panel strong {
+            color: #fff;
+        }
+
+        .info-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            color: #aaa;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-close-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            color: #888;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            border-color: #555;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <button class="navbar-btn" id="infoBtn" title="Game Info">ⓘ</button>
+        </div>
+        <div class="navbar-right">
+            <a href="../index.html" class="navbar-btn" title="Exit">✕</a>
+        </div>
+    </div>
+
+    <!-- Game Info Modal -->
+    <div class="info-modal" id="infoModal">
+        <div class="info-panel">
+            <div class="modal-title">Backgammon</div>
+            <div class="modal-text">
+                Race your pieces around the board, block opponents, and be first to bear off all pieces
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+    
+
+    <div class="game-container">
+        <!-- Player 1 Panel (Left - Orange/Brown pieces) -->
+        <div class="player-panel player1" id="player1Panel">
+            <div class="player-header">
+                <div class="player-avatar">
+                    🔶
+                    <div class="player-starter-badge">★</div>
+                </div>
+                <div class="player-header-info">
+                    <div class="player-name">Player 1</div>
+                    <div class="player-label">
+                        <span>Orange</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-label">Pip Count</div>
+                    <div class="stat-value highlight" id="p1-pip">167</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">On Bar</div>
+                    <div class="stat-value" id="p1-bar">0</div>
+                </div>
+                <div class="turn-indicator" id="p1-turn">Your Turn</div>
+                <div class="player-instruction" id="p1-instruction"></div>
+            </div>
+            <div class="bearoff-tray">
+                <div class="bearoff-label">Borne Off</div>
+                <div class="bearoff-pieces" id="p1-bearoff"></div>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="board-container">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div class="message-overlay" id="message"></div>
+        </div>
+
+        <!-- Player 2 Panel (Right - White/Cream pieces) -->
+        <div class="player-panel player2" id="player2Panel">
+            <div class="player-header">
+                <div class="player-avatar">
+                    ⬜
+                    <div class="player-starter-badge">★</div>
+                </div>
+                <div class="player-header-info">
+                    <div class="player-name">Player 2</div>
+                    <div class="player-label">
+                        <span>White</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-label">Pip Count</div>
+                    <div class="stat-value highlight" id="p2-pip">167</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">On Bar</div>
+                    <div class="stat-value" id="p2-bar">0</div>
+                </div>
+                <div class="turn-indicator" id="p2-turn">Your Turn</div>
+                <div class="player-instruction" id="p2-instruction"></div>
+            </div>
+            <div class="bearoff-tray">
+                <div class="bearoff-label">Borne Off</div>
+                <div class="bearoff-pieces" id="p2-bearoff"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Modal -->
+    <div class="winner-modal" id="winnerModal">
+        <div class="winner-content">
+            <h1>🏆 Victory!</h1>
+            <p id="winnerText">Player 1 Wins!</p>
+            <button class="play-again-btn" id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    
+
+    <script>
+        // ============================================
+        // GAME STATE
+        // ============================================
+        const PLAYER1 = 1;  // Orange - moves from point 24 to point 1 (counterclockwise from their perspective)
+        const PLAYER2 = 2;  // White - moves from point 1 to point 24 (counterclockwise from their perspective)
+        
+        let gameState = {
+            // Board: index 0-23 = points 1-24, index 24 = P1 bar, index 25 = P2 bar
+            // Positive = Player 1 pieces, Negative = Player 2 pieces
+            board: new Array(26).fill(0),
+            currentPlayer: PLAYER1,
+            dice: [0, 0],
+            diceUsed: [false, false],
+            doublesMovesUsed: 0,  // Tracks how many of the 4 doubles moves have been used
+            hasRolled: false,
+            selectedPoint: -1,
+            validMoves: [],
+            p1BorneOff: 0,
+            p2BorneOff: 0,
+            gameOver: false,
+            starterPlayer: PLAYER1  // Track which player starts each game
+        };
+
+        // ============================================
+        // CANVAS SETUP
+        // ============================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let boardDimensions = {
+            x: 0, y: 0, width: 0, height: 0,
+            pointWidth: 0, pointHeight: 0,
+            barWidth: 0, pieceRadius: 0
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = container.clientWidth * dpr;
+            canvas.height = container.clientHeight * dpr;
+            canvas.style.width = container.clientWidth + 'px';
+            canvas.style.height = container.clientHeight + 'px';
+            
+            ctx.scale(dpr, dpr);
+            
+            calculateBoardDimensions();
+            
+            // Reposition dice if not rolling
+            if (!dicePhysicsActive && !gameState.hasRolled) {
+                initDicePositions();
+            }
+            
+            render();
+        }
+
+        function calculateBoardDimensions() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+
+            const padding = Math.max(10, w * 0.015); // 1.5% of width, min 10px
+            const surfacePadding = Math.max(6, w * 0.008); // 0.8% of width, min 6px
+            const barWidth = Math.min(60, w * 0.05);
+            const pointNumberMargin = Math.max(12, w * 0.016); // 1.6% of width, min 12px
+            const availableWidth = w - padding * 2 - surfacePadding * 2;
+
+            boardDimensions = {
+                x: padding,
+                y: padding,
+                width: w - padding * 2,
+                height: h - padding * 2,
+                surfacePadding: surfacePadding,
+                barWidth: barWidth,
+                pointWidth: (availableWidth - barWidth) / 12,
+                pointHeight: (h - padding * 2) * 0.42,
+                pieceRadius: Math.min(22, (availableWidth - barWidth) / 12 * 0.4),
+                outlineMargin: padding,
+                pointNumberMarginVertical: pointNumberMargin
+            };
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        function initGame() {
+            // Reset board
+            gameState.board = new Array(26).fill(0);
+
+            // Standard backgammon starting position
+            // Player 1 (positive) moves 24->1, Player 2 (negative) moves 1->24
+            // Point indices are 0-23 (representing points 1-24)
+
+            // Player 1 setup (orange)
+            gameState.board[23] = 2;   // 2 on point 24
+            gameState.board[12] = 5;   // 5 on point 13
+            gameState.board[7] = 3;    // 3 on point 8
+            gameState.board[5] = 5;    // 5 on point 6
+
+            // Player 2 setup (white) - negative numbers
+            gameState.board[0] = -2;   // 2 on point 1
+            gameState.board[11] = -5;  // 5 on point 12
+            gameState.board[16] = -3;  // 3 on point 17
+            gameState.board[18] = -5;  // 5 on point 19
+
+            // Bar (index 24 = P1 bar, 25 = P2 bar)
+            gameState.board[24] = 0;
+            gameState.board[25] = 0;
+
+            // Random starting player
+            gameState.starterPlayer = Math.random() < 0.5 ? PLAYER1 : PLAYER2;
+            gameState.currentPlayer = gameState.starterPlayer;
+            gameState.dice = [0, 0];
+            gameState.diceUsed = [false, false];
+            gameState.doublesMovesUsed = 0;
+            gameState.hasRolled = false;
+            gameState.selectedPoint = -1;
+            gameState.validMoves = [];
+            gameState.p1BorneOff = 0;
+            gameState.p2BorneOff = 0;
+            gameState.gameOver = false;
+
+            updateUI();
+            initDicePositions();
+            render();
+        }
+
+        // ============================================
+        // BOARD RENDERING
+        // ============================================
+        function render() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            const bd = boardDimensions;
+            
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Draw board background
+            ctx.fillStyle = '#1a1512';
+            ctx.strokeStyle = '#3d3428';
+            ctx.lineWidth = 2;
+            // Extend outline to encompass point numbers
+            roundRect(ctx,
+                bd.x - bd.outlineMargin,
+                bd.y - bd.pointNumberMarginVertical,
+                bd.width + bd.outlineMargin * 2,
+                bd.height + bd.pointNumberMarginVertical * 2,
+                10);
+            
+            // Draw playing surface
+            const surfacePadding = bd.surfacePadding;
+            ctx.fillStyle = '#2d2820';
+            roundRect(ctx, bd.x + surfacePadding, bd.y + surfacePadding,
+                     bd.width - surfacePadding * 2, bd.height - surfacePadding * 2, 6);
+            
+            // Draw bar
+            const barX = bd.x + surfacePadding + (bd.width - surfacePadding * 2) / 2 - bd.barWidth / 2;
+            ctx.fillStyle = '#1a1512';
+            ctx.fillRect(barX, bd.y - bd.pointNumberMarginVertical, bd.barWidth, bd.height + bd.pointNumberMarginVertical * 2);
+            ctx.strokeStyle = '#3d3428';
+            ctx.strokeRect(barX, bd.y - bd.pointNumberMarginVertical, bd.barWidth, bd.height + bd.pointNumberMarginVertical * 2);
+            
+            // Draw points (triangles)
+            drawPoints();
+            
+            // Draw pieces
+            drawPieces();
+            
+            // Draw bar pieces
+            drawBarPieces();
+            
+            // Highlight valid moves while dragging
+            if (dragState.isDragging && dragState.validMoves.length > 0) {
+                drawValidMoveIndicators();
+            }
+            
+            // Always draw dice
+            drawDice();
+            
+            // Draw dragged piece on top
+            if (dragState.isDragging) {
+                drawDraggedPiece();
+            }
+        }
+
+        function drawValidMoveIndicators() {
+            const bd = boardDimensions;
+            
+            dragState.validMoves.forEach(move => {
+                if (move.to === 'off') {
+                    // Draw bear-off zone indicator
+                    const player = gameState.currentPlayer;
+                    ctx.fillStyle = 'rgba(0, 255, 100, 0.3)';
+                    ctx.strokeStyle = '#00FF64';
+                    ctx.lineWidth = 3;
+                    
+                    if (player === PLAYER1) {
+                        roundRect(ctx, bd.x - 5, bd.y + bd.height * 0.3, 40, bd.height * 0.4, 8);
+                    } else {
+                        roundRect(ctx, bd.x + bd.width - 35, bd.y + bd.height * 0.3, 40, bd.height * 0.4, 8);
+                    }
+                } else {
+                    const pos = getPointPosition(move.to);
+                    
+                    // Glow effect
+                    ctx.fillStyle = 'rgba(0, 255, 100, 0.25)';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, bd.pieceRadius + 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Ring
+                    ctx.strokeStyle = '#00FF64';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, bd.pieceRadius + 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Show which die this move uses
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(move.die.toString(), pos.x, pos.y);
+                }
+            });
+        }
+
+        function drawDraggedPiece() {
+            const player = dragState.player;
+            const r = boardDimensions.pieceRadius;
+            
+            ctx.save();
+            
+            // Slight scale up for "lifted" effect
+            ctx.translate(dragState.pieceX, dragState.pieceY);
+            ctx.scale(1.15, 1.15);
+            
+            // Shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 5;
+            ctx.shadowOffsetY = 5;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            
+            if (player === PLAYER1) {
+                const grad = ctx.createRadialGradient(-r/3, -r/3, 0, 0, 0, r);
+                grad.addColorStop(0, '#E07830');
+                grad.addColorStop(1, '#8B3A1D');
+                ctx.fillStyle = grad;
+            } else {
+                const grad = ctx.createRadialGradient(-r/3, -r/3, 0, 0, 0, r);
+                grad.addColorStop(0, '#FFFEF8');
+                grad.addColorStop(1, '#C4B896');
+                ctx.fillStyle = grad;
+            }
+            
+            ctx.fill();
+            
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = player === PLAYER1 ? '#5A2010' : '#8A8060';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function drawPoints() {
+            const bd = boardDimensions;
+            const sp = bd.surfacePadding;
+            const barX = bd.x + sp + (bd.width - sp * 2) / 2 - bd.barWidth / 2;
+
+            // Colors for alternating triangles
+            const darkTriangle = '#4a3f30';
+            const lightTriangle = '#8B5A2B';
+
+            // Top row: Points 13-24 (indices 12-23) - left to right: 13-18, bar, 19-24
+            // Bottom row: Points 12-1 (indices 11-0) - left to right: 12-7, bar, 6-1
+
+            for (let i = 0; i < 12; i++) {
+                const isLeft = i < 6;
+                const baseX = bd.x + sp + i * bd.pointWidth + (isLeft ? 0 : bd.barWidth);
+
+                // Top triangles (points up)
+                const topPointIndex = 12 + i; // 12-17 left, 18-23 right
+                const topColor = i % 2 === 0 ? darkTriangle : lightTriangle;
+                drawTriangle(baseX, bd.y + sp, bd.pointWidth, bd.pointHeight, true, topColor, topPointIndex);
+
+                // Bottom triangles (points down)
+                const bottomPointIndex = 11 - i; // 11-6 left, 5-0 right
+                const bottomColor = i % 2 === 0 ? lightTriangle : darkTriangle;
+                drawTriangle(baseX, bd.y + bd.height - sp, bd.pointWidth, bd.pointHeight, false, bottomColor, bottomPointIndex);
+            }
+        }
+
+        function drawTriangle(x, y, width, height, pointsUp, color, pointIndex) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            
+            if (pointsUp) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + width, y);
+                ctx.lineTo(x + width / 2, y + height);
+            } else {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + width, y);
+                ctx.lineTo(x + width / 2, y - height);
+            }
+            
+            ctx.closePath();
+            ctx.fill();
+            
+            // Draw point number
+            ctx.fillStyle = '#555';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            const numY = pointsUp ? y - 8 : y + 12;
+            ctx.fillText((pointIndex + 1).toString(), x + width / 2, numY);
+        }
+
+        function drawPieces() {
+            const bd = boardDimensions;
+            
+            for (let i = 0; i < 24; i++) {
+                let count = gameState.board[i];
+                if (count === 0) continue;
+                
+                // Hide one piece if dragging from this point
+                if (dragState.isDragging && dragState.fromPoint === i) {
+                    if (count > 0) count--;
+                    else count++;
+                    if (count === 0) continue;
+                }
+                
+                const player = count > 0 ? PLAYER1 : PLAYER2;
+                const pieceCount = Math.abs(count);
+                const pos = getPointPosition(i);
+                
+                const isTop = i >= 12;
+                const maxStack = 5;
+                const displayCount = Math.min(pieceCount, maxStack);
+                
+                for (let j = 0; j < displayCount; j++) {
+                    const stackOffset = j * bd.pieceRadius * 1.8;
+                    const y = isTop ? pos.y + stackOffset : pos.y - stackOffset;
+                    
+                    drawPiece(pos.x, y, player, false);
+                }
+                
+                // Show count if more than 5
+                if (pieceCount > maxStack) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const countY = isTop ? pos.y + (maxStack - 1) * bd.pieceRadius * 1.8 : pos.y - (maxStack - 1) * bd.pieceRadius * 1.8;
+                    ctx.fillText(pieceCount.toString(), pos.x, countY);
+                }
+            }
+        }
+
+        function drawPiece(x, y, player, isSelected = false) {
+            const bd = boardDimensions;
+            const r = bd.pieceRadius;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            
+            if (player === PLAYER1) {
+                // Orange piece
+                const grad = ctx.createRadialGradient(x - r/3, y - r/3, 0, x, y, r);
+                grad.addColorStop(0, '#E07830');
+                grad.addColorStop(1, '#8B3A1D');
+                ctx.fillStyle = grad;
+            } else {
+                // White piece
+                const grad = ctx.createRadialGradient(x - r/3, y - r/3, 0, x, y, r);
+                grad.addColorStop(0, '#FFFEF8');
+                grad.addColorStop(1, '#C4B896');
+                ctx.fillStyle = grad;
+            }
+            
+            ctx.fill();
+            
+            // Border
+            ctx.strokeStyle = player === PLAYER1 ? '#5A2010' : '#8A8060';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Selection highlight
+            if (isSelected) {
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+
+        function drawBarPieces() {
+            const bd = boardDimensions;
+            const barX = bd.x + bd.width / 2;
+            
+            // Player 1 bar pieces (top half of bar)
+            let p1BarCount = gameState.board[24];
+            if (dragState.isDragging && dragState.fromPoint === 24) {
+                p1BarCount--;
+            }
+            for (let i = 0; i < p1BarCount; i++) {
+                const y = bd.y + bd.height * 0.25 + i * bd.pieceRadius * 1.5;
+                drawPiece(barX, y, PLAYER1, false);
+            }
+            
+            // Player 2 bar pieces (bottom half of bar)
+            let p2BarCount = Math.abs(gameState.board[25]);
+            if (dragState.isDragging && dragState.fromPoint === 25) {
+                p2BarCount--;
+            }
+            for (let i = 0; i < p2BarCount; i++) {
+                const y = bd.y + bd.height * 0.75 - i * bd.pieceRadius * 1.5;
+                drawPiece(barX, y, PLAYER2, false);
+            }
+        }
+
+        function getPointPosition(pointIndex) {
+            const bd = boardDimensions;
+            const sp = bd.surfacePadding;
+            const barX = bd.x + sp + (bd.width - sp * 2) / 2 - bd.barWidth / 2;
+
+            let x, y;
+            const isTop = pointIndex >= 12;
+
+            if (isTop) {
+                // Points 13-24 (indices 12-23) along top
+                const i = pointIndex - 12;
+                const isLeft = i < 6;
+
+                x = bd.x + sp + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
+                y = bd.y + sp + bd.pieceRadius + 5;
+            } else {
+                // Points 1-12 (indices 0-11) along bottom
+                const i = 11 - pointIndex;
+                const isLeft = i < 6;
+
+                x = bd.x + sp + i * bd.pointWidth + bd.pointWidth / 2 + (isLeft ? 0 : bd.barWidth);
+                y = bd.y + bd.height - sp - bd.pieceRadius - 5;
+            }
+
+            return { x, y };
+        }
+
+        function highlightSelected() {
+            const bd = boardDimensions;
+            const idx = gameState.selectedPoint;
+            
+            if (idx >= 24) return; // Bar selection
+            
+            const pos = getPointPosition(idx);
+            
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, bd.pieceRadius + 5, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function highlightValidMoves() {
+            const bd = boardDimensions;
+            
+            gameState.validMoves.forEach(move => {
+                if (move.to === 'off') {
+                    // Highlight bear-off area
+                    return;
+                }
+                
+                const pos = getPointPosition(move.to);
+                
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, bd.pieceRadius + 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+        function getAvailableDice() {
+            const available = [];
+
+            if (gameState.dice[0] === gameState.dice[1]) {
+                // Doubles - can use up to 4 times
+                const remaining = 4 - gameState.doublesMovesUsed;
+                for (let i = 0; i < remaining; i++) {
+                    available.push(gameState.dice[0]);
+                }
+            } else {
+                if (!gameState.diceUsed[0]) available.push(gameState.dice[0]);
+                if (!gameState.diceUsed[1]) available.push(gameState.dice[1]);
+            }
+
+            return available;
+        }
+
+        function canMoveFrom(pointIndex) {
+            const player = gameState.currentPlayer;
+            const count = gameState.board[pointIndex];
+            
+            // Check if player has pieces on bar first
+            const barIndex = player === PLAYER1 ? 24 : 25;
+            const barCount = player === PLAYER1 ? gameState.board[24] : Math.abs(gameState.board[25]);
+            
+            if (barCount > 0 && pointIndex !== barIndex) {
+                return false; // Must move from bar first
+            }
+            
+            if (player === PLAYER1) {
+                return count > 0;
+            } else {
+                return count < 0;
+            }
+        }
+
+        function calculateValidMoves(fromPoint) {
+            const moves = [];
+            const player = gameState.currentPlayer;
+            const availableDice = getAvailableDice();
+            
+            // Remove duplicates for non-doubles
+            const uniqueDice = [...new Set(availableDice)];
+            
+            uniqueDice.forEach(die => {
+                const toPoint = calculateDestination(fromPoint, die, player);
+                
+                if (toPoint === 'off') {
+                    // Bearing off
+                    if (canBearOff(player)) {
+                        if (isValidBearOff(fromPoint, die, player)) {
+                            moves.push({ from: fromPoint, to: 'off', die: die });
+                        }
+                    }
+                } else if (toPoint >= 0 && toPoint < 24) {
+                    // Regular move
+                    if (isValidMove(fromPoint, toPoint, player)) {
+                        moves.push({ from: fromPoint, to: toPoint, die: die });
+                    }
+                }
+            });
+            
+            return moves;
+        }
+
+        function calculateDestination(fromPoint, die, player) {
+            let to;
+            
+            if (fromPoint === 24) {
+                // P1 entering from bar - enters on points 19-24 (indices 18-23)
+                to = 24 - die;
+            } else if (fromPoint === 25) {
+                // P2 entering from bar - enters on points 1-6 (indices 0-5)
+                to = die - 1;
+            } else if (player === PLAYER1) {
+                // P1 moves from high to low (24 -> 1)
+                to = fromPoint - die;
+                if (to < 0) return 'off';
+            } else {
+                // P2 moves from low to high (1 -> 24)
+                to = fromPoint + die;
+                if (to > 23) return 'off';
+            }
+            
+            return to;
+        }
+
+        function isValidMove(from, to, player) {
+            const destCount = gameState.board[to];
+            
+            if (player === PLAYER1) {
+                // Can move if: empty, own pieces, or only 1 opponent piece (hit)
+                return destCount >= -1;
+            } else {
+                return destCount <= 1;
+            }
+        }
+
+        function canBearOff(player) {
+            // All pieces must be in home board
+            if (player === PLAYER1) {
+                // Home board is points 1-6 (indices 0-5)
+                // Check bar
+                if (gameState.board[24] > 0) return false;
+                // Check outside home
+                for (let i = 6; i < 24; i++) {
+                    if (gameState.board[i] > 0) return false;
+                }
+                return true;
+            } else {
+                // Home board is points 19-24 (indices 18-23)
+                if (gameState.board[25] < 0) return false;
+                for (let i = 0; i < 18; i++) {
+                    if (gameState.board[i] < 0) return false;
+                }
+                return true;
+            }
+        }
+
+        function isValidBearOff(fromPoint, die, player) {
+            if (player === PLAYER1) {
+                // From point 1-6 (indices 0-5), need exact or higher with no pieces behind
+                const exactPoint = die - 1; // Die 1 = index 0, etc.
+                
+                if (fromPoint === exactPoint) return true;
+                
+                // Can bear off with higher die only if no pieces on higher points
+                if (fromPoint < exactPoint) {
+                    for (let i = fromPoint + 1; i <= 5; i++) {
+                        if (gameState.board[i] > 0) return false;
+                    }
+                    return true;
+                }
+                return false;
+            } else {
+                // P2 bears off from points 19-24 (indices 18-23)
+                const exactPoint = 24 - die; // Die 1 = index 23, etc.
+                
+                if (fromPoint === exactPoint) return true;
+                
+                if (fromPoint > exactPoint) {
+                    for (let i = fromPoint - 1; i >= 18; i--) {
+                        if (gameState.board[i] < 0) return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        function makeMove(move) {
+            const player = gameState.currentPlayer;
+            const from = move.from;
+            const to = move.to;
+            
+            // Remove piece from source
+            if (from === 24) {
+                gameState.board[24]--;
+            } else if (from === 25) {
+                gameState.board[25]++;
+            } else {
+                gameState.board[from] += player === PLAYER1 ? -1 : 1;
+            }
+            
+            if (to === 'off') {
+                // Bear off
+                if (player === PLAYER1) {
+                    gameState.p1BorneOff++;
+                } else {
+                    gameState.p2BorneOff++;
+                }
+            } else {
+                // Check for hit
+                const destCount = gameState.board[to];
+                if (player === PLAYER1 && destCount === -1) {
+                    // Hit P2's blot
+                    gameState.board[to] = 0;
+                    gameState.board[25]--;
+                    showMessage("Hit! Player 2's piece goes to bar");
+                } else if (player === PLAYER2 && destCount === 1) {
+                    // Hit P1's blot
+                    gameState.board[to] = 0;
+                    gameState.board[24]++;
+                    showMessage("Hit! Player 1's piece goes to bar");
+                }
+                
+                // Place piece
+                gameState.board[to] += player === PLAYER1 ? 1 : -1;
+            }
+            
+            // Mark die as used
+            useDie(move.die);
+            
+            // Clear selection
+            gameState.selectedPoint = -1;
+            gameState.validMoves = [];
+            
+            // Check for win
+            if (checkWin()) {
+                return;
+            }
+            
+            // Check if turn should end
+            if (getAvailableDice().length === 0 || !hasAnyValidMove()) {
+                endTurn();
+            }
+            
+            updateUI();
+            render();
+        }
+
+        function useDie(value) {
+            if (gameState.dice[0] === gameState.dice[1]) {
+                // Doubles - increment the moves used counter
+                gameState.doublesMovesUsed++;
+            } else {
+                if (gameState.dice[0] === value && !gameState.diceUsed[0]) {
+                    gameState.diceUsed[0] = true;
+                } else if (gameState.dice[1] === value && !gameState.diceUsed[1]) {
+                    gameState.diceUsed[1] = true;
+                }
+            }
+
+            updateDiceDisplay();
+        }
+
+        function hasAnyValidMove() {
+            const player = gameState.currentPlayer;
+            const barIndex = player === PLAYER1 ? 24 : 25;
+            const barCount = player === PLAYER1 ? gameState.board[24] : Math.abs(gameState.board[25]);
+            
+            if (barCount > 0) {
+                return calculateValidMoves(barIndex).length > 0;
+            }
+            
+            for (let i = 0; i < 24; i++) {
+                if (canMoveFrom(i) && calculateValidMoves(i).length > 0) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function endTurn() {
+            gameState.currentPlayer = gameState.currentPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
+            gameState.hasRolled = false;
+            gameState.dice = [0, 0];
+            gameState.diceUsed = [false, false];
+            gameState.doublesMovesUsed = 0;
+            gameState.selectedPoint = -1;
+            gameState.validMoves = [];
+
+            updateUI();
+            initDicePositions();
+            render();
+        }
+
+        function checkWin() {
+            if (gameState.p1BorneOff >= 15) {
+                showWinner(PLAYER1);
+                return true;
+            }
+            if (gameState.p2BorneOff >= 15) {
+                showWinner(PLAYER2);
+                return true;
+            }
+            return false;
+        }
+
+        // ============================================
+        // PHYSICS-BASED DICE SYSTEM - 2D WITH ROLL EFFECT
+        // ============================================
+        const DICE_SIZE = 54;
+        const DICE_RADIUS = 12;
+        const FRICTION = 0.96;  // Slightly more friction for realistic deceleration
+        const BOUNCE = 0.55;
+        const MIN_VELOCITY = 0.5;  // Lower threshold to detect settling
+        const SHAKE_THRESHOLD = 8;
+        
+        let dice = [
+            { x: 0, y: 0, vx: 0, vy: 0, 
+              tiltX: 0, tiltY: 0, rotation: 0,
+              value: 1, held: false, settled: false },
+            { x: 0, y: 0, vx: 0, vy: 0, 
+              tiltX: 0, tiltY: 0, rotation: 0,
+              value: 1, held: false, settled: false }
+        ];
+        
+        let dicePhysicsActive = false;
+        let heldDiceIndex = -1;
+        let pointerX = 0, pointerY = 0;
+        let lastPointerX = 0, lastPointerY = 0;
+        let velocityHistory = [];
+        let shakeIntensity = 0;
+        let animationId = null;
+        
+        // Dot patterns for each face value
+        const dotPatterns = {
+            1: [[0.5, 0.5]],
+            2: [[0.27, 0.27], [0.73, 0.73]],
+            3: [[0.27, 0.27], [0.5, 0.5], [0.73, 0.73]],
+            4: [[0.27, 0.27], [0.73, 0.27], [0.27, 0.73], [0.73, 0.73]],
+            5: [[0.27, 0.27], [0.73, 0.27], [0.5, 0.5], [0.27, 0.73], [0.73, 0.73]],
+            6: [[0.27, 0.27], [0.73, 0.27], [0.27, 0.5], [0.73, 0.5], [0.27, 0.73], [0.73, 0.73]]
+        };
+        
+        function initDicePositions() {
+            const bd = boardDimensions;
+            const centerX = bd.x + bd.width / 2;
+            const centerY = bd.y + bd.height / 2;
+            
+            dice[0].x = centerX - DICE_SIZE - 20;
+            dice[0].y = centerY;
+            dice[1].x = centerX + DICE_SIZE + 20;
+            dice[1].y = centerY;
+            
+            dice.forEach(d => {
+                d.vx = 0;
+                d.vy = 0;
+                d.tiltX = 0;
+                d.tiltY = 0;
+                d.rotation = 0;
+                d.settled = false;
+                d.value = Math.ceil(Math.random() * 6);
+            });
+        }
+        
+        function drawDice() {
+            // Determine which dice are used
+            const available = getAvailableDice();
+            const isUsed = [false, false];
+
+            if (gameState.hasRolled) {
+                if (gameState.dice[0] === gameState.dice[1]) {
+                    // For doubles, dim both dice if all 4 moves used
+                    isUsed[0] = gameState.doublesMovesUsed >= 4;
+                    isUsed[1] = gameState.doublesMovesUsed >= 4;
+                } else {
+                    isUsed[0] = !available.includes(gameState.dice[0]);
+                    isUsed[1] = !available.includes(gameState.dice[1]);
+                }
+            }
+            
+            dice.forEach((d, index) => {
+                ctx.save();
+                ctx.translate(d.x, d.y);
+                ctx.rotate(d.rotation);
+                
+                // Apply tilt based on velocity for rolling effect
+                const tiltX = d.tiltX * 0.12;
+                const tiltY = d.tiltY * 0.12;
+                ctx.transform(1, tiltY, tiltX, 1, 0, 0);
+                
+                // Apply opacity for used dice
+                if (isUsed[index]) {
+                    ctx.globalAlpha = 0.35;
+                }
+                
+                const s = DICE_SIZE;
+                const r = DICE_RADIUS;
+                
+                // Drop shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 4;
+                
+                // Main dice body
+                ctx.fillStyle = '#f8f6f0';
+                roundRectPath(ctx, -s/2, -s/2, s, s, r);
+                ctx.fill();
+                
+                // Reset shadow for details
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // Gradient overlay for 3D effect - rotates with tilt
+                const lightAngle = Math.atan2(d.tiltY, d.tiltX) + Math.PI/4;
+                const gradX = Math.cos(lightAngle) * s;
+                const gradY = Math.sin(lightAngle) * s;
+                const grad = ctx.createLinearGradient(-gradX/2, -gradY/2, gradX/2, gradY/2);
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+                grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.1)');
+                grad.addColorStop(0.65, 'rgba(0, 0, 0, 0.02)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
+                ctx.fillStyle = grad;
+                roundRectPath(ctx, -s/2, -s/2, s, s, r);
+                ctx.fill();
+                
+                // Edge highlights
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-s/2 + r, -s/2 + 1);
+                ctx.lineTo(s/2 - r, -s/2 + 1);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(-s/2 + 1, -s/2 + r);
+                ctx.lineTo(-s/2 + 1, s/2 - r);
+                ctx.stroke();
+                
+                // Edge shadows
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.beginPath();
+                ctx.moveTo(-s/2 + r, s/2 - 1);
+                ctx.lineTo(s/2 - r, s/2 - 1);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(s/2 - 1, -s/2 + r);
+                ctx.lineTo(s/2 - 1, s/2 - r);
+                ctx.stroke();
+                
+                // Outer border
+                ctx.strokeStyle = d.held ? '#FFD700' : 'rgba(0, 0, 0, 0.2)';
+                ctx.lineWidth = d.held ? 3 : 1;
+                roundRectPath(ctx, -s/2, -s/2, s, s, r);
+                ctx.stroke();
+                
+                // Draw dots with slight offset based on tilt
+                const dotOffsetX = tiltY * 2;
+                const dotOffsetY = tiltX * 2;
+                const pattern = dotPatterns[d.value];
+                const dotRadius = s * 0.09;
+                const padding = s * 0.15;
+                const innerSize = s - padding * 2;
+                
+                pattern.forEach(([px, py]) => {
+                    const dotX = -s/2 + padding + px * innerSize + dotOffsetX;
+                    const dotY = -s/2 + padding + py * innerSize + dotOffsetY;
+                    
+                    // Dot shadow (inset effect)
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(dotX + 1, dotY + 1, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Main dot
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Dot highlight
+                    ctx.fillStyle = 'rgba(70, 70, 70, 1)';
+                    ctx.beginPath();
+                    ctx.arc(dotX - dotRadius * 0.3, dotY - dotRadius * 0.3, dotRadius * 0.35, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                ctx.restore();
+            });
+        }
+        
+        function roundRectPath(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+        
+        function diceCollision() {
+            const d1 = dice[0];
+            const d2 = dice[1];
+            
+            if (d1.settled && d2.settled) return;
+            if (d1.held || d2.held) return;
+            
+            const dx = d2.x - d1.x;
+            const dy = d2.y - d1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const minDist = DICE_SIZE + 4;
+            
+            if (dist < minDist && dist > 0) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+                
+                const dvx = d1.vx - d2.vx;
+                const dvy = d1.vy - d2.vy;
+                const dvn = dvx * nx + dvy * ny;
+                
+                if (dvn > 0) {
+                    const restitution = 0.65;
+                    const impulse = dvn * restitution;
+                    
+                    d1.vx -= impulse * nx;
+                    d1.vy -= impulse * ny;
+                    d2.vx += impulse * nx;
+                    d2.vy += impulse * ny;
+                    
+                    // Randomize values on collision
+                    d1.value = Math.ceil(Math.random() * 6);
+                    d2.value = Math.ceil(Math.random() * 6);
+                }
+                
+                // Separate overlapping dice
+                const overlap = minDist - dist;
+                const separateX = (overlap / 2 + 1) * nx;
+                const separateY = (overlap / 2 + 1) * ny;
+                d1.x -= separateX;
+                d1.y -= separateY;
+                d2.x += separateX;
+                d2.y += separateY;
+            }
+        }
+        
+        function updateDicePhysics() {
+            if (!dicePhysicsActive) return;
+
+            const bd = boardDimensions;
+            let allSettled = true;
+
+            dice.forEach((d, index) => {
+                if (d.held) {
+                    // Follow pointer with slight lag for natural feel
+                    const offsetX = index === 0 ? -DICE_SIZE * 0.7 : DICE_SIZE * 0.7;
+                    d.x += (pointerX + offsetX - d.x) * 0.6;
+                    d.y += (pointerY - d.y) * 0.6;
+
+                    // Wobble based on movement
+                    d.rotation += shakeIntensity * 0.015 * (index === 0 ? 1 : -1);
+                    d.tiltX = shakeIntensity * 0.3 * Math.sin(Date.now() * 0.02);
+                    d.tiltY = shakeIntensity * 0.3 * Math.cos(Date.now() * 0.025);
+
+                    // Randomize value while shaking
+                    if (shakeIntensity > SHAKE_THRESHOLD) {
+                        d.value = Math.ceil(Math.random() * 6);
+                    }
+
+                    allSettled = false;
+                    return;
+                }
+
+                if (d.settled) return;
+
+                // Apply velocity
+                d.x += d.vx;
+                d.y += d.vy;
+
+                // Calculate speed
+                const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
+
+                // Rolling effect - tilt based on velocity direction
+                const targetTiltX = d.vy * 0.15;
+                const targetTiltY = -d.vx * 0.15;
+                d.tiltX += (targetTiltX - d.tiltX) * 0.3;
+                d.tiltY += (targetTiltY - d.tiltY) * 0.3;
+
+                // Rotation based on movement - more rotation for more realistic effect
+                const absVx = Math.abs(d.vx);
+                const absVy = Math.abs(d.vy);
+                d.rotation += (absVx + absVy) * 0.025;
+
+                // Change value while rolling - increased frequency
+                if (speed > 1.5) {
+                    // Probability increases with speed
+                    const changeChance = Math.min(0.4, speed * 0.08);
+                    if (Math.random() < changeChance) {
+                        d.value = Math.ceil(Math.random() * 6);
+                    }
+                }
+
+                // Apply friction
+                d.vx *= FRICTION;
+                d.vy *= FRICTION;
+                
+                // Wall bounces
+                const minX = bd.x + DICE_SIZE/2 + 10;
+                const maxX = bd.x + bd.width - DICE_SIZE/2 - 10;
+                const minY = bd.y + DICE_SIZE/2 + 10;
+                const maxY = bd.y + bd.height - DICE_SIZE/2 - 10;
+                
+                if (d.x < minX) {
+                    d.x = minX;
+                    d.vx = -d.vx * BOUNCE;
+                    d.value = Math.ceil(Math.random() * 6);
+                } else if (d.x > maxX) {
+                    d.x = maxX;
+                    d.vx = -d.vx * BOUNCE;
+                    d.value = Math.ceil(Math.random() * 6);
+                }
+                
+                if (d.y < minY) {
+                    d.y = minY;
+                    d.vy = -d.vy * BOUNCE;
+                    d.value = Math.ceil(Math.random() * 6);
+                } else if (d.y > maxY) {
+                    d.y = maxY;
+                    d.vy = -d.vy * BOUNCE;
+                    d.value = Math.ceil(Math.random() * 6);
+                }
+                
+                // Check if settled
+                if (speed < MIN_VELOCITY) {
+                    d.vx = 0;
+                    d.vy = 0;
+                    d.settled = true;
+                    // Smooth out tilt
+                    d.tiltX = 0;
+                    d.tiltY = 0;
+                    d.rotation = Math.round(d.rotation / (Math.PI/2)) * (Math.PI/2);
+                } else {
+                    allSettled = false;
+                }
+            });
+            
+            // Check dice-to-dice collision
+            diceCollision();
+            
+            // When both dice settle, finalize the roll
+            if (allSettled && dice[0].settled && dice[1].settled) {
+                dicePhysicsActive = false;
+                animateDiceToTop();
+            }
+        }
+        
+        function animateDiceToTop() {
+            const bd = boardDimensions;
+            // Position dice at top of board, inside the canvas
+            const targetY = bd.y + DICE_SIZE/2 + 25;
+            const target1X = bd.x + bd.width/2 - DICE_SIZE - 15;
+            const target2X = bd.x + bd.width/2 + 15;
+            
+            let frame = 0;
+            const totalFrames = 20;
+            
+            const start1X = dice[0].x, start1Y = dice[0].y;
+            const start2X = dice[1].x, start2Y = dice[1].y;
+            const startRot1 = dice[0].rotation, startRot2 = dice[1].rotation;
+            
+            function animate() {
+                frame++;
+                const t = frame / totalFrames;
+                const ease = 1 - Math.pow(1 - t, 3); // Ease out cubic
+                
+                dice[0].x = start1X + (target1X - start1X) * ease;
+                dice[0].y = start1Y + (targetY - start1Y) * ease;
+                dice[0].rotation = startRot1 * (1 - ease);
+                
+                dice[1].x = start2X + (target2X - start2X) * ease;
+                dice[1].y = start2Y + (targetY - start2Y) * ease;
+                dice[1].rotation = startRot2 * (1 - ease);
+                
+                render();
+                
+                if (frame < totalFrames) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Ensure dice are flat at end
+                    dice[0].rotation = 0;
+                    dice[0].tiltX = 0;
+                    dice[0].tiltY = 0;
+                    dice[1].rotation = 0;
+                    dice[1].tiltX = 0;
+                    dice[1].tiltY = 0;
+                    finalizeDiceRoll();
+                }
+            }
+            
+            animate();
+        }
+        
+        function finalizeDiceRoll() {
+            gameState.dice[0] = dice[0].value;
+            gameState.dice[1] = dice[1].value;
+            gameState.hasRolled = true;
+            gameState.diceUsed = [false, false];
+            gameState.doublesMovesUsed = 0;
+
+            // Check for doubles
+            if (gameState.dice[0] === gameState.dice[1]) {
+                showMessage("Doubles! You get 4 moves");
+            }
+
+            // Check if any moves available
+            if (!hasAnyValidMove()) {
+                showMessage("No valid moves - turn passes");
+                setTimeout(endTurn, 1500);
+            }
+
+            updateDiceDisplay();
+            updatePlayerStatus();
+            render();
+        }
+        
+        function diceAnimationLoop() {
+            updateDicePhysics();
+            render();
+            
+            if (dicePhysicsActive || heldDiceIndex >= 0) {
+                animationId = requestAnimationFrame(diceAnimationLoop);
+            }
+        }
+        
+        function startDiceAnimation() {
+            if (animationId) cancelAnimationFrame(animationId);
+            diceAnimationLoop();
+        }
+        
+        // Pointer event handlers
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+        
+        function getDiceAtPoint(x, y) {
+            for (let i = dice.length - 1; i >= 0; i--) {
+                const d = dice[i];
+                const dx = x - d.x;
+                const dy = y - d.y;
+                if (Math.abs(dx) < DICE_SIZE/2 + 10 && Math.abs(dy) < DICE_SIZE/2 + 10) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        
+        function updateDiceDisplay() {
+            // Dice values shown by the dice themselves above the board
+            // Update visual appearance of used dice
+            const available = getAvailableDice();
+            // Dim used dice in the render function based on gameState
+        }
+
+        // ============================================
+        // BOARD INTERACTION - DRAG AND DROP
+        // ============================================
+        let dragState = {
+            isDragging: false,
+            fromPoint: -1,
+            pieceX: 0,
+            pieceY: 0,
+            validMoves: [],
+            player: null
+        };
+
+        function setupBoardInteraction() {
+            // Combined with dice interaction - use same event flow
+            canvas.addEventListener('mousedown', handleCanvasDown);
+            canvas.addEventListener('mousemove', handleCanvasMove);
+            canvas.addEventListener('mouseup', handleCanvasUp);
+            canvas.addEventListener('mouseleave', handleCanvasUp);
+            
+            canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
+            canvas.addEventListener('touchcancel', handleCanvasTouchEnd, { passive: false });
+        }
+
+        function handleCanvasTouchStart(e) {
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            handleInteractionStart(coords.x, coords.y, e);
+        }
+
+        function handleCanvasTouchMove(e) {
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            handleInteractionMove(coords.x, coords.y, e);
+        }
+
+        function handleCanvasTouchEnd(e) {
+            e.preventDefault();
+            const coords = e.changedTouches ? getCanvasCoords({ touches: e.changedTouches }) : { x: dragState.pieceX, y: dragState.pieceY };
+            handleInteractionEnd(coords.x, coords.y, e);
+        }
+
+        function handleCanvasDown(e) {
+            const coords = getCanvasCoords(e);
+            handleInteractionStart(coords.x, coords.y, e);
+        }
+
+        function handleCanvasMove(e) {
+            const coords = getCanvasCoords(e);
+            handleInteractionMove(coords.x, coords.y, e);
+        }
+
+        function handleCanvasUp(e) {
+            const coords = getCanvasCoords(e);
+            handleInteractionEnd(coords.x, coords.y, e);
+        }
+
+        function handleInteractionStart(x, y, e) {
+            // First check for dice interaction
+            if (!gameState.hasRolled) {
+                const diceIndex = getDiceAtPoint(x, y);
+                if (diceIndex >= 0) {
+                    heldDiceIndex = diceIndex;
+                    dice[0].held = true;
+                    dice[1].held = true;
+                    dice[0].settled = false;
+                    dice[1].settled = false;
+                    
+                    pointerX = x;
+                    pointerY = y;
+                    lastPointerX = x;
+                    lastPointerY = y;
+                    velocityHistory = [];
+                    shakeIntensity = 0;
+                    
+                    dicePhysicsActive = true;
+                    startDiceAnimation();
+                    return;
+                }
+                return; // Can't move pieces until rolled
+            }
+            
+            // Check for piece drag
+            const clickedPoint = getPieceAtPoint(x, y);
+            if (clickedPoint >= 0 && canMoveFrom(clickedPoint)) {
+                dragState.isDragging = true;
+                dragState.fromPoint = clickedPoint;
+                dragState.pieceX = x;
+                dragState.pieceY = y;
+                dragState.player = gameState.currentPlayer;
+                dragState.validMoves = calculateValidMoves(clickedPoint);
+                
+                if (dragState.validMoves.length === 0) {
+                    showMessage("No valid moves from here");
+                    dragState.isDragging = false;
+                    dragState.fromPoint = -1;
+                    return;
+                }
+                
+                gameState.selectedPoint = clickedPoint;
+                updatePlayerStatus();
+                render();
+            }
+        }
+
+        function handleInteractionMove(x, y, e) {
+            // Dice dragging
+            if (heldDiceIndex >= 0) {
+                lastPointerX = pointerX;
+                lastPointerY = pointerY;
+                pointerX = x;
+                pointerY = y;
+                
+                const dx = pointerX - lastPointerX;
+                const dy = pointerY - lastPointerY;
+                const speed = Math.sqrt(dx * dx + dy * dy);
+                
+                velocityHistory.push({ dx, dy, time: Date.now() });
+                if (velocityHistory.length > 5) velocityHistory.shift();
+                
+                shakeIntensity = shakeIntensity * 0.7 + speed * 0.3;
+                return;
+            }
+            
+            // Piece dragging
+            if (dragState.isDragging) {
+                dragState.pieceX = x;
+                dragState.pieceY = y;
+                render();
+            }
+        }
+
+        function handleInteractionEnd(x, y, e) {
+            // Dice release
+            if (heldDiceIndex >= 0) {
+                let avgVx = 0, avgVy = 0;
+                if (velocityHistory.length > 0) {
+                    velocityHistory.forEach(v => {
+                        avgVx += v.dx;
+                        avgVy += v.dy;
+                    });
+                    avgVx /= velocityHistory.length;
+                    avgVy /= velocityHistory.length;
+                }
+
+                const velocityMultiplier = 2.5;  // Increased for more realistic rolling
+
+                dice.forEach((d, index) => {
+                    d.held = false;
+
+                    // Apply velocity with some randomness
+                    d.vx = avgVx * velocityMultiplier + (Math.random() - 0.5) * 3;
+                    d.vy = avgVy * velocityMultiplier + (Math.random() - 0.5) * 3;
+
+                    // Initial tilt based on throw direction
+                    d.tiltX = avgVy * 0.25;
+                    d.tiltY = -avgVx * 0.25;
+
+                    // Minimum velocity to ensure dice roll (prevents cheating)
+                    const minSpeed = 10;  // Increased minimum speed
+                    const currentSpeed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
+                    if (currentSpeed < minSpeed) {
+                        const angle = Math.random() * Math.PI * 2;
+                        d.vx = Math.cos(angle) * minSpeed;
+                        d.vy = Math.sin(angle) * minSpeed;
+                    }
+
+                    // Random initial face
+                    d.value = Math.ceil(Math.random() * 6);
+                });
+
+                heldDiceIndex = -1;
+                velocityHistory = [];
+                shakeIntensity = 0;
+                return;
+            }
+            
+            // Piece drop
+            if (dragState.isDragging) {
+                const dropPoint = getDropTarget(x, y);
+                
+                // Check if dropped on a valid destination
+                const move = dragState.validMoves.find(m => m.to === dropPoint);
+                if (move) {
+                    makeMove(move);
+                } else {
+                    // Invalid drop - cancel
+                    gameState.selectedPoint = -1;
+                    updatePlayerStatus();
+                }
+                
+                dragState.isDragging = false;
+                dragState.fromPoint = -1;
+                dragState.validMoves = [];
+                render();
+            }
+        }
+
+        function getPieceAtPoint(x, y) {
+            const bd = boardDimensions;
+            const barX = bd.x + bd.width / 2 - bd.barWidth / 2;
+            const player = gameState.currentPlayer;
+            
+            // Check bar first
+            if (x >= barX && x <= barX + bd.barWidth) {
+                if (player === PLAYER1 && gameState.board[24] > 0) {
+                    return 24;
+                }
+                if (player === PLAYER2 && gameState.board[25] < 0) {
+                    return 25;
+                }
+            }
+            
+            // Check points - only return points with current player's pieces
+            for (let i = 0; i < 24; i++) {
+                const count = gameState.board[i];
+                if ((player === PLAYER1 && count <= 0) || (player === PLAYER2 && count >= 0)) {
+                    continue;
+                }
+                
+                const pos = getPointPosition(i);
+                const isTop = i >= 12;
+                const absCount = Math.abs(count);
+                const stackHeight = Math.min(absCount, 5) * bd.pieceRadius * 1.8;
+                
+                let minY, maxY;
+                if (isTop) {
+                    minY = pos.y - bd.pieceRadius;
+                    maxY = pos.y + stackHeight + bd.pieceRadius;
+                } else {
+                    minY = pos.y - stackHeight - bd.pieceRadius;
+                    maxY = pos.y + bd.pieceRadius;
+                }
+                
+                if (x >= pos.x - bd.pointWidth / 2 && x <= pos.x + bd.pointWidth / 2 &&
+                    y >= minY && y <= maxY) {
+                    return i;
+                }
+            }
+            
+            return -1;
+        }
+
+        function getDropTarget(x, y) {
+            const bd = boardDimensions;
+            const player = gameState.currentPlayer;
+            
+            // Check for bear-off drop zones
+            if (canBearOff(player)) {
+                if (player === PLAYER1 && x < bd.x + 50) {
+                    return 'off';
+                }
+                if (player === PLAYER2 && x > bd.x + bd.width - 50) {
+                    return 'off';
+                }
+            }
+            
+            // Find closest point
+            let closestPoint = -1;
+            let closestDist = Infinity;
+            
+            for (let i = 0; i < 24; i++) {
+                const pos = getPointPosition(i);
+                const dx = x - pos.x;
+                const dy = y - pos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < closestDist && dist < bd.pointWidth) {
+                    closestDist = dist;
+                    closestPoint = i;
+                }
+            }
+            
+            return closestPoint;
+        }
+
+        function getClickedPoint(x, y) {
+            // Keep for compatibility but simplified
+            return getPieceAtPoint(x, y);
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateUI() {
+            // Pip counts
+            document.getElementById('p1-pip').textContent = calculatePipCount(PLAYER1);
+            document.getElementById('p2-pip').textContent = calculatePipCount(PLAYER2);
+
+            // Bar counts
+            document.getElementById('p1-bar').textContent = gameState.board[24];
+            document.getElementById('p2-bar').textContent = Math.abs(gameState.board[25]);
+
+            // Turn indicators
+            const p1Turn = document.getElementById('p1-turn');
+            const p2Turn = document.getElementById('p2-turn');
+
+            p1Turn.classList.toggle('active', gameState.currentPlayer === PLAYER1);
+            p2Turn.classList.toggle('active', gameState.currentPlayer === PLAYER2);
+
+            // Active panel styling
+            const p1Panel = document.getElementById('player1Panel');
+            const p2Panel = document.getElementById('player2Panel');
+
+            p1Panel.classList.toggle('active', gameState.currentPlayer === PLAYER1);
+            p2Panel.classList.toggle('active', gameState.currentPlayer === PLAYER2);
+
+            // Starter badges
+            p1Panel.classList.toggle('starter', gameState.starterPlayer === PLAYER1);
+            p2Panel.classList.toggle('starter', gameState.starterPlayer === PLAYER2);
+
+            // Update status messages
+            updatePlayerStatus();
+
+            // Borne off pieces
+            updateBearoffDisplay();
+        }
+
+        function updatePlayerStatus() {
+            const p1Instruction = document.getElementById('p1-instruction');
+            const p2Instruction = document.getElementById('p2-instruction');
+
+            if (gameState.currentPlayer === PLAYER1) {
+                // Player 1's turn
+                if (!gameState.hasRolled) {
+                    p1Instruction.textContent = '🎲 Grab dice and throw!';
+                } else if (dragState.isDragging) {
+                    p1Instruction.textContent = '🎯 Drop on highlighted spot';
+                } else {
+                    const barCount = gameState.board[24];
+                    if (barCount > 0) {
+                        p1Instruction.textContent = '⚠️ Drag from bar to enter';
+                    } else if (canBearOff(PLAYER1)) {
+                        p1Instruction.textContent = '🏠 Drag to bear off';
+                    } else {
+                        p1Instruction.textContent = '✋ Drag a piece to move';
+                    }
+                }
+            } else {
+                // Player 2's turn
+                if (!gameState.hasRolled) {
+                    p2Instruction.textContent = '🎲 Grab dice and throw!';
+                } else if (dragState.isDragging) {
+                    p2Instruction.textContent = '🎯 Drop on highlighted spot';
+                } else {
+                    const barCount = Math.abs(gameState.board[25]);
+                    if (barCount > 0) {
+                        p2Instruction.textContent = '⚠️ Drag from bar to enter';
+                    } else if (canBearOff(PLAYER2)) {
+                        p2Instruction.textContent = '🏠 Drag to bear off';
+                    } else {
+                        p2Instruction.textContent = '✋ Drag a piece to move';
+                    }
+                }
+            }
+        }
+
+        function calculatePipCount(player) {
+            let count = 0;
+            
+            if (player === PLAYER1) {
+                // P1: distance to point 0 (off board)
+                for (let i = 0; i < 24; i++) {
+                    if (gameState.board[i] > 0) {
+                        count += gameState.board[i] * (i + 1);
+                    }
+                }
+                count += gameState.board[24] * 25; // Bar pieces
+            } else {
+                // P2: distance to point 24 (off board)
+                for (let i = 0; i < 24; i++) {
+                    if (gameState.board[i] < 0) {
+                        count += Math.abs(gameState.board[i]) * (24 - i);
+                    }
+                }
+                count += Math.abs(gameState.board[25]) * 25;
+            }
+            
+            return count;
+        }
+
+        function updateBearoffDisplay() {
+            const p1Bearoff = document.getElementById('p1-bearoff');
+            const p2Bearoff = document.getElementById('p2-bearoff');
+            
+            p1Bearoff.innerHTML = '';
+            p2Bearoff.innerHTML = '';
+            
+            for (let i = 0; i < gameState.p1BorneOff; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'bearoff-piece';
+                p1Bearoff.appendChild(piece);
+            }
+            
+            for (let i = 0; i < gameState.p2BorneOff; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'bearoff-piece';
+                p2Bearoff.appendChild(piece);
+            }
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.classList.add('visible');
+            
+            setTimeout(() => {
+                msg.classList.remove('visible');
+            }, 2000);
+        }
+
+        function showWinner(player) {
+            gameState.gameOver = true;
+            const modal = document.getElementById('winnerModal');
+            const text = document.getElementById('winnerText');
+            
+            text.textContent = player === PLAYER1 ? 'Player 1 (Orange) Wins!' : 'Player 2 (White) Wins!';
+            modal.classList.add('visible');
+        }
+
+        // ============================================
+        // INFO MODAL HANDLER
+        // ============================================
+        const infoButton = document.getElementById('infoBtn');
+        const infoModal = document.getElementById('infoModal');
+        const infoCloseBtn = document.getElementById('closeInfoBtn');
+
+        if (infoButton) {
+            infoButton.addEventListener('click', () => {
+                infoModal.classList.add('active');
+            });
+        }
+
+        if (infoCloseBtn) {
+            infoCloseBtn.addEventListener('click', () => {
+                infoModal.classList.remove('active');
+            });
+        }
+
+        if (infoModal) {
+            infoModal.addEventListener('click', (e) => {
+                if (e.target === infoModal) {
+                    infoModal.classList.remove('active');
+                }
+            });
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            initGame();
+            setupBoardInteraction();
+        });
+
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            document.getElementById('winnerModal').classList.remove('visible');
+            initGame();
+        });
+    </script>
+</body>
+</html>

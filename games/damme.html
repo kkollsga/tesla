@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damme - Tesla Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 500;
+        }
+
+        .navbar-left, .navbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .navbar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .navbar-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .game-board {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .game-container {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            position: relative;
+        }
+
+        .player-info {
+            background: rgba(26, 26, 26, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            color: white;
+            min-width: 150px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-info.active {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .player-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-color {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .player-status {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            color: #FFD700;
+            min-height: 20px;
+        }
+
+        .piece-count {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(8, 100px);
+            grid-template-rows: repeat(8, 100px);
+            gap: 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow:
+                inset 0 4px 12px rgba(0,0,0,0.5),
+                0 8px 24px rgba(0,0,0,0.3);
+            transform: rotate(90deg);
+        }
+
+        .grid-cell {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .grid-cell.light {
+            background: linear-gradient(135deg, #F5F5F5 0%, #E5E5E5 100%);
+            box-shadow:
+                inset 0 1px 3px rgba(255,255,255,0.3),
+                0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .grid-cell.dark {
+            background: linear-gradient(135deg, #2D2D2D 0%, #1D1D1D 100%);
+            box-shadow:
+                inset 0 1px 3px rgba(0,0,0,0.4),
+                0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .grid-cell:hover {
+            transform: translateY(-1px);
+        }
+
+        .grid-cell.valid-move {
+            box-shadow:
+                0 0 0 3px #10b981,
+                0 0 20px rgba(16, 185, 129, 0.6);
+            z-index: 10;
+        }
+
+        .grid-cell.valid-jump {
+            box-shadow:
+                0 0 0 3px #f59e0b,
+                0 0 20px rgba(245, 158, 11, 0.6);
+            z-index: 10;
+        }
+
+        .grid-cell.selected {
+            box-shadow:
+                0 0 0 3px #3b82f6,
+                0 0 20px rgba(59, 130, 246, 0.6);
+            z-index: 10;
+        }
+
+        .piece {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            z-index: 100;
+            transition: all 0.2s ease;
+            user-select: none;
+            box-shadow:
+                0 6px 16px rgba(0,0,0,0.6),
+                0 2px 4px rgba(0,0,0,0.4),
+                inset -3px -3px 8px rgba(0,0,0,0.3),
+                inset 3px 3px 8px rgba(255,255,255,0.3);
+        }
+
+        .piece.red {
+            background: radial-gradient(circle at 35% 35%, #EF4444, #B91C1C);
+            border: 3px solid #7F1D1D;
+        }
+
+        .piece.white {
+            background: radial-gradient(circle at 35% 35%, #FFFFFF, #D1D5DB);
+            border: 3px solid #9CA3AF;
+        }
+
+        .piece.king::after {
+            content: '♔';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            font-size: 40px;
+            color: #FFD700;
+            text-shadow:
+                0 -1px 1px rgba(255, 255, 200, 0.8),
+                0 1px 2px rgba(0,0,0,0.6),
+                0 2px 4px rgba(0,0,0,0.5),
+                0 3px 6px rgba(0,0,0,0.4),
+                0 0 8px rgba(255, 215, 0, 0.6);
+            pointer-events: none;
+        }
+
+        .piece:hover {
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+
+        .piece:active {
+            cursor: grabbing;
+        }
+
+        /* Counter-rotate crown when grid is rotated 270deg (Player 1 is red) */
+        .game-board.flipped .piece.king::after {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        .piece.dragging {
+            position: fixed !important;
+            z-index: 1000 !important;
+            cursor: grabbing;
+            opacity: 0.9;
+            pointer-events: none;
+            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.8));
+        }
+
+        /* Remove counter-rotation when dragging (piece is outside rotated grid) */
+        .piece.dragging.king::after {
+            transform: translate(-50%, -50%) !important;
+        }
+
+        .piece-ghost {
+            opacity: 0.3;
+        }
+
+        .piece.inactive {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .game-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 200;
+        }
+
+        .game-button {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
+            background-size: 200% 200%;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .game-button:hover {
+            background: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
+        }
+
+        .game-button:active {
+            transform: translateY(1px);
+        }
+
+        .info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .info-modal.active {
+            display: flex;
+        }
+
+        .info-panel {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .info-panel h2 {
+            color: #DC2626;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .info-panel h3 {
+            color: #EF4444;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        .info-panel ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-panel li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
+        .victory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        .victory-text {
+            font-size: 80px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                4px 4px 8px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: victory-glow 2s ease-in-out infinite alternate;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+
+        .victory-subtext {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            text-shadow:
+                0 0 10px rgba(255, 255, 255, 0.8),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fade-in-up 1s ease-out 0.5s forwards;
+        }
+
+        .victory-hint {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0;
+            animation: fade-in-up 1s ease-out 1.5s forwards;
+        }
+
+        @keyframes victory-glow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            to {
+                text-shadow:
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 60px rgba(255, 215, 0, 0.8),
+                    0 0 90px rgba(255, 215, 0, 0.6),
+                    4px 4px 12px rgba(0, 0, 0, 0.9);
+            }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <button class="navbar-btn" id="infoBtn" title="Game Info">ⓘ</button>
+        </div>
+        <div class="navbar-right">
+            <a href="../index.html" class="navbar-btn" title="Exit">✕</a>
+        </div>
+    </div>
+
+    <!-- Game Info Modal -->
+    <div class="info-modal" id="infoModal">
+        <div class="info-panel">
+            <h2>How to Play Damme (Checkers)</h2>
+
+            <h3>Objective</h3>
+            <p>Capture all of your opponent's pieces or block them so they cannot move!</p>
+
+            <h3>Game Setup</h3>
+            <p>Each player starts with 12 pieces on an 8x8 board. Players are randomly assigned red or white pieces.</p>
+            <ul>
+                <li>Red pieces start on the top three rows</li>
+                <li>White pieces start on the bottom three rows</li>
+                <li>Pieces are placed only on dark squares</li>
+            </ul>
+
+            <h3>How to Play</h3>
+            <p><strong>Moving:</strong></p>
+            <ul>
+                <li>Regular pieces can only move diagonally forward one square</li>
+                <li>Drag your piece to a highlighted adjacent square to move</li>
+            </ul>
+
+            <p><strong>Capturing:</strong></p>
+            <ul>
+                <li>If an opponent's piece is diagonally adjacent and the square beyond it is empty, you must jump over it to capture</li>
+                <li>Captured pieces are removed from the board</li>
+                <li>If you can capture, you must capture (forced jump rule)</li>
+                <li>You can make multiple jumps in one turn if available</li>
+            </ul>
+
+            <p><strong>Kings:</strong></p>
+            <ul>
+                <li>When a piece reaches the opposite end of the board, it becomes a king (shown with a crown)</li>
+                <li>Kings can move and capture diagonally in both forward and backward directions</li>
+            </ul>
+
+            <h3>Winning</h3>
+            <p>You win when:</p>
+            <ul>
+                <li>You capture all of your opponent's pieces</li>
+                <li>Your opponent has no legal moves available</li>
+            </ul>
+
+            <h3>Strategy Tips</h3>
+            <ul>
+                <li>Try to get your pieces to the opposite end to become kings</li>
+                <li>Control the center of the board</li>
+                <li>Look for double jumps to capture multiple pieces</li>
+                <li>Protect your back row to prevent opponent kings</li>
+            </ul>
+
+            <p style="margin-top: 30px; text-align: center; color: #888;">Click anywhere outside this panel to close</p>
+        </div>
+    </div>
+
+    <div class="game-board">
+        <div class="game-container">
+            <div class="game-controls">
+                <button class="game-button" id="new-game">New Game</button>
+            </div>
+
+            <div class="player-info" id="player-1-info">
+                <div class="player-name">Player 1</div>
+                <div class="player-color" id="player-1-color"></div>
+                <div class="piece-count" id="player-1-count">12 pieces</div>
+                <div class="player-status" id="player-1-status"></div>
+            </div>
+
+            <div class="grid-container" id="grid-container"></div>
+
+            <div class="player-info" id="player-2-info">
+                <div class="player-name">Player 2</div>
+                <div class="player-color" id="player-2-color"></div>
+                <div class="piece-count" id="player-2-count">12 pieces</div>
+                <div class="player-status" id="player-2-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Overlay -->
+    <div class="victory-overlay" id="victory-overlay">
+        <div class="victory-text" id="victory-text">Victory!</div>
+        <div class="victory-subtext" id="victory-subtext">Player 1 Wins!</div>
+        <div class="victory-hint">Click anywhere to play again</div>
+    </div>
+
+    <script>
+        // Info button event listener
+        document.getElementById('infoBtn').addEventListener('click', () => {
+            document.getElementById('infoModal').classList.add('active');
+        });
+        document.getElementById('infoModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('infoModal')) {
+                document.getElementById('infoModal').classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../damme-logic.js"></script>
+</body>
+</html>

@@ -172,7 +172,7 @@
 
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -249,6 +249,15 @@
         .game-option.backgammon-option:hover {
             border-color: #C45C26;
             box-shadow: 0 0 30px rgba(196, 92, 38, 0.6);
+        }
+
+        .game-option.sudoku-option {
+            border-color: #8b5cf6;
+        }
+
+        .game-option.sudoku-option:hover {
+            border-color: #a78bfa;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
         }
 
         .game-icon {
@@ -398,12 +407,12 @@
             <button class="close-modal" id="close-modal">&times;</button>
             <div class="modal-header">Select a Game</div>
             <div class="game-grid">
-                <a href="https://kkollsga.github.io/tesla/solitaire.html" class="game-option solitaire-option" data-url="https://kkollsga.github.io/tesla/solitaire.html" data-game="solitaire">
+                <a href="games/solitaire.html" class="game-option solitaire-option" data-url="games/solitaire.html" data-game="solitaire">
                     <span class="favorite-indicator" data-game="solitaire">★</span>
                     <img src="icons/solitaire.svg" class="game-icon" alt="Solitaire">
                     <div class="game-name">Solitaire</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/isola.html" class="game-option isola-option" data-url="https://kkollsga.github.io/tesla/isola.html" data-game="isola">
+                <a href="games/isola.html" class="game-option isola-option" data-url="games/isola.html" data-game="isola">
                     <span class="favorite-indicator" data-game="isola">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- Game board grid -->
@@ -424,7 +433,7 @@
                     </svg>
                     <div class="game-name">Isola</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/santorini.html" class="game-option santorini-option" data-url="https://kkollsga.github.io/tesla/santorini.html" data-game="santorini">
+                <a href="games/santorini.html" class="game-option santorini-option" data-url="games/santorini.html" data-game="santorini">
                     <span class="favorite-indicator" data-game="santorini">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- 5x5 Grid -->
@@ -451,7 +460,7 @@
                     </svg>
                     <div class="game-name">Santorini</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/chess.html" class="game-option chess-option" data-url="https://kkollsga.github.io/tesla/chess.html" data-game="chess">
+                <a href="games/chess.html" class="game-option chess-option" data-url="games/chess.html" data-game="chess">
                     <span class="favorite-indicator" data-game="chess">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- Chess board -->
@@ -481,7 +490,7 @@
                     </svg>
                     <div class="game-name">Chess</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/damme.html" class="game-option damme-option" data-url="https://kkollsga.github.io/tesla/damme.html" data-game="damme">
+                <a href="games/damme.html" class="game-option damme-option" data-url="games/damme.html" data-game="damme">
                     <span class="favorite-indicator" data-game="damme">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- Checkers board -->
@@ -509,7 +518,7 @@
                     </svg>
                     <div class="game-name">Damme</div>
                 </a>
-                <a href="https://kkollsga.github.io/tesla/backgammon.html" class="game-option backgammon-option" data-url="https://kkollsga.github.io/tesla/backgammon.html" data-game="backgammon">
+                <a href="games/backgammon.html" class="game-option backgammon-option" data-url="games/backgammon.html" data-game="backgammon">
                     <span class="favorite-indicator" data-game="backgammon">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <!-- Backgammon board -->
@@ -540,6 +549,25 @@
                         <circle cx="59" cy="51" r="1.5" fill="#1a1a1a"/>
                     </svg>
                     <div class="game-name">Backgammon</div>
+                </a>
+                <a href="games/sudoku.html" class="game-option sudoku-option" data-url="games/sudoku.html" data-game="sudoku">
+                    <span class="favorite-indicator" data-game="sudoku">★</span>
+                    <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Sudoku grid 9x9 -->
+                        <rect x="15" y="15" width="70" height="70" fill="none" stroke="#8b5cf6" stroke-width="2" rx="2"/>
+                        <!-- 3x3 box borders -->
+                        <line x1="40" y1="15" x2="40" y2="85" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="65" y1="15" x2="65" y2="85" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="15" y1="40" x2="85" y2="40" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <line x1="15" y1="65" x2="85" y2="65" stroke="#8b5cf6" stroke-width="1.5"/>
+                        <!-- Sample numbers -->
+                        <text x="22" y="27" font-size="8" fill="#a78bfa" text-anchor="middle">5</text>
+                        <text x="32" y="27" font-size="8" fill="#a78bfa" text-anchor="middle">3</text>
+                        <text x="52" y="47" font-size="8" fill="#a78bfa" text-anchor="middle">7</text>
+                        <text x="62" y="57" font-size="8" fill="#a78bfa" text-anchor="middle">9</text>
+                        <text x="78" y="77" font-size="8" fill="#a78bfa" text-anchor="middle">6</text>
+                    </svg>
+                    <div class="game-name">Sudoku</div>
                 </a>
             </div>
         </div>
@@ -614,12 +642,12 @@
         const GAMES = {
             solitaire: {
                 name: 'Solitaire',
-                url: 'https://kkollsga.github.io/tesla/solitaire.html',
+                url: 'games/solitaire.html',
                 icon: '<img src="icons/solitaire.svg" class="icon" alt="Solitaire">'
             },
             isola: {
                 name: 'Isola',
-                url: 'https://kkollsga.github.io/tesla/isola.html',
+                url: 'games/isola.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="15" y="25" width="70" height="50" fill="none" stroke="#8B1538" stroke-width="2"/>
                     <line x1="15" y1="35" x2="85" y2="35" stroke="#8B1538" stroke-width="1"/>
@@ -637,7 +665,7 @@
             },
             santorini: {
                 name: 'Santorini',
-                url: 'https://kkollsga.github.io/tesla/santorini.html',
+                url: 'games/santorini.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="20" y="30" width="60" height="60" fill="none" stroke="#4A90E2" stroke-width="2"/>
                     <line x1="20" y1="42" x2="80" y2="42" stroke="#4A90E2" stroke-width="1"/>
@@ -659,7 +687,7 @@
             },
             chess: {
                 name: 'Chess',
-                url: 'https://kkollsga.github.io/tesla/chess.html',
+                url: 'games/chess.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="20" y="20" width="60" height="60" fill="none" stroke="#3D3D3D" stroke-width="2"/>
                     <rect x="20" y="20" width="15" height="15" fill="#E8E8E8"/>
@@ -686,7 +714,7 @@
             },
             damme: {
                 name: 'Damme',
-                url: 'https://kkollsga.github.io/tesla/damme.html',
+                url: 'games/damme.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="20" y="20" width="60" height="60" fill="none" stroke="#DC2626" stroke-width="2"/>
                     <rect x="35" y="20" width="15" height="15" fill="#2D2D2D"/>
@@ -709,7 +737,7 @@
             },
             backgammon: {
                 name: 'Backgammon',
-                url: 'https://kkollsga.github.io/tesla/backgammon.html',
+                url: 'games/backgammon.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="15" y="20" width="70" height="60" fill="#1a1512" stroke="#3d3428" stroke-width="2" rx="3"/>
                     <rect x="47" y="20" width="6" height="60" fill="#0d0a08"/>
@@ -730,6 +758,22 @@
                     <rect x="52" y="44" width="10" height="10" fill="#fff" rx="2"/>
                     <circle cx="55" cy="47" r="1.5" fill="#1a1a1a"/>
                     <circle cx="59" cy="51" r="1.5" fill="#1a1a1a"/>
+                </svg>`
+            },
+            sudoku: {
+                name: 'Sudoku',
+                url: 'games/sudoku.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="15" width="70" height="70" fill="none" stroke="#8b5cf6" stroke-width="2" rx="2"/>
+                    <line x1="40" y1="15" x2="40" y2="85" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <line x1="65" y1="15" x2="65" y2="85" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <line x1="15" y1="40" x2="85" y2="40" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <line x1="15" y1="65" x2="85" y2="65" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <text x="22" y="27" font-size="8" fill="#a78bfa" text-anchor="middle">5</text>
+                    <text x="32" y="27" font-size="8" fill="#a78bfa" text-anchor="middle">3</text>
+                    <text x="52" y="47" font-size="8" fill="#a78bfa" text-anchor="middle">7</text>
+                    <text x="62" y="57" font-size="8" fill="#a78bfa" text-anchor="middle">9</text>
+                    <text x="78" y="77" font-size="8" fill="#a78bfa" text-anchor="middle">6</text>
                 </svg>`
             }
         };
