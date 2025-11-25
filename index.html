@@ -127,21 +127,6 @@
         .games { border-color: #8B1538; }
         .games:hover { border-color: #DC2626; box-shadow: 0 0 20px rgba(139, 21, 56, 0.5); }
 
-        /* Temporary dimension display */
-        #dimension-display {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #0f0;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            z-index: 9999;
-            border: 1px solid #0f0;
-        }
-
         /* Game selection modal */
         .modal-overlay {
             position: fixed;
@@ -328,9 +313,6 @@
     </style>
 </head>
 <body>
-    <!-- Temporary dimension display -->
-    <div id="dimension-display"></div>
-
     <div class="container">
         <div class="grid">
             <!-- Row 1 -->
@@ -564,15 +546,6 @@
     </div>
 
     <script>
-        // Temporary dimension display
-        function updateDimensions() {
-            const display = document.getElementById('dimension-display');
-            display.textContent = `${window.innerWidth} x ${window.innerHeight}`;
-        }
-
-        window.addEventListener('resize', updateDimensions);
-        window.addEventListener('load', updateDimensions);
-
         const YOUTUBE_REDIRECT_BASE = 'https://www.youtube.com/redirect?q=';
 
         function isFullscreen() {
