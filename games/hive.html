@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hive</title>
+
+    <!-- iOS app installation headers -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hive">
+
+    <style>
+        * {
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #1a472a 0%, #0a1f13 100%);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 500;
+            pointer-events: none;
+        }
+
+        .navbar-left, .navbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .navbar-btn {
+            width: auto;
+            height: auto;
+            border: none;
+            background: none;
+            color: #888;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-style: italic;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            pointer-events: all;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .navbar-btn:hover {
+            color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+        }
+
+        .game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-board {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
+        }
+
+        .game-container {
+            background: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .board-row {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .board-area {
+            position: relative;
+            width: 800px;
+            height: 700px;
+            background: linear-gradient(135deg, rgba(26, 71, 42, 0.3) 0%, rgba(13, 42, 24, 0.3) 100%);
+            border: 2px solid #2d7a4f;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+
+        .hexagon-zoom-wrapper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+            transition: transform 0.3s ease;
+        }
+
+        .hexagon-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+        }
+
+        .hexagon {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hexagon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hexagon:hover {
+            filter: brightness(1.2);
+        }
+
+        .hexagon.valid-placement {
+            cursor: copy;
+            filter: drop-shadow(0 0 8px rgba(45, 122, 79, 0.8));
+        }
+
+        .hexagon.occupied {
+            cursor: grab;
+        }
+
+        .hexagon.occupied:hover {
+            filter: brightness(1.3);
+        }
+
+        .insect {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            z-index: 5;
+        }
+
+        .insect.dragging {
+            position: fixed !important;
+            z-index: 1000 !important;
+            cursor: grabbing;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.8));
+            pointer-events: none;
+        }
+
+        .insect-ghost {
+            opacity: 0.4;
+        }
+
+        .hexagon-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hand-area {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            background: rgba(13, 42, 24, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #2d7a4f;
+            min-height: 120px;
+            width: 100%;
+            align-content: flex-start;
+            justify-content: center;
+        }
+
+        .hand-insect {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
+            border: 2px solid #4a9f68;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .hand-insect:hover {
+            transform: scale(1.1);
+            border-color: #6bb98a;
+            box-shadow: 0 0 15px rgba(45, 122, 79, 0.6);
+        }
+
+        .hand-insect.dragging {
+            position: fixed !important;
+            z-index: 1000 !important;
+            cursor: grabbing;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+        }
+
+        .hand-insect svg {
+            width: 50px;
+            height: 50px;
+        }
+
+        .insect-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #FFD700;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .player-info {
+            background: rgba(13, 42, 24, 0.6);
+            border-radius: 10px;
+            padding: 25px;
+            color: white;
+            width: 160px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .player-info.active {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .player-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-color {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .player-dragging-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a9f68;
+            margin-bottom: 10px;
+            min-height: 16px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .player-dragging-label.show {
+            opacity: 1;
+        }
+
+        .player-queen-status {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #FFD700;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-info.active .player-queen-status {
+            opacity: 1;
+        }
+
+        .player-status {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #FFD700;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-info.active .player-status {
+            opacity: 1;
+        }
+
+        .player-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 10px auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .player-preview.blue {
+            background: radial-gradient(circle at 30% 30%, #5599ff, #1155cc);
+        }
+
+        .player-preview.orange {
+            background: radial-gradient(circle at 30% 30%, #ffaa44, #dd6611);
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-button {
+            background: linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
+            border: 1px solid rgba(45, 122, 79, 0.3);
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .game-button:hover {
+            background: linear-gradient(135deg, #3d9a5f 0%, #2a5540 100%);
+            border-color: rgba(45, 122, 79, 0.6);
+            box-shadow: 0 6px 16px rgba(45, 122, 79, 0.2);
+            color: #fff;
+        }
+
+        .game-button:active {
+            transform: translateY(1px);
+        }
+
+        .victory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .victory-text {
+            font-size: 80px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                4px 4px 8px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: victory-glow 2s ease-in-out infinite alternate;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        @keyframes victory-glow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            to {
+                text-shadow:
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 60px rgba(255, 215, 0, 0.8),
+                    0 0 90px rgba(255, 215, 0, 0.6),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .victory-subtext {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            text-shadow:
+                0 0 10px rgba(255, 255, 255, 0.8),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 16px;
+            border-radius: 0 50% 50% 50%;
+            animation: confetti-fall 3s ease-in forwards;
+            transform: rotate(45deg);
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-20vh) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            10% {
+                transform: translateY(10vh) translateX(var(--drift-x)) rotate(90deg);
+            }
+            30% {
+                transform: translateY(40vh) translateX(calc(var(--drift-x) * 2)) rotate(270deg);
+            }
+            50% {
+                transform: translateY(70vh) translateX(calc(var(--drift-x) * 2.5)) rotate(450deg);
+                opacity: 1;
+            }
+            70% {
+                transform: translateY(90vh) translateX(calc(var(--drift-x) * 2.8)) rotate(630deg);
+            }
+            100% {
+                transform: translateY(110vh) translateX(calc(var(--drift-x) * 3)) rotate(810deg);
+                opacity: 0;
+            }
+        }
+
+        .info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .info-modal.active {
+            display: flex;
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
+            border-radius: 14px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FFD700;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #ddd;
+            line-height: 1.8;
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 30px;
+            padding-right: 15px;
+        }
+
+        .modal-text h3 {
+            font-size: 18px;
+            color: #FFD700;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-text h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-text p {
+            margin: 0 0 16px 0;
+            color: #ddd;
+        }
+
+        .modal-text ul {
+            margin: 0 0 16px 20px;
+            padding: 0;
+            list-style-position: inside;
+        }
+
+        .modal-text li {
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        .modal-text li strong {
+            color: #FFD700;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+        }
+
+        .modal-btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .modal-btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            pointer-events: all;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(45, 122, 79, 0.8);
+            border: 2px solid #2d7a4f;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(45, 122, 79, 1);
+            border-color: #4a9f68;
+            transform: scale(1.1);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .turn-indicator {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(13, 42, 24, 0.8);
+            border: 2px solid #2d7a4f;
+            border-radius: 10px;
+            padding: 15px 25px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .piece-info-popup {
+            position: fixed;
+            background: rgba(13, 42, 24, 0.95);
+            border: 2px solid #4a9f68;
+            border-radius: 8px;
+            padding: 15px;
+            color: white;
+            font-size: 13px;
+            z-index: 999;
+            pointer-events: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+            display: none;
+            min-width: 140px;
+            animation: popupAppear 0.2s ease;
+        }
+
+        .piece-info-popup.active {
+            display: block;
+        }
+
+        @keyframes popupAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .piece-info-title {
+            font-weight: 700;
+            color: #FFD700;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .piece-info-details {
+            font-size: 12px;
+            color: #ddd;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .piece-info-owner {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(77, 159, 104, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <button class="navbar-btn" id="infoBtn" title="Game Info">ⓘ</button>
+        </div>
+        <div class="navbar-right">
+            <a href="../index.html" class="navbar-btn" title="Exit">✕</a>
+        </div>
+    </div>
+
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomInBtn" title="Zoom In">+</button>
+        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">−</button>
+        <button class="zoom-btn" id="resetZoomBtn" title="Reset Zoom">⊙</button>
+    </div>
+
+    <div class="turn-indicator" id="turnIndicator">
+        Player 1's Turn
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-board">
+            <div class="game-container">
+                <div class="board-row">
+                    <div class="player-info" id="player1-info">
+                        <div class="player-name">Left</div>
+                        <div class="player-preview blue"></div>
+                        <div class="player-color">Blue</div>
+                        <div class="player-dragging-label" id="player1-dragging-label"></div>
+                        <div class="player-queen-status" id="player1-queen">Queen: Not Placed</div>
+                        <div class="player-status" id="player1-status">Your Turn</div>
+                    </div>
+
+                    <div class="board-area" id="boardArea">
+                        <div class="hexagon-zoom-wrapper" id="hexagonZoomWrapper">
+                            <div class="hexagon-container" id="hexagonContainer"></div>
+                        </div>
+                    </div>
+
+                    <div class="player-info" id="player2-info">
+                        <div class="player-name">Right</div>
+                        <div class="player-preview orange"></div>
+                        <div class="player-color">Orange</div>
+                        <div class="player-dragging-label" id="player2-dragging-label"></div>
+                        <div class="player-queen-status" id="player2-queen">Queen: Not Placed</div>
+                        <div class="player-status" id="player2-status">Waiting...</div>
+                    </div>
+                </div>
+
+                <div class="hand-area" id="handArea">
+                    <!-- Hand insects will be generated here -->
+                </div>
+
+                <div class="game-controls">
+                    <button class="game-button" id="new-game">New Game</button>
+                    <button class="game-button" id="pass-turn">Pass Turn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="piece-info-popup" id="pieceInfoPopup">
+        <div class="piece-info-title" id="pieceInfoTitle">Queen</div>
+        <div class="piece-info-details" id="pieceInfoDetails">Moves 1 space</div>
+        <div class="piece-info-owner" id="pieceInfoOwner">Player 1</div>
+    </div>
+
+    <div class="info-modal" id="infoModal">
+        <div class="info-panel">
+            <div class="modal-title">How to Play Hive</div>
+            <div class="modal-text">
+                <h3>Objective</h3>
+                <p>Surround your opponent's Queen bee with 6 of your insects. The player who surrounds the opponent's Queen first wins!</p>
+
+                <h3>The Game Board</h3>
+                <p>Hive is played on an expandable hexagonal board. Insects are placed on the board and can move according to their own rules. The board grows dynamically as you play.</p>
+
+                <h3>Starting the Game</h3>
+                <p>Each player starts with 11 insects in their hand:</p>
+                <ul>
+                    <li><strong>Queen (1):</strong> Slow but powerful - must be placed by turn 3</li>
+                    <li><strong>Ants (3):</strong> Can move any distance but must stay connected</li>
+                    <li><strong>Beetles (2):</strong> Can climb on top of other insects</li>
+                    <li><strong>Hoppers (3):</strong> Jump over connected insects</li>
+                    <li><strong>Ladybugs (2):</strong> Move exactly 3 spaces using pillars</li>
+                </ul>
+
+                <h3>How to Play</h3>
+                <ul>
+                    <li><strong>On Your Turn:</strong> Either place a new insect from your hand OR move an insect already on the board</li>
+                    <li><strong>Placing Insects:</strong> Drag from your hand and drop on a valid hexagon</li>
+                    <li><strong>Moving Insects:</strong> Click an insect on the board and drag it to a valid destination</li>
+                    <li><strong>Queen Placement:</strong> You MUST place your Queen by your 3rd turn</li>
+                    <li><strong>Connectivity Rule:</strong> The first insect of each player must be placed next to the opponent's first insect</li>
+                </ul>
+
+                <h3>Insect Movement Rules</h3>
+                <ul>
+                    <li><strong>Queen:</strong> Moves 1 hexagon in any direction</li>
+                    <li><strong>Ant:</strong> Slides any distance in straight lines</li>
+                    <li><strong>Beetle:</strong> Moves 1 space and can climb on top of other insects</li>
+                    <li><strong>Hopper:</strong> Jumps over a continuous line of insects to land on an empty space</li>
+                    <li><strong>Ladybug:</strong> Moves exactly 3 spaces using insects as pillars</li>
+                </ul>
+
+                <h3>Important Rules</h3>
+                <ul>
+                    <li>The hive must always remain connected - you cannot move an insect if it breaks the connection</li>
+                    <li>Once the Queen is placed, you can only move insects (no new placements)</li>
+                    <li>You cannot move an insect if no valid moves exist</li>
+                    <li>The game ends immediately when a Queen is surrounded</li>
+                </ul>
+
+                <h3>Winning</h3>
+                <p>You win when your opponent's Queen is completely surrounded by 6 of your insects (one on each adjacent hexagon).</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ====== HEXAGONAL COORDINATE SYSTEM ======
+        // Using axial coordinates (q, r) for hexagonal grid
+
+        class Hex {
+            constructor(q, r) {
+                this.q = q;
+                this.r = r;
+            }
+
+            equals(other) {
+                return this.q === other.q && this.r === other.r;
+            }
+
+            toString() {
+                return `${this.q},${this.r}`;
+            }
+
+            static fromString(str) {
+                const [q, r] = str.split(',').map(Number);
+                return new Hex(q, r);
+            }
+
+            getNeighbors() {
+                const directions = [
+                    new Hex(1, 0), new Hex(1, -1), new Hex(0, -1),
+                    new Hex(-1, 0), new Hex(-1, 1), new Hex(0, 1)
+                ];
+                return directions.map(d => new Hex(this.q + d.q, this.r + d.r));
+            }
+
+            distance(other) {
+                return (Math.abs(this.q - other.q) + Math.abs(this.r - other.r) +
+                    Math.abs((this.q + this.r) - (other.q + other.r))) / 2;
+            }
+
+            static getLine(start, end) {
+                const distance = start.distance(end);
+                if (distance === 0) return [start];
+
+                const line = [];
+                for (let i = 0; i <= distance; i++) {
+                    const t = distance === 0 ? 0 : i / distance;
+                    const q = Math.round(start.q + (end.q - start.q) * t);
+                    const r = Math.round(start.r + (end.r - start.r) * t);
+                    line.push(new Hex(q, r));
+                }
+                return line;
+            }
+        }
+
+        // ====== GAME STATE ======
+        const INSECT_TYPES = {
+            queen: { name: 'Queen', count: 1, icon: '👑', movement: 'Moves 1 hexagon in any direction' },
+            ant: { name: 'Ant', count: 3, icon: '🐜', movement: 'Slides any distance in straight lines' },
+            beetle: { name: 'Beetle', count: 2, icon: '🪲', movement: 'Moves 1 space, can climb on others' },
+            hopper: { name: 'Hopper', count: 3, icon: '🦗', movement: 'Jumps over connected insects' },
+            ladybug: { name: 'Ladybug', count: 2, icon: '🐞', movement: 'Moves exactly 3 spaces using pillars' }
+        };
+
+        let gameState = {
+            board: new Map(), // key: hex.toString(), value: { player: 1|2, insect: type, id: unique }
+            hand: {
+                player1: {},
+                player2: {}
+            },
+            currentPlayer: 1,
+            gameOver: false,
+            winner: null,
+            turn: 0,
+            selectedInsect: null,
+            queenPlaced: { 1: false, 2: false },
+            turnCount: { 1: 0, 2: 0 }
+        };
+
+        // Initialize hand
+        function initializeHand() {
+            for (let player of [1, 2]) {
+                gameState.hand[`player${player}`] = {};
+                for (let type in INSECT_TYPES) {
+                    gameState.hand[`player${player}`][type] = INSECT_TYPES[type].count;
+                }
+            }
+        }
+
+        // ====== HEXAGON RENDERING ======
+        const HEX_SIZE = 50;
+        const HEX_MARGIN = 2;
+        const HEX_ACTUAL_SIZE = HEX_SIZE - HEX_MARGIN;
+
+        function hexToPixel(hex) {
+            const q = hex.q;
+            const r = hex.r;
+            const x = HEX_ACTUAL_SIZE * (3/2 * q);
+            const y = HEX_ACTUAL_SIZE * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+            return { x, y };
+        }
+
+        function pixelToHex(x, y) {
+            const q = (2/3 * x) / HEX_ACTUAL_SIZE;
+            const r = (-1/3 * x + Math.sqrt(3)/3 * y) / HEX_ACTUAL_SIZE;
+            return hexRound(q, r);
+        }
+
+        function hexRound(q, r) {
+            let rq = Math.round(q);
+            let rr = Math.round(r);
+            const rs = Math.round(-q - r);
+
+            const qDiff = Math.abs(rq - q);
+            const rDiff = Math.abs(rr - r);
+            const sDiff = Math.abs(rs - (-q - r));
+
+            if (qDiff > rDiff && qDiff > sDiff) {
+                rq = -rr - rs;
+            } else if (rDiff > sDiff) {
+                rr = -rq - rs;
+            }
+
+            return new Hex(rq, rr);
+        }
+
+        // Hexagon cache to avoid recreating DOM elements
+        const hexagonCache = new Map();
+
+        function createHexagon(hex) {
+            const hexKey = hex.toString();
+
+            // Return cached hexagon if it exists
+            if (hexagonCache.has(hexKey)) {
+                return hexagonCache.get(hexKey);
+            }
+
+            const pos = hexToPixel(hex);
+            const div = document.createElement('div');
+            div.className = 'hexagon';
+            div.dataset.hex = hexKey;
+
+            const size = HEX_ACTUAL_SIZE;
+            div.style.left = (pos.x - size) + 'px';
+            div.style.top = (pos.y - size) + 'px';
+            div.style.width = (size * 2) + 'px';
+            div.style.height = (size * 2) + 'px';
+
+            const svg = createHexagonSVG();
+            div.appendChild(svg);
+
+            div.addEventListener('mousedown', handleHexagonMouseDown);
+            div.addEventListener('touchstart', handleHexagonTouchStart);
+
+            // Cache the element
+            hexagonCache.set(hexKey, div);
+            return div;
+        }
+
+        function createHexagonSVG() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 100 100');
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.PI / 3 * i;
+                const x = 50 + 45 * Math.cos(angle);
+                const y = 50 + 45 * Math.sin(angle);
+                points.push(`${x},${y}`);
+            }
+            polygon.setAttribute('points', points.join(' '));
+            polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
+            polygon.setAttribute('stroke', '#2d7a4f');
+            polygon.setAttribute('stroke-width', '2');
+
+            svg.appendChild(polygon);
+            return svg;
+        }
+
+        // ====== THROTTLE UTILITY ======
+        function throttle(func, limit) {
+            let inThrottle;
+            return function executedFunction(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // ====== DRAG AND DROP ======
+        let dragState = {
+            isDragging: false,
+            dragElement: null,
+            dragClone: null,
+            dragOffsetX: 0,
+            dragOffsetY: 0,
+            dragSource: null, // 'hand' or 'board'
+            sourceData: null
+        };
+
+        function handleHexagonMouseDown(e) {
+            const hex = new Hex(...e.currentTarget.dataset.hex.split(',').map(Number));
+            const insect = gameState.board.get(hex.toString());
+
+            if (insect && insect.player === gameState.currentPlayer) {
+                startDrag(e, 'board', insect);
+            }
+        }
+
+        function handleHexagonTouchStart(e) {
+            const hex = new Hex(...e.currentTarget.dataset.hex.split(',').map(Number));
+            const insect = gameState.board.get(hex.toString());
+
+            if (insect && insect.player === gameState.currentPlayer) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                startDrag(mouseEvent, 'board', insect);
+            }
+        }
+
+        // Create throttled drag move handlers
+        const throttledDragMove = throttle(handleDragMove, 16); // ~60fps
+        const throttledDragMoveTouchpause = throttle(handleDragMoveTouchpause, 16);
+
+        function startDrag(e, source, data) {
+            if (dragState.isDragging) return;
+
+            dragState.isDragging = true;
+            dragState.dragSource = source;
+            dragState.sourceData = data;
+            dragState.dragElement = e.target.closest('.insect') || e.target.closest('.hand-insect');
+
+            if (dragState.dragElement) {
+                const rect = dragState.dragElement.getBoundingClientRect();
+                dragState.dragOffsetX = e.clientX - rect.left;
+                dragState.dragOffsetY = e.clientY - rect.top;
+
+                dragState.dragClone = dragState.dragElement.cloneNode(true);
+                dragState.dragClone.style.position = 'fixed';
+                dragState.dragClone.style.zIndex = '1000';
+                dragState.dragClone.style.pointerEvents = 'none';
+                document.body.appendChild(dragState.dragClone);
+
+                dragState.dragElement.classList.add('insect-ghost');
+
+                // Show dragging label if from hand
+                if (source === 'hand') {
+                    const insectType = data;
+                    const insectName = INSECT_TYPES[insectType]?.name || 'Insect';
+                    const playerLabel = document.getElementById(`player${gameState.currentPlayer}-dragging-label`);
+                    if (playerLabel) {
+                        playerLabel.textContent = `Place ${insectName}`;
+                        playerLabel.classList.add('show');
+                    }
+                }
+
+                document.addEventListener('mousemove', throttledDragMove);
+                document.addEventListener('touchmove', throttledDragMoveTouchpause);
+                document.addEventListener('mouseup', handleDragEnd);
+                document.addEventListener('touchend', handleDragEnd);
+            }
+        }
+
+        function handleDragMove(e) {
+            if (!dragState.isDragging || !dragState.dragClone) return;
+
+            dragState.dragClone.style.left = (e.clientX - dragState.dragOffsetX) + 'px';
+            dragState.dragClone.style.top = (e.clientY - dragState.dragOffsetY) + 'px';
+        }
+
+        function handleDragMoveTouchpause(e) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                handleDragMove(fakeEvent);
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (!dragState.isDragging) return;
+
+            dragState.isDragging = false;
+
+            // Clean up drag visuals
+            if (dragState.dragClone) {
+                dragState.dragClone.remove();
+                dragState.dragClone = null;
+            }
+            if (dragState.dragElement) {
+                dragState.dragElement.classList.remove('insect-ghost');
+            }
+
+            // Hide dragging label
+            document.querySelectorAll('.player-dragging-label').forEach(label => {
+                label.classList.remove('show');
+            });
+
+            // Detect drop target
+            const dropElement = document.elementFromPoint(e.clientX, e.clientY);
+            const hexElement = dropElement?.closest('.hexagon');
+
+            if (hexElement && dragState.dragSource === 'hand') {
+                const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
+                placeInsect(hex, dragState.sourceData);
+            } else if (hexElement && dragState.dragSource === 'board') {
+                const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
+                moveInsect(dragState.sourceData, hex);
+            }
+
+            dragState = {
+                isDragging: false,
+                dragElement: null,
+                dragClone: null,
+                dragOffsetX: 0,
+                dragOffsetY: 0,
+                dragSource: null,
+                sourceData: null
+            };
+
+            document.removeEventListener('mousemove', throttledDragMove);
+            document.removeEventListener('touchmove', throttledDragMoveTouchpause);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchend', handleDragEnd);
+        }
+
+        // ====== GAME LOGIC ======
+        function placeInsect(hex, insectType) {
+            const hexKey = hex.toString();
+
+            // Validation
+            if (gameState.board.has(hexKey)) return; // Position occupied
+
+            // First placement must be adjacent
+            if (gameState.board.size > 0 && !canPlaceInsect(hex)) {
+                return;
+            }
+
+            // Create insect ID
+            const insectId = `${gameState.currentPlayer}-${insectType}-${Date.now()}`;
+            gameState.board.set(hexKey, {
+                player: gameState.currentPlayer,
+                insect: insectType,
+                id: insectId
+            });
+
+            // Update hand
+            gameState.hand[`player${gameState.currentPlayer}`][insectType]--;
+
+            // Check if queen
+            if (insectType === 'queen') {
+                gameState.queenPlaced[gameState.currentPlayer] = true;
+            }
+
+            renderGame();
+            checkWinCondition();
+            endTurn();
+        }
+
+        function canPlaceInsect(hex) {
+            // Must be adjacent to at least one opponent's insect
+            const neighbors = hex.getNeighbors();
+            const opponentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+
+            return neighbors.some(n => {
+                const insect = gameState.board.get(n.toString());
+                return insect && insect.player === opponentPlayer;
+            });
+        }
+
+        function moveInsect(insect, targetHex) {
+            // Find current hex
+            let currentHex = null;
+            for (let [hexKey, bug] of gameState.board) {
+                if (bug.id === insect.id) {
+                    currentHex = Hex.fromString(hexKey);
+                    break;
+                }
+            }
+
+            if (!currentHex) return;
+
+            const targetKey = targetHex.toString();
+            if (gameState.board.has(targetKey)) return; // Target occupied
+
+            // Move the insect
+            gameState.board.delete(currentHex.toString());
+            gameState.board.set(targetKey, insect);
+
+            renderGame();
+            checkWinCondition();
+            endTurn();
+        }
+
+        function endTurn() {
+            gameState.turn++;
+            gameState.turnCount[gameState.currentPlayer]++;
+            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+            renderGame();
+        }
+
+        function checkWinCondition() {
+            // Check if either queen is surrounded
+            for (let [hexKey, insect] of gameState.board) {
+                if (insect.insect === 'queen') {
+                    const hex = Hex.fromString(hexKey);
+                    const neighbors = hex.getNeighbors();
+                    const adjacentInsects = neighbors.filter(n => {
+                        const adj = gameState.board.get(n.toString());
+                        return adj && adj.player !== insect.player;
+                    });
+
+                    if (adjacentInsects.length === 6) {
+                        // Queen is surrounded
+                        gameState.gameOver = true;
+                        gameState.winner = insect.player === 1 ? 2 : 1;
+                        showVictory();
+                        return;
+                    }
+                }
+            }
+        }
+
+        function canPassTurn() {
+            // Can pass if queen is placed OR this is turn 3+ for the player
+            return gameState.queenPlaced[gameState.currentPlayer] || gameState.turnCount[gameState.currentPlayer] >= 2;
+        }
+
+        // ====== RENDERING ======
+        function renderGame() {
+            renderBoard();
+            renderHand();
+            updatePlayerInfo();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('hexagonContainer');
+
+            // Get all hexes currently in use
+            const usedHexes = new Set(gameState.board.keys());
+
+            // Create view range
+            let minQ = 0, maxQ = 0, minR = 0, maxR = 0;
+            for (let hexKey of usedHexes) {
+                const hex = Hex.fromString(hexKey);
+                minQ = Math.min(minQ, hex.q);
+                maxQ = Math.max(maxQ, hex.q);
+                minR = Math.min(minR, hex.r);
+                maxR = Math.max(maxR, hex.r);
+            }
+
+            // Add buffer
+            minQ -= 2;
+            maxQ += 2;
+            minR -= 2;
+            maxR += 2;
+
+            // Track which hexes should be visible
+            const visibleHexes = new Set();
+            const hexesToRender = [];
+
+            for (let q = minQ; q <= maxQ; q++) {
+                for (let r = minR; r <= maxR; r++) {
+                    const hexKey = `${q},${r}`;
+                    if (visibleHexes.has(hexKey)) continue;
+                    visibleHexes.add(hexKey);
+                    hexesToRender.push(new Hex(q, r));
+                }
+            }
+
+            // Remove hexagons that are no longer in view range
+            const currentHexElements = container.querySelectorAll('.hexagon');
+            currentHexElements.forEach(elem => {
+                if (!visibleHexes.has(elem.dataset.hex)) {
+                    elem.remove();
+                }
+            });
+
+            // Add or update hexagons for visible range
+            for (let hex of hexesToRender) {
+                const hexKey = hex.toString();
+                let hexElement = container.querySelector(`[data-hex="${hexKey}"]`);
+
+                if (!hexElement) {
+                    // Create new hexagon
+                    hexElement = createHexagon(hex);
+                    container.appendChild(hexElement);
+                }
+
+                // Clear existing insect content
+                const existingInsects = hexElement.querySelectorAll('.insect');
+                existingInsects.forEach(el => el.remove());
+
+                // Add insect if present
+                const insect = gameState.board.get(hexKey);
+                if (insect) {
+                    const insectElement = createInsectElement(insect);
+                    hexElement.appendChild(insectElement);
+                }
+            }
+
+            autoFitBoard();
+        }
+
+        function createInsectElement(insect) {
+            const div = document.createElement('div');
+            div.className = 'insect';
+            div.dataset.insectId = insect.id;
+
+            const svg = createInsectSVG(insect.insect, insect.player);
+            div.appendChild(svg);
+
+            div.addEventListener('mousedown', handleHexagonMouseDown);
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showPieceInfo(insect, e);
+            });
+            div.addEventListener('click', (e) => {
+                if (e.button === 2) return; // Right click handled by contextmenu
+                if (dragState.isDragging) return;
+                showPieceInfo(insect, e);
+            });
+
+            return div;
+        }
+
+        function createInsectSVG(type, player) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 100 100');
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+            const color = player === 1 ? '#5599ff' : '#ffaa44';
+            const strokeColor = player === 1 ? '#1155cc' : '#dd6611';
+
+            // Create different shapes for different insects
+            switch (type) {
+                case 'queen':
+                    createQueenSVG(svg, color, strokeColor);
+                    break;
+                case 'ant':
+                    createAntSVG(svg, color, strokeColor);
+                    break;
+                case 'beetle':
+                    createBeetleSVG(svg, color, strokeColor);
+                    break;
+                case 'hopper':
+                    createHopperSVG(svg, color, strokeColor);
+                    break;
+                case 'ladybug':
+                    createLadybugSVG(svg, color, strokeColor);
+                    break;
+            }
+
+            return svg;
+        }
+
+        // SVG Creation Functions
+        function createQueenSVG(svg, color, strokeColor) {
+            // Abdomen segments
+            const abdomen1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            abdomen1.setAttribute('cx', '50');
+            abdomen1.setAttribute('cy', '65');
+            abdomen1.setAttribute('r', '18');
+            abdomen1.setAttribute('fill', color);
+            abdomen1.setAttribute('stroke', strokeColor);
+            abdomen1.setAttribute('stroke-width', '1.5');
+            svg.appendChild(abdomen1);
+
+            const abdomen2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            abdomen2.setAttribute('cx', '50');
+            abdomen2.setAttribute('cy', '45');
+            abdomen2.setAttribute('r', '16');
+            abdomen2.setAttribute('fill', color);
+            abdomen2.setAttribute('stroke', strokeColor);
+            abdomen2.setAttribute('stroke-width', '1.5');
+            svg.appendChild(abdomen2);
+
+            // Thorax
+            const thorax = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            thorax.setAttribute('cx', '50');
+            thorax.setAttribute('cy', '32');
+            thorax.setAttribute('rx', '14');
+            thorax.setAttribute('ry', '12');
+            thorax.setAttribute('fill', color);
+            thorax.setAttribute('stroke', strokeColor);
+            thorax.setAttribute('stroke-width', '1.5');
+            svg.appendChild(thorax);
+
+            // Head
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            head.setAttribute('cx', '50');
+            head.setAttribute('cy', '18');
+            head.setAttribute('r', '10');
+            head.setAttribute('fill', color);
+            head.setAttribute('stroke', strokeColor);
+            head.setAttribute('stroke-width', '1.5');
+            svg.appendChild(head);
+
+            // Crown - elegant arcs on top of head
+            const crownArc = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            crownArc.setAttribute('d', 'M 38 15 Q 35 5 50 2 Q 65 5 62 15');
+            crownArc.setAttribute('fill', 'none');
+            crownArc.setAttribute('stroke', strokeColor);
+            crownArc.setAttribute('stroke-width', '2.5');
+            crownArc.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(crownArc);
+
+            // Crown jewels - small circles on crown
+            for (let i = 0; i < 3; i++) {
+                const jewel = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                jewel.setAttribute('cx', 40 + i * 10);
+                jewel.setAttribute('cy', 6);
+                jewel.setAttribute('r', '2');
+                jewel.setAttribute('fill', strokeColor);
+                svg.appendChild(jewel);
+            }
+
+            // Antennae
+            for (let side of [-1, 1]) {
+                const antenna = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                antenna.setAttribute('d', `M ${50 + side * 6} 10 Q ${50 + side * 15} 0 ${50 + side * 14} -5`);
+                antenna.setAttribute('fill', 'none');
+                antenna.setAttribute('stroke', strokeColor);
+                antenna.setAttribute('stroke-width', '2');
+                antenna.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(antenna);
+            }
+
+            // Eyes
+            for (let side of [-4, 4]) {
+                const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                eye.setAttribute('cx', 50 + side);
+                eye.setAttribute('cy', '17');
+                eye.setAttribute('r', '1.5');
+                eye.setAttribute('fill', strokeColor);
+                svg.appendChild(eye);
+            }
+        }
+
+        function createAntSVG(svg, color, strokeColor) {
+            // Head
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            head.setAttribute('cx', '50');
+            head.setAttribute('cy', '25');
+            head.setAttribute('r', '15');
+            head.setAttribute('fill', color);
+            head.setAttribute('stroke', strokeColor);
+            head.setAttribute('stroke-width', '2');
+            svg.appendChild(head);
+
+            // Body segments
+            const body1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            body1.setAttribute('cx', '50');
+            body1.setAttribute('cy', '50');
+            body1.setAttribute('r', '18');
+            body1.setAttribute('fill', color);
+            body1.setAttribute('stroke', strokeColor);
+            body1.setAttribute('stroke-width', '2');
+            svg.appendChild(body1);
+
+            const body2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            body2.setAttribute('cx', '50');
+            body2.setAttribute('cy', '75');
+            body2.setAttribute('r', '14');
+            body2.setAttribute('fill', color);
+            body2.setAttribute('stroke', strokeColor);
+            body2.setAttribute('stroke-width', '2');
+            svg.appendChild(body2);
+
+            // Legs
+            for (let side of [-1, 1]) {
+                for (let y of [35, 50, 65]) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', '50');
+                    line.setAttribute('y1', y);
+                    line.setAttribute('x2', 50 + side * 30);
+                    line.setAttribute('y2', y + 10);
+                    line.setAttribute('stroke', strokeColor);
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-linecap', 'round');
+                    svg.appendChild(line);
+                }
+            }
+
+            // Antennae
+            for (let side of [-1, 1]) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', 50 + side * 8);
+                line.setAttribute('y1', '15');
+                line.setAttribute('x2', 50 + side * 20);
+                line.setAttribute('y2', '5');
+                line.setAttribute('stroke', strokeColor);
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(line);
+            }
+        }
+
+        function createBeetleSVG(svg, color, strokeColor) {
+            // Shell
+            const shell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            shell.setAttribute('cx', '50');
+            shell.setAttribute('cy', '50');
+            shell.setAttribute('rx', '38');
+            shell.setAttribute('ry', '40');
+            shell.setAttribute('fill', color);
+            shell.setAttribute('stroke', strokeColor);
+            shell.setAttribute('stroke-width', '2');
+            svg.appendChild(shell);
+
+            // Wing covers
+            const leftWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            leftWing.setAttribute('cx', '35');
+            leftWing.setAttribute('cy', '50');
+            leftWing.setAttribute('rx', '14');
+            leftWing.setAttribute('ry', '35');
+            leftWing.setAttribute('fill', 'rgba(255,255,255,0.2)');
+            leftWing.setAttribute('stroke', 'none');
+            svg.appendChild(leftWing);
+
+            const rightWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            rightWing.setAttribute('cx', '65');
+            rightWing.setAttribute('cy', '50');
+            rightWing.setAttribute('rx', '14');
+            rightWing.setAttribute('ry', '35');
+            rightWing.setAttribute('fill', 'rgba(255,255,255,0.2)');
+            rightWing.setAttribute('stroke', 'none');
+            svg.appendChild(rightWing);
+
+            // Center line
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '50');
+            line.setAttribute('y1', '15');
+            line.setAttribute('x2', '50');
+            line.setAttribute('y2', '85');
+            line.setAttribute('stroke', strokeColor);
+            line.setAttribute('stroke-width', '1');
+            svg.appendChild(line);
+
+            // Spots
+            for (let i = 0; i < 4; i++) {
+                const spot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                spot.setAttribute('cx', i % 2 === 0 ? 35 : 65);
+                spot.setAttribute('cy', 35 + (i > 1 ? 30 : 0));
+                spot.setAttribute('r', '4');
+                spot.setAttribute('fill', strokeColor);
+                svg.appendChild(spot);
+            }
+        }
+
+        function createHopperSVG(svg, color, strokeColor) {
+            // Head with prominent eyes for jumping
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            head.setAttribute('cx', '50');
+            head.setAttribute('cy', '25');
+            head.setAttribute('r', '13');
+            head.setAttribute('fill', color);
+            head.setAttribute('stroke', strokeColor);
+            head.setAttribute('stroke-width', '2');
+            svg.appendChild(head);
+
+            // Main body
+            const body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            body.setAttribute('cx', '50');
+            body.setAttribute('cy', '50');
+            body.setAttribute('rx', '18');
+            body.setAttribute('ry', '22');
+            body.setAttribute('fill', color);
+            body.setAttribute('stroke', strokeColor);
+            body.setAttribute('stroke-width', '2');
+            svg.appendChild(body);
+
+            // Abdomen - lower segment
+            const abdomen = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            abdomen.setAttribute('cx', '50');
+            abdomen.setAttribute('cy', '68');
+            abdomen.setAttribute('rx', '15');
+            abdomen.setAttribute('ry', '16');
+            abdomen.setAttribute('fill', color);
+            abdomen.setAttribute('stroke', strokeColor);
+            abdomen.setAttribute('stroke-width', '1.5');
+            svg.appendChild(abdomen);
+
+            // Thick, powerful hind legs - emphasize jumping ability
+            // Left hind leg - two segments for powerful jump
+            const leftHindLeg1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            leftHindLeg1.setAttribute('d', 'M 32 65 Q 15 70 12 88');
+            leftHindLeg1.setAttribute('fill', 'none');
+            leftHindLeg1.setAttribute('stroke', strokeColor);
+            leftHindLeg1.setAttribute('stroke-width', '3.5');
+            leftHindLeg1.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(leftHindLeg1);
+
+            const leftHindLeg2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            leftHindLeg2.setAttribute('d', 'M 32 68 Q 8 75 2 95');
+            leftHindLeg2.setAttribute('fill', 'none');
+            leftHindLeg2.setAttribute('stroke', strokeColor);
+            leftHindLeg2.setAttribute('stroke-width', '2.5');
+            leftHindLeg2.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(leftHindLeg2);
+
+            // Right hind leg
+            const rightHindLeg1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            rightHindLeg1.setAttribute('d', 'M 68 65 Q 85 70 88 88');
+            rightHindLeg1.setAttribute('fill', 'none');
+            rightHindLeg1.setAttribute('stroke', strokeColor);
+            rightHindLeg1.setAttribute('stroke-width', '3.5');
+            rightHindLeg1.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(rightHindLeg1);
+
+            const rightHindLeg2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            rightHindLeg2.setAttribute('d', 'M 68 68 Q 92 75 98 95');
+            rightHindLeg2.setAttribute('fill', 'none');
+            rightHindLeg2.setAttribute('stroke', strokeColor);
+            rightHindLeg2.setAttribute('stroke-width', '2.5');
+            rightHindLeg2.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(rightHindLeg2);
+
+            // Middle legs
+            for (let side of [-1, 1]) {
+                const midLeg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                midLeg.setAttribute('d', `M ${50 + side * 16} 50 L ${50 + side * 28} 62`);
+                midLeg.setAttribute('fill', 'none');
+                midLeg.setAttribute('stroke', strokeColor);
+                midLeg.setAttribute('stroke-width', '2');
+                midLeg.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(midLeg);
+            }
+
+            // Front legs - shorter
+            for (let side of [-1, 1]) {
+                const frontLeg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                frontLeg.setAttribute('d', `M ${50 + side * 14} 35 L ${50 + side * 22} 42`);
+                frontLeg.setAttribute('fill', 'none');
+                frontLeg.setAttribute('stroke', strokeColor);
+                frontLeg.setAttribute('stroke-width', '2');
+                frontLeg.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(frontLeg);
+            }
+
+            // Large eyes on top of head
+            for (let side of [-5, 5]) {
+                const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                eye.setAttribute('cx', 50 + side);
+                eye.setAttribute('cy', '16');
+                eye.setAttribute('r', '3');
+                eye.setAttribute('fill', strokeColor);
+                svg.appendChild(eye);
+
+                // Eye shine
+                const shine = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                shine.setAttribute('cx', 50 + side + 1);
+                shine.setAttribute('cy', '15');
+                shine.setAttribute('r', '1');
+                shine.setAttribute('fill', 'rgba(255,255,255,0.6)');
+                svg.appendChild(shine);
+            }
+        }
+
+        function createLadybugSVG(svg, color, strokeColor) {
+            // Shell
+            const shell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            shell.setAttribute('cx', '50');
+            shell.setAttribute('cy', '55');
+            shell.setAttribute('rx', '32');
+            shell.setAttribute('ry', '35');
+            shell.setAttribute('fill', color);
+            shell.setAttribute('stroke', strokeColor);
+            shell.setAttribute('stroke-width', '2');
+            svg.appendChild(shell);
+
+            // Head
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            head.setAttribute('cx', '50');
+            head.setAttribute('cy', '25');
+            head.setAttribute('r', '14');
+            head.setAttribute('fill', 'rgba(0,0,0,0.3)');
+            head.setAttribute('stroke', strokeColor);
+            head.setAttribute('stroke-width', '2');
+            svg.appendChild(head);
+
+            // Center line
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '50');
+            line.setAttribute('y1', '20');
+            line.setAttribute('x2', '50');
+            line.setAttribute('y2', '90');
+            line.setAttribute('stroke', strokeColor);
+            line.setAttribute('stroke-width', '1');
+            svg.appendChild(line);
+
+            // Spots (6 on each wing)
+            const positions = [
+                { x: 35, y: 40 }, { x: 35, y: 55 }, { x: 35, y: 70 },
+                { x: 65, y: 40 }, { x: 65, y: 55 }, { x: 65, y: 70 }
+            ];
+
+            positions.forEach(pos => {
+                const spot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                spot.setAttribute('cx', pos.x);
+                spot.setAttribute('cy', pos.y);
+                spot.setAttribute('r', '5');
+                spot.setAttribute('fill', strokeColor);
+                svg.appendChild(spot);
+            });
+
+            // Eyes
+            for (let side of [-4, 4]) {
+                const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                eye.setAttribute('cx', 50 + side);
+                eye.setAttribute('cy', '22');
+                eye.setAttribute('r', '2');
+                eye.setAttribute('fill', strokeColor);
+                svg.appendChild(eye);
+            }
+        }
+
+        function renderHand() {
+            const handArea = document.getElementById('handArea');
+            const player = gameState.currentPlayer;
+            const handData = gameState.hand[`player${player}`];
+
+            handArea.innerHTML = '';
+
+            for (let type in INSECT_TYPES) {
+                const count = handData[type];
+                if (count > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'hand-insect';
+                    div.dataset.insectType = type;
+                    div.addEventListener('mousedown', handleHandInsectMouseDown);
+                    div.addEventListener('touchstart', handleHandInsectTouchStart);
+
+                    const svg = createInsectSVG(type, player);
+                    div.appendChild(svg);
+
+                    if (count > 1) {
+                        const countBadge = document.createElement('div');
+                        countBadge.className = 'insect-count';
+                        countBadge.textContent = count;
+                        div.appendChild(countBadge);
+                    }
+
+                    handArea.appendChild(div);
+                }
+            }
+        }
+
+        function handleHandInsectMouseDown(e) {
+            const type = e.currentTarget.dataset.insectType;
+            startDrag(e, 'hand', type);
+        }
+
+        function handleHandInsectTouchStart(e) {
+            const type = e.currentTarget.dataset.insectType;
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            startDrag(mouseEvent, 'hand', type);
+        }
+
+        function updatePlayerInfo() {
+            for (let p = 1; p <= 2; p++) {
+                const info = document.getElementById(`player${p}-info`);
+                const isActive = p === gameState.currentPlayer && !gameState.gameOver;
+                info.classList.toggle('active', isActive);
+
+                const queenStatus = document.getElementById(`player${p}-queen`);
+                if (gameState.queenPlaced[p]) {
+                    queenStatus.textContent = 'Queen: Placed ✓';
+                } else {
+                    const turnsLeft = Math.max(0, 3 - gameState.turnCount[p]);
+                    queenStatus.textContent = `Queen: ${turnsLeft} turns left`;
+                }
+
+                const status = document.getElementById(`player${p}-status`);
+                if (gameState.gameOver) {
+                    status.textContent = p === gameState.winner ? 'WINNER!' : 'DEFEATED';
+                } else {
+                    status.textContent = isActive ? 'Your Turn' : 'Waiting...';
+                }
+            }
+
+            const turnInd = document.getElementById('turnIndicator');
+            if (!gameState.gameOver) {
+                turnInd.textContent = `Player ${gameState.currentPlayer}'s Turn`;
+            }
+        }
+
+        // ====== PIECE INFO POPUP ======
+        let currentPopupCloser = null;
+
+        function showPieceInfo(insect, event) {
+            const popup = document.getElementById('pieceInfoPopup');
+            const insectData = INSECT_TYPES[insect.insect];
+
+            // Remove previous close listener if it exists
+            if (currentPopupCloser) {
+                document.removeEventListener('click', currentPopupCloser);
+                document.removeEventListener('contextmenu', currentPopupCloser);
+            }
+
+            document.getElementById('pieceInfoTitle').textContent = insectData.name;
+            document.getElementById('pieceInfoDetails').textContent = insectData.movement;
+            document.getElementById('pieceInfoOwner').textContent = `${insect.player === 1 ? 'Left (Blue)' : 'Right (Orange)'}`;
+
+            popup.classList.add('active');
+
+            // Position popup near cursor
+            let x = event.clientX + 10;
+            let y = event.clientY + 10;
+
+            // Adjust if popup would go off-screen
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+
+            const rect = popup.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                x = window.innerWidth - rect.width - 10;
+                popup.style.left = x + 'px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                y = window.innerHeight - rect.height - 10;
+                popup.style.top = y + 'px';
+            }
+
+            // Close popup when clicking elsewhere
+            currentPopupCloser = (e) => {
+                // Don't close if clicking on the popup itself
+                if (popup.contains(e.target)) return;
+                popup.classList.remove('active');
+                document.removeEventListener('click', currentPopupCloser);
+                document.removeEventListener('contextmenu', currentPopupCloser);
+                currentPopupCloser = null;
+            };
+
+            setTimeout(() => {
+                document.addEventListener('click', currentPopupCloser);
+                document.addEventListener('contextmenu', currentPopupCloser);
+            }, 10);
+        }
+
+        // ====== ZOOM SYSTEM ======
+        let currentZoom = 1;
+        const MIN_ZOOM = 0.3;
+        const MAX_ZOOM = 3;
+        const AUTO_ZOOM_THRESHOLD = 2; // Auto-zoom if zoom would be less than this
+
+        function updateBoardZoom() {
+            const wrapper = document.querySelector('.hexagon-zoom-wrapper');
+            if (wrapper) {
+                wrapper.style.transform = `scale(${currentZoom})`;
+            }
+        }
+
+        function autoFitBoard() {
+            const container = document.getElementById('hexagonContainer');
+            if (!container || gameState.board.size === 0) {
+                currentZoom = 1;
+                updateBoardZoom();
+                return;
+            }
+
+            // Find bounds of all placed insects
+            let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
+            for (let hexKey of gameState.board.keys()) {
+                const [q, r] = hexKey.split(',').map(Number);
+                minQ = Math.min(minQ, q);
+                maxQ = Math.max(maxQ, q);
+                minR = Math.min(minR, r);
+                maxR = Math.max(maxR, r);
+            }
+
+            if (minQ === Infinity) {
+                currentZoom = 1;
+            } else {
+                // Calculate required zoom to fit all pieces
+                const qSpan = maxQ - minQ + 2;
+                const rSpan = maxR - minR + 2;
+                const boardWidth = 800;
+                const boardHeight = 700;
+                const hexSize = 100; // HEX_ACTUAL_SIZE * 2
+
+                const requiredZoom = Math.min(
+                    boardWidth / (qSpan * hexSize * 1.5),
+                    boardHeight / (rSpan * hexSize * Math.sqrt(3))
+                );
+
+                currentZoom = Math.max(AUTO_ZOOM_THRESHOLD, requiredZoom);
+                currentZoom = Math.min(currentZoom, MAX_ZOOM);
+            }
+
+            updateBoardZoom();
+        }
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            currentZoom = Math.min(currentZoom + 0.2, MAX_ZOOM);
+            updateBoardZoom();
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            currentZoom = Math.max(currentZoom - 0.2, MIN_ZOOM);
+            updateBoardZoom();
+        });
+
+        document.getElementById('resetZoomBtn').addEventListener('click', () => {
+            autoFitBoard();
+        });
+
+        // ====== VICTORY SCREEN ======
+        function showVictory() {
+            const overlay = document.createElement('div');
+            overlay.className = 'victory-overlay';
+
+            const winner = gameState.winner === 1 ? 'Left' : 'Right';
+            const winnerColor = gameState.winner === 1 ? 'Blue' : 'Orange';
+
+            overlay.innerHTML = `
+                <div class="victory-text">${winner} Wins!</div>
+                <div class="victory-subtext">${winnerColor} player has surrounded the Queen!</div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Create confetti
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = Math.random() > 0.5 ? '#FFD700' : '#FFA500';
+                confetti.style.setProperty('--drift-x', (Math.random() - 0.5) * 200 + 'px');
+                document.body.appendChild(confetti);
+            }
+        }
+
+        // ====== INFO MODAL ======
+        document.getElementById('infoBtn').addEventListener('click', () => {
+            document.getElementById('infoModal').classList.add('active');
+        });
+
+        document.getElementById('closeInfoBtn').addEventListener('click', () => {
+            document.getElementById('infoModal').classList.remove('active');
+        });
+
+        document.getElementById('infoModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('infoModal')) {
+                document.getElementById('infoModal').classList.remove('active');
+            }
+        });
+
+        // ====== GAME CONTROLS ======
+        document.getElementById('new-game').addEventListener('click', () => {
+            document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
+            document.querySelectorAll('.confetti').forEach(el => el.remove());
+            initGame();
+        });
+
+        document.getElementById('pass-turn').addEventListener('click', () => {
+            if (canPassTurn()) {
+                endTurn();
+            }
+        });
+
+        // ====== INITIALIZATION ======
+        function initGame() {
+            gameState = {
+                board: new Map(),
+                hand: {},
+                currentPlayer: Math.random() < 0.5 ? 1 : 2,
+                gameOver: false,
+                winner: null,
+                turn: 0,
+                selectedInsect: null,
+                queenPlaced: { 1: false, 2: false },
+                turnCount: { 1: 0, 2: 0 }
+            };
+            initializeHand();
+            renderGame();
+        }
+
+        // Start game on load
+        window.addEventListener('load', () => {
+            initGame();
+        });
+    </script>
+</body>
+</html>
