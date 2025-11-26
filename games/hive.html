@@ -226,6 +226,12 @@
 
         .insect-ghost {
             opacity: 0.4;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            pointer-events: none !important;
         }
 
         .hexagon-content {
@@ -1598,6 +1604,7 @@
                     const polygon = hexElement.querySelector('svg polygon');
                     if (polygon) {
                         polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
+                        polygon.removeAttribute('stroke');
                     }
                 }
             }
