@@ -260,6 +260,15 @@
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
         }
 
+        .game-option.hive-option {
+            border-color: #2d7a4f;
+        }
+
+        .game-option.hive-option:hover {
+            border-color: #4a9f68;
+            box-shadow: 0 0 30px rgba(45, 122, 79, 0.6);
+        }
+
         .game-icon {
             width: 100px;
             height: 100px;
@@ -569,6 +578,24 @@
                     </svg>
                     <div class="game-name">Sudoku</div>
                 </a>
+                <a href="games/hive.html" class="game-option hive-option" data-url="games/hive.html" data-game="hive">
+                    <span class="favorite-indicator" data-game="hive">★</span>
+                    <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Hexagonal board -->
+                        <g id="hex-cluster">
+                            <!-- Center hex -->
+                            <polygon points="50,20 65,30 65,50 50,60 35,50 35,30" fill="rgba(45, 122, 79, 0.3)" stroke="#2d7a4f" stroke-width="1.5"/>
+                            <!-- Surrounding hexes -->
+                            <polygon points="35,30 45,20 60,20 70,30 65,45 50,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                            <polygon points="50,60 65,50 80,50 85,65 75,75 60,70" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                            <polygon points="35,50 35,70 20,75 15,65 20,50 35,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                        </g>
+                        <!-- Queen bee icon -->
+                        <circle cx="50" cy="40" r="8" fill="#FFD700"/>
+                        <path d="M 50 32 L 55 38 L 50 35 L 45 38 Z" fill="#FFA500"/>
+                    </svg>
+                    <div class="game-name">Hive</div>
+                </a>
             </div>
         </div>
     </div>
@@ -792,6 +819,18 @@
                     <text x="52" y="47" font-size="8" fill="#a78bfa" text-anchor="middle">7</text>
                     <text x="62" y="57" font-size="8" fill="#a78bfa" text-anchor="middle">9</text>
                     <text x="78" y="77" font-size="8" fill="#a78bfa" text-anchor="middle">6</text>
+                </svg>`
+            },
+            hive: {
+                name: 'Hive',
+                url: 'games/hive.html',
+                icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50,20 65,30 65,50 50,60 35,50 35,30" fill="rgba(45, 122, 79, 0.3)" stroke="#2d7a4f" stroke-width="1.5"/>
+                    <polygon points="35,30 45,20 60,20 70,30 65,45 50,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                    <polygon points="50,60 65,50 80,50 85,65 75,75 60,70" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                    <polygon points="35,50 35,70 20,75 15,65 20,50 35,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
+                    <circle cx="50" cy="40" r="8" fill="#FFD700"/>
+                    <path d="M 50 32 L 55 38 L 50 35 L 45 38 Z" fill="#FFA500"/>
                 </svg>`
             }
         };
