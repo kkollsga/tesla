@@ -581,18 +581,42 @@
                 <a href="games/hive.html" class="game-option hive-option" data-url="games/hive.html" data-game="hive">
                     <span class="favorite-indicator" data-game="hive">★</span>
                     <svg class="game-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Hexagonal board -->
-                        <g id="hex-cluster">
-                            <!-- Center hex -->
-                            <polygon points="50,20 65,30 65,50 50,60 35,50 35,30" fill="rgba(45, 122, 79, 0.3)" stroke="#2d7a4f" stroke-width="1.5"/>
-                            <!-- Surrounding hexes -->
-                            <polygon points="35,30 45,20 60,20 70,30 65,45 50,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                            <polygon points="50,60 65,50 80,50 85,65 75,75 60,70" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                            <polygon points="35,50 35,70 20,75 15,65 20,50 35,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                        </g>
-                        <!-- Queen bee icon -->
-                        <circle cx="50" cy="40" r="8" fill="#FFD700"/>
-                        <path d="M 50 32 L 55 38 L 50 35 L 45 38 Z" fill="#FFA500"/>
+                        <defs>
+                            <linearGradient id="hexGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4a9f68;stop-opacity:0.6" />
+                                <stop offset="100%" style="stop-color:#1a472a;stop-opacity:0.6" />
+                            </linearGradient>
+                            <linearGradient id="hexGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3d9a5f;stop-opacity:0.4" />
+                                <stop offset="100%" style="stop-color:#0f3420;stop-opacity:0.4" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Top row (2 hexes) -->
+                        <polygon points="38,16 45,12 52,16 52,26 45,30 38,26" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                        <polygon points="52,16 59,12 66,16 66,26 59,30 52,26" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+
+                        <!-- Middle row (3 hexes) -->
+                        <polygon points="31,32 38,28 45,32 45,42 38,46 31,42" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                        <polygon points="45,32 52,28 59,32 59,42 52,46 45,42" fill="url(#hexGradient1)" stroke="#2d7a4f" stroke-width="1.2"/>
+                        <polygon points="59,32 66,28 73,32 73,42 66,46 59,42" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+
+                        <!-- Bottom row (2 hexes) -->
+                        <polygon points="38,48 45,44 52,48 52,58 45,62 38,58" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                        <polygon points="52,48 59,44 66,48 66,58 59,62 52,58" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+
+                        <!-- Game pieces on center hex -->
+                        <!-- Blue piece -->
+                        <circle cx="48" cy="36" r="3.5" fill="#5599ff" stroke="#1155cc" stroke-width="0.8"/>
+                        <!-- Orange piece -->
+                        <circle cx="56" cy="36" r="3.5" fill="#ffaa44" stroke="#dd6611" stroke-width="0.8"/>
+                        <!-- Blue piece -->
+                        <circle cx="48" cy="44" r="3" fill="#4a7ccc" stroke="#1155cc" stroke-width="0.8"/>
+                        <!-- Orange piece -->
+                        <circle cx="56" cy="44" r="3" fill="#ff9922" stroke="#dd6611" stroke-width="0.8"/>
+
+                        <!-- Queen in center -->
+                        <circle cx="52" cy="40" r="2.8" fill="#FFD700" stroke="#FFA500" stroke-width="0.7"/>
                     </svg>
                     <div class="game-name">Hive</div>
                 </a>
@@ -825,12 +849,28 @@
                 name: 'Hive',
                 url: 'games/hive.html',
                 icon: `<svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polygon points="50,20 65,30 65,50 50,60 35,50 35,30" fill="rgba(45, 122, 79, 0.3)" stroke="#2d7a4f" stroke-width="1.5"/>
-                    <polygon points="35,30 45,20 60,20 70,30 65,45 50,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                    <polygon points="50,60 65,50 80,50 85,65 75,75 60,70" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                    <polygon points="35,50 35,70 20,75 15,65 20,50 35,45" fill="rgba(45, 122, 79, 0.2)" stroke="#2d7a4f" stroke-width="1"/>
-                    <circle cx="50" cy="40" r="8" fill="#FFD700"/>
-                    <path d="M 50 32 L 55 38 L 50 35 L 45 38 Z" fill="#FFA500"/>
+                    <defs>
+                        <linearGradient id="hexGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4a9f68;stop-opacity:0.6" />
+                            <stop offset="100%" style="stop-color:#1a472a;stop-opacity:0.6" />
+                        </linearGradient>
+                        <linearGradient id="hexGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3d9a5f;stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:#0f3420;stop-opacity:0.4" />
+                        </linearGradient>
+                    </defs>
+                    <polygon points="38,16 45,12 52,16 52,26 45,30 38,26" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="52,16 59,12 66,16 66,26 59,30 52,26" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="31,32 38,28 45,32 45,42 38,46 31,42" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="45,32 52,28 59,32 59,42 52,46 45,42" fill="url(#hexGradient1)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="59,32 66,28 73,32 73,42 66,46 59,42" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="38,48 45,44 52,48 52,58 45,62 38,58" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <polygon points="52,48 59,44 66,48 66,58 59,62 52,58" fill="url(#hexGradient2)" stroke="#2d7a4f" stroke-width="1.2"/>
+                    <circle cx="48" cy="36" r="3.5" fill="#5599ff" stroke="#1155cc" stroke-width="0.8"/>
+                    <circle cx="56" cy="36" r="3.5" fill="#ffaa44" stroke="#dd6611" stroke-width="0.8"/>
+                    <circle cx="48" cy="44" r="3" fill="#4a7ccc" stroke="#1155cc" stroke-width="0.8"/>
+                    <circle cx="56" cy="44" r="3" fill="#ff9922" stroke="#dd6611" stroke-width="0.8"/>
+                    <circle cx="52" cy="40" r="2.8" fill="#FFD700" stroke="#FFA500" stroke-width="0.7"/>
                 </svg>`
             }
         };
