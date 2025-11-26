@@ -185,8 +185,10 @@
             filter: drop-shadow(0 0 8px rgba(45, 122, 79, 0.8));
         }
 
-        .hexagon.valid-move {
-            border: 2px solid #4a9f68;
+        .hexagon.valid-move svg polygon {
+            stroke: var(--player-color, #4a9f68) !important;
+            stroke-width: 3 !important;
+            filter: drop-shadow(0 0 3px var(--player-color, #4a9f68));
         }
 
         .insect.selected {
@@ -670,20 +672,6 @@
             transform: scale(0.95);
         }
 
-        .turn-indicator {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: rgba(13, 42, 24, 0.8);
-            border: 2px solid #2d7a4f;
-            border-radius: 10px;
-            padding: 15px 25px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 100;
-            pointer-events: none;
-        }
 
         .piece-info-popup {
             position: fixed;
@@ -754,10 +742,6 @@
         <button class="zoom-btn" id="zoomInBtn" title="Zoom In">+</button>
         <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">−</button>
         <button class="zoom-btn" id="resetZoomBtn" title="Reset Zoom">⊙</button>
-    </div>
-
-    <div class="turn-indicator" id="turnIndicator">
-        Player 1's Turn
     </div>
 
     <div class="game-wrapper">
@@ -1047,7 +1031,9 @@
             dragOffsetX: 0,
             dragOffsetY: 0,
             dragSource: null, // 'hand' or 'board'
-            sourceData: null
+            sourceData: null,
+            highlightTimeout: null,
+            lastHighlightedHex: null
         };
 
         let selectedElement = null; // Tracks element locked for dragging
@@ -1189,6 +1175,8 @@
             dragState.dragClone.style.position = 'fixed';
             dragState.dragClone.style.zIndex = '1000';
             dragState.dragClone.style.pointerEvents = 'none';
+            dragState.dragClone.style.transition = 'none';
+            dragState.dragClone.style.transform = 'scale(1)';
             dragState.dragClone.classList.remove('selected');
             document.body.appendChild(dragState.dragClone);
 
@@ -1242,8 +1230,13 @@
             dragState.dragClone.style.left = (e.clientX - dragState.dragOffsetX) + 'px';
             dragState.dragClone.style.top = (e.clientY - dragState.dragOffsetY) + 'px';
 
-            // Update highlighting
-            updateDropZoneHighlight(e.clientX, e.clientY);
+            // Update highlighting (debounce this expensive operation)
+            if (!dragState.highlightTimeout) {
+                dragState.highlightTimeout = requestAnimationFrame(() => {
+                    updateDropZoneHighlight(e.clientX, e.clientY);
+                    dragState.highlightTimeout = null;
+                });
+            }
         }
 
         function handleDragMoveTouch(e) {
@@ -1256,30 +1249,50 @@
         }
 
         function updateDropZoneHighlight(x, y) {
-            // Clear all previous highlights
-            const allHexagons = document.querySelectorAll('.hexagon');
-            allHexagons.forEach(hex => {
-                hex.classList.remove('valid-move');
-            });
-
             // Get element under cursor
             const elementBelow = document.elementFromPoint(x, y);
             const hexElement = elementBelow?.closest('.hexagon');
 
-            if (!hexElement) return;
+            if (!hexElement) {
+                // Clear highlight if not over a hex
+                if (dragState.lastHighlightedHex) {
+                    dragState.lastHighlightedHex.classList.remove('valid-move');
+                    dragState.lastHighlightedHex.style.removeProperty('--player-color');
+                    dragState.lastHighlightedHex = null;
+                }
+                return;
+            }
 
-            const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
-            const hexKey = hex.toString();
+            const hexKey = hexElement.dataset.hex;
+
+            // Skip if already highlighting this hex
+            if (dragState.lastHighlightedHex === hexElement) {
+                return;
+            }
+
+            // Clear previous highlight
+            if (dragState.lastHighlightedHex) {
+                dragState.lastHighlightedHex.classList.remove('valid-move');
+                dragState.lastHighlightedHex.style.removeProperty('--player-color');
+            }
+
+            const hex = new Hex(...hexKey.split(',').map(Number));
+
+            const playerColor = gameState.currentPlayer === 1 ? '#5599ff' : '#ffaa44';
 
             if (dragState.dragSource === 'hand') {
                 // For placement from hand
                 if (!gameState.board.has(hexKey) && canPlaceInsect(hex)) {
+                    hexElement.style.setProperty('--player-color', playerColor);
                     hexElement.classList.add('valid-move');
+                    dragState.lastHighlightedHex = hexElement;
                 }
             } else if (dragState.dragSource === 'board') {
                 // For movement on board
                 if (!gameState.board.has(hexKey)) {
+                    hexElement.style.setProperty('--player-color', playerColor);
                     hexElement.classList.add('valid-move');
+                    dragState.lastHighlightedHex = hexElement;
                 }
             }
         }
@@ -1287,6 +1300,12 @@
         function handleDragEnd(e) {
             const wasDragging = dragState.isDragging;
             dragState.isDragging = false;
+
+            // Cancel pending highlight update
+            if (dragState.highlightTimeout) {
+                cancelAnimationFrame(dragState.highlightTimeout);
+                dragState.highlightTimeout = null;
+            }
 
             // Clean up drag visuals
             if (dragState.dragClone) {
@@ -1302,10 +1321,12 @@
                 label.classList.remove('show');
             });
 
-            // Clear all highlights
-            document.querySelectorAll('.valid-move').forEach(hex => {
-                hex.classList.remove('valid-move');
-            });
+            // Clear highlights
+            if (dragState.lastHighlightedHex) {
+                dragState.lastHighlightedHex.classList.remove('valid-move');
+                dragState.lastHighlightedHex.style.removeProperty('--player-color');
+                dragState.lastHighlightedHex = null;
+            }
 
             // Only process drop if we actually dragged
             if (wasDragging) {
@@ -1550,6 +1571,21 @@
                 if (insect) {
                     const insectElement = createInsectElement(insect);
                     hexElement.appendChild(insectElement);
+
+                    // Update hexagon background color based on player
+                    const polygon = hexElement.querySelector('svg polygon');
+                    if (polygon) {
+                        const playerColor = insect.player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
+                        const strokeColor = insect.player === 1 ? '#5599ff' : '#ffaa44';
+                        polygon.setAttribute('fill', playerColor);
+                        polygon.setAttribute('stroke', strokeColor);
+                    }
+                } else {
+                    // Reset hexagon color if no insect
+                    const polygon = hexElement.querySelector('svg polygon');
+                    if (polygon) {
+                        polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
+                    }
                 }
             }
 
@@ -2038,11 +2074,6 @@
                 } else {
                     status.textContent = isActive ? 'Your Turn' : 'Waiting...';
                 }
-            }
-
-            const turnInd = document.getElementById('turnIndicator');
-            if (!gameState.gameOver) {
-                turnInd.textContent = `Player ${gameState.currentPlayer}'s Turn`;
             }
         }
 
