@@ -185,8 +185,11 @@
         }
 
         .hexagon.valid-move {
-            box-shadow: inset 0 0 0 3px #4a9f68, 0 0 15px rgba(74, 159, 104, 0.8);
-            filter: brightness(1.1);
+            border: 2px solid #4a9f68;
+        }
+
+        .insect.selected {
+            filter: drop-shadow(0 0 8px rgba(74, 159, 104, 0.9));
         }
 
         .hexagon.occupied {
@@ -1046,12 +1049,14 @@
             sourceData: null
         };
 
+        let selectedElement = null; // Tracks element locked for dragging
+
         function handleHexagonMouseDown(e) {
             const hex = new Hex(...e.currentTarget.dataset.hex.split(',').map(Number));
             const insect = gameState.board.get(hex.toString());
 
             if (insect && insect.player === gameState.currentPlayer) {
-                startDrag(e, 'board', insect);
+                selectAndDrag(e, 'board', insect);
             }
         }
 
@@ -1065,46 +1070,98 @@
                     clientX: touch.clientX,
                     clientY: touch.clientY
                 });
-                startDrag(mouseEvent, 'board', insect);
+                selectAndDrag(mouseEvent, 'board', insect);
             }
         }
 
-        function startDrag(e, source, data) {
+        function selectAndDrag(e, source, data) {
             if (dragState.isDragging) return;
 
-            dragState.isDragging = true;
+            const element = e.target.closest('.insect') || e.target.closest('.hand-insect');
+            if (!element) return;
+
+            // Lock this element as the selected reference point
+            if (selectedElement && selectedElement !== element) {
+                selectedElement.classList.remove('selected');
+            }
+            selectedElement = element;
+            selectedElement.classList.add('selected');
+
+            // Record the initial click position for smooth dragging
+            const rect = element.getBoundingClientRect();
+            dragState.dragOffsetX = e.clientX - rect.left;
+            dragState.dragOffsetY = e.clientY - rect.top;
+
+            // Only start dragging on movement (like Solitaire)
+            dragState.isDragging = false; // Will become true on first move
             dragState.dragSource = source;
             dragState.sourceData = data;
-            dragState.dragElement = e.target.closest('.insect') || e.target.closest('.hand-insect');
+            dragState.dragElement = element;
 
-            if (dragState.dragElement) {
-                const rect = dragState.dragElement.getBoundingClientRect();
-                dragState.dragOffsetX = e.clientX - rect.left;
-                dragState.dragOffsetY = e.clientY - rect.top;
+            document.addEventListener('mousemove', beginDragOnMove);
+            document.addEventListener('touchmove', beginDragOnMoveTouch);
+            document.addEventListener('mouseup', cancelDragIfNotStarted);
+            document.addEventListener('touchend', cancelDragIfNotStarted);
+        }
 
-                dragState.dragClone = dragState.dragElement.cloneNode(true);
-                dragState.dragClone.style.position = 'fixed';
-                dragState.dragClone.style.zIndex = '1000';
-                dragState.dragClone.style.pointerEvents = 'none';
-                document.body.appendChild(dragState.dragClone);
+        function beginDragOnMove(e) {
+            if (dragState.isDragging) {
+                handleDragMove(e);
+                return;
+            }
 
-                dragState.dragElement.classList.add('insect-ghost');
+            // Start dragging on first movement
+            dragState.isDragging = true;
 
-                // Show dragging label if from hand
-                if (source === 'hand') {
-                    const insectType = data;
-                    const insectName = INSECT_TYPES[insectType]?.name || 'Insect';
-                    const playerLabel = document.getElementById(`player${gameState.currentPlayer}-dragging-label`);
-                    if (playerLabel) {
-                        playerLabel.textContent = `Place ${insectName}`;
-                        playerLabel.classList.add('show');
-                    }
+            // Create clone now that we're actually dragging
+            dragState.dragClone = dragState.dragElement.cloneNode(true);
+            dragState.dragClone.style.position = 'fixed';
+            dragState.dragClone.style.zIndex = '1000';
+            dragState.dragClone.style.pointerEvents = 'none';
+            dragState.dragClone.classList.remove('selected');
+            document.body.appendChild(dragState.dragClone);
+
+            dragState.dragElement.classList.add('insect-ghost');
+
+            // Show dragging label if from hand
+            if (dragState.dragSource === 'hand') {
+                const insectType = dragState.sourceData;
+                const insectName = INSECT_TYPES[insectType]?.name || 'Insect';
+                const playerLabel = document.getElementById(`player${gameState.currentPlayer}-dragging-label`);
+                if (playerLabel) {
+                    playerLabel.textContent = `Place ${insectName}`;
+                    playerLabel.classList.add('show');
                 }
+            }
 
-                document.addEventListener('mousemove', handleDragMove);
-                document.addEventListener('touchmove', handleDragMoveTouch);
-                document.addEventListener('mouseup', handleDragEnd);
-                document.addEventListener('touchend', handleDragEnd);
+            // Remove the old listeners and add drag handlers
+            document.removeEventListener('mousemove', beginDragOnMove);
+            document.removeEventListener('touchmove', beginDragOnMoveTouch);
+            document.removeEventListener('mouseup', cancelDragIfNotStarted);
+            document.removeEventListener('touchend', cancelDragIfNotStarted);
+
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMoveTouch);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+
+            handleDragMove(e);
+        }
+
+        function beginDragOnMoveTouch(e) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                beginDragOnMove({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+        }
+
+        function cancelDragIfNotStarted(e) {
+            if (!dragState.isDragging) {
+                // Just a click, not a drag
+                document.removeEventListener('mousemove', beginDragOnMove);
+                document.removeEventListener('touchmove', beginDragOnMoveTouch);
+                document.removeEventListener('mouseup', cancelDragIfNotStarted);
+                document.removeEventListener('touchend', cancelDragIfNotStarted);
             }
         }
 
@@ -1157,8 +1214,7 @@
         }
 
         function handleDragEnd(e) {
-            if (!dragState.isDragging) return;
-
+            const wasDragging = dragState.isDragging;
             dragState.isDragging = false;
 
             // Clean up drag visuals
@@ -1180,17 +1236,20 @@
                 hex.classList.remove('valid-move');
             });
 
-            // Detect drop target
-            const dropElement = document.elementFromPoint(e.clientX, e.clientY);
-            const hexElement = dropElement?.closest('.hexagon');
+            // Only process drop if we actually dragged
+            if (wasDragging) {
+                // Detect drop target
+                const dropElement = document.elementFromPoint(e.clientX, e.clientY);
+                const hexElement = dropElement?.closest('.hexagon');
 
-            if (hexElement) {
-                const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
+                if (hexElement) {
+                    const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
 
-                if (dragState.dragSource === 'hand') {
-                    placeInsect(hex, dragState.sourceData);
-                } else if (dragState.dragSource === 'board') {
-                    moveInsect(dragState.sourceData, hex);
+                    if (dragState.dragSource === 'hand') {
+                        placeInsect(hex, dragState.sourceData);
+                    } else if (dragState.dragSource === 'board') {
+                        moveInsect(dragState.sourceData, hex);
+                    }
                 }
             }
 
@@ -1208,6 +1267,10 @@
             document.removeEventListener('touchmove', handleDragMoveTouch);
             document.removeEventListener('mouseup', handleDragEnd);
             document.removeEventListener('touchend', handleDragEnd);
+            document.removeEventListener('mousemove', beginDragOnMove);
+            document.removeEventListener('touchmove', beginDragOnMoveTouch);
+            document.removeEventListener('mouseup', cancelDragIfNotStarted);
+            document.removeEventListener('touchend', cancelDragIfNotStarted);
         }
 
         // ====== GAME LOGIC ======
