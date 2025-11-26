@@ -1902,8 +1902,8 @@
         // ====== ZOOM SYSTEM ======
         let currentZoom = 1;
         const MIN_ZOOM = 0.3;
-        const MAX_ZOOM = 3;
-        const AUTO_ZOOM_THRESHOLD = 2; // Auto-zoom if zoom would be less than this
+        const MAX_ZOOM = 1.8; // Prevent zooming in too much, especially with single pieces
+        const MIN_AUTO_ZOOM = 0.8; // Don't zoom out below this when auto-fitting
 
         function updateBoardZoom() {
             const wrapper = document.querySelector('.hexagon-zoom-wrapper');
@@ -1933,9 +1933,10 @@
             if (minQ === Infinity) {
                 currentZoom = 1;
             } else {
-                // Calculate required zoom to fit all pieces
-                const qSpan = maxQ - minQ + 2;
-                const rSpan = maxR - minR + 2;
+                // Calculate required zoom to fit all pieces with margins
+                // Margin of 4 hexagons on each side ensures good spacing
+                const qSpan = maxQ - minQ + 4;
+                const rSpan = maxR - minR + 4;
                 const boardWidth = 800;
                 const boardHeight = 700;
                 const hexSize = 100; // HEX_ACTUAL_SIZE * 2
@@ -1945,7 +1946,8 @@
                     boardHeight / (rSpan * hexSize * Math.sqrt(3))
                 );
 
-                currentZoom = Math.max(AUTO_ZOOM_THRESHOLD, requiredZoom);
+                // Constrain zoom: don't go below MIN_AUTO_ZOOM, don't exceed MAX_ZOOM
+                currentZoom = Math.max(MIN_AUTO_ZOOM, requiredZoom);
                 currentZoom = Math.min(currentZoom, MAX_ZOOM);
             }
 
