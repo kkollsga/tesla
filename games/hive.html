@@ -149,7 +149,8 @@
             width: 100%;
             height: 100%;
             transform-origin: center center;
-            transition: transform 0.3s ease;
+            --pan-x: 0px;
+            --pan-y: 0px;
         }
 
         .hexagon-container {
@@ -1050,18 +1051,80 @@
         };
 
         let selectedElement = null; // Tracks element locked for dragging
+        let panState = {
+            startX: 0,
+            startY: 0,
+            startPanX: 0,
+            startPanY: 0
+        };
+
+        function startPan(e) {
+            if (dragState.isDragging) return;
+
+            const wrapper = document.querySelector('.hexagon-zoom-wrapper');
+            const panX = parseFloat(wrapper.style.getPropertyValue('--pan-x')) || 0;
+            const panY = parseFloat(wrapper.style.getPropertyValue('--pan-y')) || 0;
+
+            panState.startX = e.clientX;
+            panState.startY = e.clientY;
+            panState.startPanX = panX;
+            panState.startPanY = panY;
+
+            document.addEventListener('mousemove', handlePanMove);
+            document.addEventListener('mouseup', endPan);
+            document.addEventListener('touchmove', handlePanMoveTouch);
+            document.addEventListener('touchend', endPan);
+        }
+
+        function handlePanMove(e) {
+            const deltaX = e.clientX - panState.startX;
+            const deltaY = e.clientY - panState.startY;
+
+            const wrapper = document.querySelector('.hexagon-zoom-wrapper');
+            const newX = panState.startPanX + deltaX;
+            const newY = panState.startPanY + deltaY;
+
+            wrapper.style.setProperty('--pan-x', newX + 'px');
+            wrapper.style.setProperty('--pan-y', newY + 'px');
+            updateBoardZoom();
+        }
+
+        function handlePanMoveTouch(e) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                handlePanMove({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+        }
+
+        function endPan(e) {
+            document.removeEventListener('mousemove', handlePanMove);
+            document.removeEventListener('mouseup', endPan);
+            document.removeEventListener('touchmove', handlePanMoveTouch);
+            document.removeEventListener('touchend', endPan);
+        }
 
         function handleHexagonMouseDown(e) {
-            const hex = new Hex(...e.currentTarget.dataset.hex.split(',').map(Number));
+            // Get hexagon element - could be triggered on insect or empty hexagon
+            const hexElement = e.currentTarget.closest('.hexagon') || e.currentTarget;
+            if (!hexElement.dataset.hex) return;
+
+            const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
             const insect = gameState.board.get(hex.toString());
 
             if (insect && insect.player === gameState.currentPlayer) {
                 selectAndDrag(e, 'board', insect);
+            } else if (!insect) {
+                // Empty hexagon - pan the board
+                startPan(e);
             }
         }
 
         function handleHexagonTouchStart(e) {
-            const hex = new Hex(...e.currentTarget.dataset.hex.split(',').map(Number));
+            // Get hexagon element
+            const hexElement = e.currentTarget.closest('.hexagon') || e.currentTarget;
+            if (!hexElement.dataset.hex) return;
+
+            const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
             const insect = gameState.board.get(hex.toString());
 
             if (insect && insect.player === gameState.currentPlayer) {
@@ -1071,6 +1134,14 @@
                     clientY: touch.clientY
                 });
                 selectAndDrag(mouseEvent, 'board', insect);
+            } else if (!insect) {
+                // Empty hexagon - pan the board
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                startPan(mouseEvent);
             }
         }
 
@@ -1382,6 +1453,40 @@
             updatePlayerInfo();
         }
 
+        function areAllPiecesVisible() {
+            // Check if all pieces are currently visible in the viewport with margin
+            if (gameState.board.size === 0) return true;
+
+            const boardArea = document.getElementById('boardArea');
+            const boardRect = boardArea.getBoundingClientRect();
+
+            // Margin of 80 pixels where pieces should be visible (not cut off)
+            const margin = 80;
+            const viewMinX = boardRect.left + margin;
+            const viewMaxX = boardRect.right - margin;
+            const viewMinY = boardRect.top + margin;
+            const viewMaxY = boardRect.bottom - margin;
+
+            // Check each piece
+            for (let hexKey of gameState.board.keys()) {
+                const hexElement = document.querySelector(`[data-hex="${hexKey}"]`);
+                if (!hexElement) return false; // Hex not rendered
+
+                const hexRect = hexElement.getBoundingClientRect();
+
+                // Check if hex center is within visible area
+                const hexCenterX = hexRect.left + hexRect.width / 2;
+                const hexCenterY = hexRect.top + hexRect.height / 2;
+
+                if (hexCenterX < viewMinX || hexCenterX > viewMaxX ||
+                    hexCenterY < viewMinY || hexCenterY > viewMaxY) {
+                    return false; // Piece is not visible
+                }
+            }
+
+            return true; // All pieces are visible
+        }
+
         function renderBoard() {
             const container = document.getElementById('hexagonContainer');
 
@@ -1448,7 +1553,10 @@
                 }
             }
 
-            autoFitBoard();
+            // Only auto-fit if pieces are not all visible
+            if (!areAllPiecesVisible()) {
+                autoFitBoard();
+            }
         }
 
         function createInsectElement(insect) {
@@ -1897,7 +2005,7 @@
 
         function handleHandInsectMouseDown(e) {
             const type = e.currentTarget.dataset.insectType;
-            startDrag(e, 'hand', type);
+            selectAndDrag(e, 'hand', type);
         }
 
         function handleHandInsectTouchStart(e) {
@@ -1907,7 +2015,7 @@
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
-            startDrag(mouseEvent, 'hand', type);
+            selectAndDrag(mouseEvent, 'hand', type);
         }
 
         function updatePlayerInfo() {
@@ -2000,12 +2108,22 @@
         function updateBoardZoom() {
             const wrapper = document.querySelector('.hexagon-zoom-wrapper');
             if (wrapper) {
-                wrapper.style.transform = `scale(${currentZoom})`;
+                const panX = wrapper.style.getPropertyValue('--pan-x') || '0px';
+                const panY = wrapper.style.getPropertyValue('--pan-y') || '0px';
+                wrapper.style.transform = `scale(${currentZoom}) translate(${panX}, ${panY})`;
             }
         }
 
         function autoFitBoard() {
             const container = document.getElementById('hexagonContainer');
+
+            // Reset pan when auto-fitting
+            const wrapper = document.querySelector('.hexagon-zoom-wrapper');
+            if (wrapper) {
+                wrapper.style.setProperty('--pan-x', '0px');
+                wrapper.style.setProperty('--pan-y', '0px');
+            }
+
             if (!container || gameState.board.size === 0) {
                 currentZoom = 1;
                 updateBoardZoom();
