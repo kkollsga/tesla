@@ -184,6 +184,11 @@
             filter: drop-shadow(0 0 8px rgba(45, 122, 79, 0.8));
         }
 
+        .hexagon.valid-move {
+            box-shadow: inset 0 0 0 3px #4a9f68, 0 0 15px rgba(74, 159, 104, 0.8);
+            filter: brightness(1.1);
+        }
+
         .hexagon.occupied {
             cursor: grab;
         }
@@ -1030,18 +1035,6 @@
             return svg;
         }
 
-        // ====== THROTTLE UTILITY ======
-        function throttle(func, limit) {
-            let inThrottle;
-            return function executedFunction(...args) {
-                if (!inThrottle) {
-                    func.apply(this, args);
-                    inThrottle = true;
-                    setTimeout(() => inThrottle = false, limit);
-                }
-            };
-        }
-
         // ====== DRAG AND DROP ======
         let dragState = {
             isDragging: false,
@@ -1076,10 +1069,6 @@
             }
         }
 
-        // Create throttled drag move handlers
-        const throttledDragMove = throttle(handleDragMove, 16); // ~60fps
-        const throttledDragMoveTouchpause = throttle(handleDragMoveTouchpause, 16);
-
         function startDrag(e, source, data) {
             if (dragState.isDragging) return;
 
@@ -1112,8 +1101,8 @@
                     }
                 }
 
-                document.addEventListener('mousemove', throttledDragMove);
-                document.addEventListener('touchmove', throttledDragMoveTouchpause);
+                document.addEventListener('mousemove', handleDragMove);
+                document.addEventListener('touchmove', handleDragMoveTouch);
                 document.addEventListener('mouseup', handleDragEnd);
                 document.addEventListener('touchend', handleDragEnd);
             }
@@ -1124,13 +1113,46 @@
 
             dragState.dragClone.style.left = (e.clientX - dragState.dragOffsetX) + 'px';
             dragState.dragClone.style.top = (e.clientY - dragState.dragOffsetY) + 'px';
+
+            // Update highlighting
+            updateDropZoneHighlight(e.clientX, e.clientY);
         }
 
-        function handleDragMoveTouchpause(e) {
+        function handleDragMoveTouch(e) {
+            if (!dragState.isDragging || !dragState.dragClone) return;
+
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
-                const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
-                handleDragMove(fakeEvent);
+                handleDragMove({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+        }
+
+        function updateDropZoneHighlight(x, y) {
+            // Clear all previous highlights
+            const allHexagons = document.querySelectorAll('.hexagon');
+            allHexagons.forEach(hex => {
+                hex.classList.remove('valid-move');
+            });
+
+            // Get element under cursor
+            const elementBelow = document.elementFromPoint(x, y);
+            const hexElement = elementBelow?.closest('.hexagon');
+
+            if (!hexElement) return;
+
+            const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
+            const hexKey = hex.toString();
+
+            if (dragState.dragSource === 'hand') {
+                // For placement from hand
+                if (!gameState.board.has(hexKey) && canPlaceInsect(hex)) {
+                    hexElement.classList.add('valid-move');
+                }
+            } else if (dragState.dragSource === 'board') {
+                // For movement on board
+                if (!gameState.board.has(hexKey)) {
+                    hexElement.classList.add('valid-move');
+                }
             }
         }
 
@@ -1153,16 +1175,23 @@
                 label.classList.remove('show');
             });
 
+            // Clear all highlights
+            document.querySelectorAll('.valid-move').forEach(hex => {
+                hex.classList.remove('valid-move');
+            });
+
             // Detect drop target
             const dropElement = document.elementFromPoint(e.clientX, e.clientY);
             const hexElement = dropElement?.closest('.hexagon');
 
-            if (hexElement && dragState.dragSource === 'hand') {
+            if (hexElement) {
                 const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
-                placeInsect(hex, dragState.sourceData);
-            } else if (hexElement && dragState.dragSource === 'board') {
-                const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
-                moveInsect(dragState.sourceData, hex);
+
+                if (dragState.dragSource === 'hand') {
+                    placeInsect(hex, dragState.sourceData);
+                } else if (dragState.dragSource === 'board') {
+                    moveInsect(dragState.sourceData, hex);
+                }
             }
 
             dragState = {
@@ -1175,8 +1204,8 @@
                 sourceData: null
             };
 
-            document.removeEventListener('mousemove', throttledDragMove);
-            document.removeEventListener('touchmove', throttledDragMoveTouchpause);
+            document.removeEventListener('mousemove', handleDragMove);
+            document.removeEventListener('touchmove', handleDragMoveTouch);
             document.removeEventListener('mouseup', handleDragEnd);
             document.removeEventListener('touchend', handleDragEnd);
         }
