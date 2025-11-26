@@ -1176,8 +1176,21 @@
             dragState.dragClone.style.zIndex = '1000';
             dragState.dragClone.style.pointerEvents = 'none';
             dragState.dragClone.style.transition = 'none';
-            dragState.dragClone.style.transform = 'scale(1)';
+            dragState.dragClone.style.transform = 'none';
             dragState.dragClone.classList.remove('selected');
+
+            // Resize clone to match board insect size (hexagon is 96x96px)
+            const boardInsectSize = 96;
+            if (dragState.dragSource === 'hand') {
+                const handInsectSize = 70;
+                const scaleRatio = boardInsectSize / handInsectSize;
+                dragState.dragClone.style.width = boardInsectSize + 'px';
+                dragState.dragClone.style.height = boardInsectSize + 'px';
+                // Adjust offset for the new size so mouse position stays in the same relative spot
+                dragState.dragOffsetX *= scaleRatio;
+                dragState.dragOffsetY *= scaleRatio;
+            }
+
             document.body.appendChild(dragState.dragClone);
 
             dragState.dragElement.classList.add('insect-ghost');
