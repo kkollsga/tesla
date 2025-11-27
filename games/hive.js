@@ -184,6 +184,9 @@ function createHexagonSVG() {
     polygon.setAttribute('stroke', '#2d7a4f');
     polygon.setAttribute('stroke-width', '2');
 
+    // Add smooth transitions for fill and stroke
+    polygon.style.transition = 'fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease';
+
     svg.appendChild(polygon);
     return svg;
 }
@@ -201,7 +204,8 @@ let dragState = {
     dragSource: null, // 'hand' or 'board'
     sourceData: null,
     highlightTimeout: null,
-    lastHighlightedHex: null
+    lastHighlightedHex: null,
+    draggedFromHand: null // Tag for which insect type is being dragged from hand (not yet committed)
 };
 
 let selectedElement = null;
@@ -316,11 +320,8 @@ function selectAndDrag(e, source, data) {
     dragState.sourceData = data;
     dragState.dragElement = element;
 
-    // Decrement counter immediately if dragging from hand
-    if (source === 'hand') {
-        gameState.hand[`player${gameState.currentPlayer}`][data]--;
-        renderHand();
-    }
+    // Don't decrement counter yet - wait until drag actually starts
+    // This prevents DOM changes during active touch/mouse interaction
 
     document.addEventListener('mousemove', beginDragOnMove);
     document.addEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
@@ -346,11 +347,8 @@ function selectAndDragTouch(touch, element, source, data) {
     dragState.sourceData = data;
     dragState.dragElement = element;
 
-    // Decrement counter immediately if dragging from hand
-    if (source === 'hand') {
-        gameState.hand[`player${gameState.currentPlayer}`][data]--;
-        renderHand();
-    }
+    // Don't decrement counter yet - wait until drag actually starts
+    // This prevents DOM changes during active touch/mouse interaction
 
     document.addEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
     document.addEventListener('touchend', cancelDragIfNotStarted);
@@ -363,6 +361,12 @@ function beginDragOnMove(e) {
     }
 
     dragState.isDragging = true;
+
+    // Tag the insect being dragged from hand (don't modify game state yet)
+    if (dragState.dragSource === 'hand') {
+        dragState.draggedFromHand = dragState.sourceData;
+        renderHand(); // Re-render to show reduced count visually
+    }
 
     // For both hand and board insects, clone only the SVG and use consistent sizing
     const svg = dragState.dragElement.querySelector('svg');
@@ -426,16 +430,18 @@ function beginDragOnMoveTouch(e) {
 
 function cancelDragIfNotStarted(e) {
     if (!dragState.isDragging) {
-        // Restore counter if drag was from hand but never actually started
-        if (dragState.dragSource === 'hand' && dragState.sourceData) {
-            gameState.hand[`player${gameState.currentPlayer}`][dragState.sourceData]++;
-            renderHand();
-        }
-
+        // Drag never started - just clean up
         document.removeEventListener('mousemove', beginDragOnMove);
         document.removeEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
         document.removeEventListener('mouseup', cancelDragIfNotStarted);
         document.removeEventListener('touchend', cancelDragIfNotStarted);
+
+        // Reset drag state (tag was never set since drag didn't start)
+        dragState.isDragging = false;
+        dragState.dragElement = null;
+        dragState.dragSource = null;
+        dragState.sourceData = null;
+        dragState.draggedFromHand = null;
     }
 }
 
@@ -467,7 +473,8 @@ function updateDropZoneHighlight(x, y) {
     const elementBelow = document.elementFromPoint(x, y);
     const hexElement = elementBelow?.closest('.hexagon');
 
-    if (!hexElement) {
+    if (!hexElement || !hexElement.dataset.hex) {
+        // Clear previous highlight if we're not over a valid hexagon
         if (dragState.lastHighlightedHex) {
             dragState.lastHighlightedHex.classList.remove('valid-move');
             dragState.lastHighlightedHex.style.removeProperty('--player-color');
@@ -478,13 +485,16 @@ function updateDropZoneHighlight(x, y) {
 
     const hexKey = hexElement.dataset.hex;
 
+    // Same hexagon - no need to update
     if (dragState.lastHighlightedHex === hexElement) {
         return;
     }
 
+    // Clear previous highlight
     if (dragState.lastHighlightedHex) {
         dragState.lastHighlightedHex.classList.remove('valid-move');
         dragState.lastHighlightedHex.style.removeProperty('--player-color');
+        dragState.lastHighlightedHex = null;
     }
 
     const hex = new Hex(...hexKey.split(',').map(Number));
@@ -526,11 +536,12 @@ function handleDragEnd(e) {
         label.classList.remove('show');
     });
 
-    if (dragState.lastHighlightedHex) {
-        dragState.lastHighlightedHex.classList.remove('valid-move');
-        dragState.lastHighlightedHex.style.removeProperty('--player-color');
-        dragState.lastHighlightedHex = null;
-    }
+    // Clear all valid-move highlights (belt and suspenders approach)
+    document.querySelectorAll('.hexagon.valid-move').forEach(hex => {
+        hex.classList.remove('valid-move');
+        hex.style.removeProperty('--player-color');
+    });
+    dragState.lastHighlightedHex = null;
 
     if (wasDragging) {
         const dropElement = document.elementFromPoint(e.clientX, e.clientY);
@@ -542,31 +553,34 @@ function handleDragEnd(e) {
             if (dragState.dragSource === 'hand') {
                 const placed = placeInsect(hex, dragState.sourceData);
                 if (!placed) {
-                    // Restore counter if placement failed
-                    gameState.hand[`player${gameState.currentPlayer}`][dragState.sourceData]++;
+                    // Placement failed - clear the tag and re-render to restore visual count
+                    dragState.draggedFromHand = null;
                     renderHand();
                 }
+                // If placement succeeded, placeInsect already decremented the counter and tag is cleared below
             } else if (dragState.dragSource === 'board') {
                 moveInsect(dragState.sourceData, hex);
             }
         } else {
-            // Restore counter if drag was from hand but dropped on invalid location
-            if (dragState.dragSource === 'hand' && dragState.sourceData) {
-                gameState.hand[`player${gameState.currentPlayer}`][dragState.sourceData]++;
+            // Dropped on invalid location - clear tag and re-render to restore visual count
+            if (dragState.dragSource === 'hand' && dragState.draggedFromHand) {
+                dragState.draggedFromHand = null;
                 renderHand();
             }
         }
     }
 
-    dragState = {
-        isDragging: false,
-        dragElement: null,
-        dragClone: null,
-        dragOffsetX: 0,
-        dragOffsetY: 0,
-        dragSource: null,
-        sourceData: null
-    };
+    // Clear all drag state
+    dragState.isDragging = false;
+    dragState.dragElement = null;
+    dragState.dragClone = null;
+    dragState.dragOffsetX = 0;
+    dragState.dragOffsetY = 0;
+    dragState.dragSource = null;
+    dragState.sourceData = null;
+    dragState.draggedFromHand = null;
+    dragState.highlightTimeout = null;
+    dragState.lastHighlightedHex = null;
 
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('touchmove', handleDragMoveTouch, { passive: false });
@@ -622,7 +636,11 @@ function placeInsect(hex, insectType) {
         id: insectId
     });
 
-    // Note: Hand counter already decremented in selectAndDrag/selectAndDragTouch
+    // Now commit the change - decrement the actual counter
+    gameState.hand[`player${gameState.currentPlayer}`][insectType]--;
+
+    // Clear the drag tag since placement succeeded
+    dragState.draggedFromHand = null;
 
     if (insectType === 'queen') {
         gameState.queenPlaced[gameState.currentPlayer] = true;
@@ -1715,66 +1733,82 @@ function renderGame() {
     updatePlayerInfo();
 }
 
-function areAllPiecesVisible() {
-    if (gameState.board.size === 0) return true;
-
-    const boardArea = document.getElementById('boardArea');
-    const boardRect = boardArea.getBoundingClientRect();
-
-    const margin = 80;
-    const viewMinX = boardRect.left + margin;
-    const viewMaxX = boardRect.right - margin;
-    const viewMinY = boardRect.top + margin;
-    const viewMaxY = boardRect.bottom - margin;
-
-    for (let hexKey of gameState.board.keys()) {
-        const hexElement = document.querySelector(`[data-hex="${hexKey}"]`);
-        if (!hexElement) return false;
-
-        const hexRect = hexElement.getBoundingClientRect();
-        const hexCenterX = hexRect.left + hexRect.width / 2;
-        const hexCenterY = hexRect.top + hexRect.height / 2;
-
-        if (hexCenterX < viewMinX || hexCenterX > viewMaxX ||
-            hexCenterY < viewMinY || hexCenterY > viewMaxY) {
-            return false;
-        }
+// Helper: Calculate minimum distance from a hex to the nearest insect (or grid center if no insects)
+function getDistanceToNearestReference(hex) {
+    // If no insects, use distance to grid center (0,0)
+    if (gameState.board.size === 0) {
+        return hex.distance(new Hex(0, 0));
     }
 
-    return true;
+    // Find minimum distance to any insect
+    let minDistance = Infinity;
+    for (let hexKey of gameState.board.keys()) {
+        const insectHex = Hex.fromString(hexKey);
+        const dist = hex.distance(insectHex);
+        minDistance = Math.min(minDistance, dist);
+    }
+    return minDistance;
 }
+
+// Smart grid rendering: only render hexes within MAX_GRID_DISTANCE of insects or grid center
+const MAX_GRID_DISTANCE = 2;
 
 function renderBoard() {
     const container = document.getElementById('hexagonContainer');
 
-    const usedHexes = new Set(gameState.board.keys());
-
-    let minQ = 0, maxQ = 0, minR = 0, maxR = 0;
-    for (let hexKey of usedHexes) {
-        const hex = Hex.fromString(hexKey);
-        minQ = Math.min(minQ, hex.q);
-        maxQ = Math.max(maxQ, hex.q);
-        minR = Math.min(minR, hex.r);
-        maxR = Math.max(maxR, hex.r);
-    }
-
-    minQ -= 2;
-    maxQ += 2;
-    minR -= 2;
-    maxR += 2;
-
     const visibleHexes = new Set();
     const hexesToRender = [];
 
+    // Determine search bounds based on insects or grid center
+    let minQ, maxQ, minR, maxR;
+
+    if (gameState.board.size === 0) {
+        // No insects: render around grid center (0,0)
+        minQ = -MAX_GRID_DISTANCE;
+        maxQ = MAX_GRID_DISTANCE;
+        minR = -MAX_GRID_DISTANCE;
+        maxR = MAX_GRID_DISTANCE;
+    } else {
+        // Insects exist: find bounds and expand by MAX_GRID_DISTANCE
+        minQ = Infinity;
+        maxQ = -Infinity;
+        minR = Infinity;
+        maxR = -Infinity;
+
+        for (let hexKey of gameState.board.keys()) {
+            const hex = Hex.fromString(hexKey);
+            minQ = Math.min(minQ, hex.q);
+            maxQ = Math.max(maxQ, hex.q);
+            minR = Math.min(minR, hex.r);
+            maxR = Math.max(maxR, hex.r);
+        }
+
+        minQ -= MAX_GRID_DISTANCE;
+        maxQ += MAX_GRID_DISTANCE;
+        minR -= MAX_GRID_DISTANCE;
+        maxR += MAX_GRID_DISTANCE;
+    }
+
+    // Only render hexes within MAX_GRID_DISTANCE of reference points
     for (let q = minQ; q <= maxQ; q++) {
         for (let r = minR; r <= maxR; r++) {
-            const hexKey = `${q},${r}`;
+            const hex = new Hex(q, r);
+            const hexKey = hex.toString();
+
+            // Skip if already processed
             if (visibleHexes.has(hexKey)) continue;
-            visibleHexes.add(hexKey);
-            hexesToRender.push(new Hex(q, r));
+
+            // Check distance to nearest reference (insect or grid center)
+            const distance = getDistanceToNearestReference(hex);
+
+            if (distance <= MAX_GRID_DISTANCE) {
+                visibleHexes.add(hexKey);
+                hexesToRender.push(hex);
+            }
         }
     }
 
+    // Remove hexes that are no longer visible
     const currentHexElements = container.querySelectorAll('.hexagon');
     currentHexElements.forEach(elem => {
         if (!visibleHexes.has(elem.dataset.hex)) {
@@ -1782,6 +1816,7 @@ function renderBoard() {
         }
     });
 
+    // Render visible hexes
     for (let hex of hexesToRender) {
         const hexKey = hex.toString();
         let hexElement = container.querySelector(`[data-hex="${hexKey}"]`);
@@ -1805,18 +1840,25 @@ function renderBoard() {
                 const strokeColor = insect.player === 1 ? '#5599ff' : '#ffaa44';
                 polygon.setAttribute('fill', playerColor);
                 polygon.setAttribute('stroke', strokeColor);
+                polygon.setAttribute('stroke-width', '2');
             }
         } else {
+            // Reset to default empty hexagon appearance
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
                 polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
+                polygon.setAttribute('stroke', '#2d7a4f');
+                polygon.setAttribute('stroke-width', '2');
             }
         }
     }
 
-    if (!areAllPiecesVisible()) {
-        autoFitBoard();
-    }
+    // Use double requestAnimationFrame to ensure DOM is fully rendered before calculating zoom
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            centerBoard();
+        });
+    });
 }
 
 function createInsectElement(insect) {
@@ -1849,7 +1891,13 @@ function renderHand() {
     handArea.innerHTML = '';
 
     for (let type in INSECT_TYPES) {
-        const count = handData[type];
+        let count = handData[type];
+
+        // If this insect type is being dragged, show reduced count visually
+        const visualCount = (dragState.draggedFromHand === type) ? count - 1 : count;
+        const isBeingDragged = (dragState.draggedFromHand === type && count === 1);
+
+        // Show insects if count > 0 (including when being dragged)
         if (count > 0) {
             const div = document.createElement('div');
             div.className = 'hand-insect';
@@ -1857,7 +1905,9 @@ function renderHand() {
 
             // Check if this insect can be placed
             const canPlace = canPlaceInsectType(type);
-            if (!canPlace) {
+
+            // Disable if: cannot be placed OR is the last one being dragged
+            if (!canPlace || isBeingDragged) {
                 div.classList.add('disabled');
             } else {
                 div.addEventListener('mousedown', handleHandInsectMouseDown);
@@ -1867,10 +1917,11 @@ function renderHand() {
             const svg = createInsectSVG(type, player);
             div.appendChild(svg);
 
-            if (count > 1) {
+            // Show count badge if visualCount > 1 (not if being dragged and was the last one)
+            if (visualCount > 1) {
                 const countBadge = document.createElement('div');
                 countBadge.className = 'insect-count';
-                countBadge.textContent = count;
+                countBadge.textContent = visualCount;
                 div.appendChild(countBadge);
             }
 
@@ -2012,32 +2063,68 @@ let currentZoom = 1;
 function updateBoardZoom() {
     const wrapper = document.querySelector('.hexagon-zoom-wrapper');
     if (wrapper) {
-        const panX = wrapper.style.getPropertyValue('--pan-x') || '0px';
-        const panY = wrapper.style.getPropertyValue('--pan-y') || '0px';
-        wrapper.style.transform = `scale(${currentZoom}) translate(${panX}, ${panY})`;
+        const panX = parseFloat(wrapper.style.getPropertyValue('--pan-x')) || 0;
+        const panY = parseFloat(wrapper.style.getPropertyValue('--pan-y')) || 0;
+        // Use translate() scale() order so pan values are in pre-scale coordinate space
+        wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
     }
 }
 
-function autoFitBoard() {
-    const container = document.getElementById('hexagonContainer');
+// Single source of truth for centering and zooming the board
+// Considers all pieces, highlighted hexagons, and ensures everything is visible
+function centerBoard() {
+    const boardArea = document.getElementById('boardArea');
+    const wrapper = document.querySelector('.hexagon-zoom-wrapper');
 
-    if (!container) {
+    if (!boardArea || !wrapper) {
         return;
     }
 
-    if (gameState.board.size === 0) {
+    const boardRect = boardArea.getBoundingClientRect();
+    const boardWidth = boardRect.width;
+    const boardHeight = boardRect.height;
+
+    // Safety check: DOM not ready
+    if (boardWidth === 0 || boardHeight === 0) {
         currentZoom = 1;
-        const wrapper = document.querySelector('.hexagon-zoom-wrapper');
-        if (wrapper) {
-            wrapper.style.setProperty('--pan-x', '400px');
-            wrapper.style.setProperty('--pan-y', '350px');
-        }
+        wrapper.style.setProperty('--pan-x', '0px');
+        wrapper.style.setProperty('--pan-y', '0px');
         updateBoardZoom();
         return;
     }
 
-    let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
+    // Collect all hexagons that need to be visible: pieces + highlighted hexagons
+    const hexesToShow = new Set();
+
+    // Add all placed pieces
     for (let hexKey of gameState.board.keys()) {
+        hexesToShow.add(hexKey);
+    }
+
+    // Add all highlighted hexagons (during drag operations)
+    document.querySelectorAll('.hexagon.valid-move').forEach(hex => {
+        if (hex.dataset.hex) {
+            hexesToShow.add(hex.dataset.hex);
+        }
+    });
+
+    // If nothing to show, center on grid origin (hex 0,0)
+    if (hexesToShow.size === 0) {
+        currentZoom = 1;
+        // Center hex (0,0) in the viewport
+        // Hex (0,0) is at pixel position (0,0) in container coordinates
+        // We want it at the center of the viewport
+        const viewportCenterX = boardWidth / 2;
+        const viewportCenterY = boardHeight / 2;
+        wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
+        wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
+        updateBoardZoom();
+        return;
+    }
+
+    // Find bounds of all hexagons to show
+    let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity;
+    for (let hexKey of hexesToShow) {
         const [q, r] = hexKey.split(',').map(Number);
         minQ = Math.min(minQ, q);
         maxQ = Math.max(maxQ, q);
@@ -2045,43 +2132,59 @@ function autoFitBoard() {
         maxR = Math.max(maxR, r);
     }
 
-    if (minQ === Infinity) {
+    // Safety check
+    if (!isFinite(minQ) || !isFinite(maxQ)) {
         currentZoom = 1;
-        const wrapper = document.querySelector('.hexagon-zoom-wrapper');
-        if (wrapper) {
-            wrapper.style.setProperty('--pan-x', '0px');
-            wrapper.style.setProperty('--pan-y', '0px');
-        }
-    } else {
-        const qSpan = maxQ - minQ + 4;
-        const rSpan = maxR - minR + 4;
-        const boardWidth = 800;
-        const boardHeight = 700;
-        const hexSize = 100;
-
-        const requiredZoom = Math.min(
-            boardWidth / (qSpan * hexSize * 1.5),
-            boardHeight / (rSpan * hexSize * Math.sqrt(3))
-        );
-
-        currentZoom = Math.max(MIN_AUTO_ZOOM, requiredZoom);
-        currentZoom = Math.min(currentZoom, MAX_ZOOM);
-
-        const centerQ = (minQ + maxQ) / 2;
-        const centerR = (minR + maxR) / 2;
-
-        const centerX = centerQ * hexSize * 1.5;
-        const centerY = (centerR + centerQ / 2) * hexSize * Math.sqrt(3);
-
-        const panX = -centerX;
-        const panY = -centerY;
-
-        const wrapper = document.querySelector('.hexagon-zoom-wrapper');
-        if (wrapper) {
-            wrapper.style.setProperty('--pan-x', panX + 'px');
-            wrapper.style.setProperty('--pan-y', panY + 'px');
-        }
+        const viewportCenterX = boardWidth / 2;
+        const viewportCenterY = boardHeight / 2;
+        wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
+        wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
+        updateBoardZoom();
+        return;
     }
+
+    const hexSize = HEX_ACTUAL_SIZE;
+    const margin = 3; // Margin in hexagon units
+
+    // Calculate required space
+    const qSpan = (maxQ - minQ) + 1 + (margin * 2);
+    const rSpan = (maxR - minR) + 1 + (margin * 2);
+    const requiredWidth = qSpan * hexSize * 1.5;
+    const requiredHeight = rSpan * hexSize * Math.sqrt(3);
+
+    // Calculate zoom to fit
+    const zoomX = boardWidth / requiredWidth;
+    const zoomY = boardHeight / requiredHeight;
+    const requiredZoom = Math.min(zoomX, zoomY);
+
+    // Safety check
+    if (!isFinite(requiredZoom) || requiredZoom <= 0) {
+        currentZoom = 1;
+        const viewportCenterX = boardWidth / 2;
+        const viewportCenterY = boardHeight / 2;
+        wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
+        wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
+        updateBoardZoom();
+        return;
+    }
+
+    // Clamp zoom - never exceed MAX_ZOOM, and use MIN_AUTO_ZOOM as lower bound for auto-centering
+    currentZoom = Math.max(MIN_AUTO_ZOOM, Math.min(requiredZoom, MAX_ZOOM));
+
+    // Calculate center point
+    const centerQ = (minQ + maxQ) / 2;
+    const centerR = (minR + maxR) / 2;
+    const centerX = hexSize * (3/2 * centerQ);
+    const centerY = hexSize * (Math.sqrt(3)/2 * centerQ + Math.sqrt(3) * centerR);
+
+    // Center in viewport
+    const viewportCenterX = boardWidth / 2;
+    const viewportCenterY = boardHeight / 2;
+    const panX = viewportCenterX - centerX * currentZoom;
+    const panY = viewportCenterY - centerY * currentZoom;
+
+    wrapper.style.setProperty('--pan-x', panX + 'px');
+    wrapper.style.setProperty('--pan-y', panY + 'px');
 
     updateBoardZoom();
 }
@@ -2132,7 +2235,7 @@ function initGame() {
     };
     initializeHand();
     renderGame();
-    autoFitBoard();
+    centerBoard();
 }
 
 // Initialize event listeners
@@ -2195,7 +2298,7 @@ function initializeEventListeners() {
     });
 
     document.getElementById('resetZoomBtn').addEventListener('click', () => {
-        autoFitBoard();
+        centerBoard();
     });
 }
 

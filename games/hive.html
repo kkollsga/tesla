@@ -10,16 +10,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Hive">
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <!-- External CSS -->
     <link rel="stylesheet" href="hive.css">
 </head>
 <body>
     <div class="navbar">
         <div class="navbar-left">
-            <button class="navbar-btn" id="infoBtn" title="Game Info">ⓘ</button>
+            <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>
         </div>
         <div class="navbar-right">
-            <a href="../index.html" class="navbar-btn" title="Exit">✕</a>
+            <a href="../index.html" class="navbar-btn" title="Exit"><i class="fas fa-times"></i></a>
         </div>
     </div>
 
@@ -31,9 +34,9 @@
                     <div class="game-controls">
                         <button class="game-button" id="new-game">New Game</button>
                         <div class="zoom-controls">
-                            <button class="zoom-btn" id="zoomInBtn" title="Zoom In">+</button>
-                            <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">−</button>
-                            <button class="zoom-btn" id="resetZoomBtn" title="Reset Zoom">⊙</button>
+                            <button class="zoom-btn" id="zoomInBtn" title="Zoom In"><i class="fas fa-plus"></i></button>
+                            <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out"><i class="fas fa-minus"></i></button>
+                            <button class="zoom-btn" id="resetZoomBtn" title="Reset Zoom"><i class="fas fa-compress"></i></button>
                         </div>
                     </div>
                     <div class="player-info" id="player1-info">
