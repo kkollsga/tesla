@@ -141,11 +141,14 @@ function assignColors() {
 // Render the board
 function renderBoard() {
     const gridContainer = document.getElementById('grid-container');
+
+    // Completely clear the grid container to prevent any duplicate pieces
     gridContainer.innerHTML = '';
 
     // Clear previous highlights
     gameState.selectedPiece = null;
 
+    // Rebuild the board from game state (single source of truth)
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const cell = document.createElement('div');
@@ -154,7 +157,7 @@ function renderBoard() {
             cell.dataset.row = row;
             cell.dataset.col = col;
 
-            // Add piece if present
+            // Add piece if present in game state
             const piece = gameState.board[row][col];
             if (piece) {
                 const pieceEl = createPiece(piece, row, col);
@@ -288,6 +291,26 @@ function handleDragMove(e) {
     dragState.dragClone.style.top = (touch.clientY - dragState.dragOffsetY) + 'px';
 }
 
+// Clean up drag state
+function cleanupDragState() {
+    // Remove drag clone if it exists
+    if (dragState.dragClone) {
+        dragState.dragClone.remove();
+        dragState.dragClone = null;
+    }
+
+    // Remove ghost class from original piece
+    if (dragState.originalPiece) {
+        dragState.originalPiece.classList.remove('piece-ghost');
+    }
+
+    // Reset drag state
+    dragState.isDragging = false;
+    dragState.originalPiece = null;
+    dragState.dragOffsetX = 0;
+    dragState.dragOffsetY = 0;
+}
+
 // Handle drag end
 function handleDragEnd(e) {
     if (!dragState.isDragging) return;
@@ -298,30 +321,23 @@ function handleDragEnd(e) {
     const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = dropTarget?.closest('.grid-cell');
 
-    // Clean up drag state
-    if (dragState.dragClone) {
-        dragState.dragClone.remove();
-        dragState.dragClone = null;
-    }
+    // Store original piece info before cleanup
+    const originalPiece = dragState.originalPiece;
 
-    if (dragState.originalPiece) {
-        dragState.originalPiece.classList.remove('piece-ghost');
-    }
+    // Clean up drag visuals
+    cleanupDragState();
 
     // Clear highlights
     clearHighlights();
 
-    if (cell) {
+    if (cell && originalPiece) {
         const toRow = parseInt(cell.dataset.row);
         const toCol = parseInt(cell.dataset.col);
-        const fromRow = parseInt(dragState.originalPiece.dataset.row);
-        const fromCol = parseInt(dragState.originalPiece.dataset.col);
+        const fromRow = parseInt(originalPiece.dataset.row);
+        const fromCol = parseInt(originalPiece.dataset.col);
 
         tryMove(fromRow, fromCol, toRow, toCol);
     }
-
-    dragState.isDragging = false;
-    dragState.originalPiece = null;
 }
 
 // Handle cell click (for non-drag interactions)
@@ -361,6 +377,19 @@ function handleCellClick(row, col) {
 
 // Try to make a move
 function tryMove(fromRow, fromCol, toRow, toCol) {
+    // Validate source position has a piece
+    const piece = gameState.board[fromRow][fromCol];
+    if (!piece) {
+        console.error('No piece at source position');
+        return;
+    }
+
+    // Validate it's the current player's piece
+    if (piece.color !== gameState.currentPlayer) {
+        console.error('Not current player\'s piece');
+        return;
+    }
+
     const moves = getValidMoves(fromRow, fromCol);
     const move = moves.find(m => m.row === toRow && m.col === toCol);
 
@@ -373,11 +402,18 @@ function tryMove(fromRow, fromCol, toRow, toCol) {
 function makeMove(fromRow, fromCol, toRow, toCol, isJump, capturedPiece) {
     const piece = gameState.board[fromRow][fromCol];
 
-    // Move piece
-    gameState.board[toRow][toCol] = piece;
+    if (!piece) {
+        console.error('No piece at source position');
+        return;
+    }
+
+    // Clear the source position FIRST to prevent duplicates
     gameState.board[fromRow][fromCol] = null;
 
-    // Remove captured piece
+    // Move piece to destination
+    gameState.board[toRow][toCol] = piece;
+
+    // Remove captured piece if jumping
     if (isJump && capturedPiece) {
         gameState.board[capturedPiece.row][capturedPiece.col] = null;
     }
@@ -392,7 +428,8 @@ function makeMove(fromRow, fromCol, toRow, toCol, isJump, capturedPiece) {
         const additionalJumps = getValidMoves(toRow, toCol, true);
 
         if (additionalJumps.length > 0) {
-            // Multi-jump available
+            // Multi-jump available - clean up any drag state before rendering
+            cleanupDragState();
             gameState.multiJumpInProgress = true;
             gameState.jumpingPiece = { row: toRow, col: toCol };
             renderBoard();
@@ -401,7 +438,8 @@ function makeMove(fromRow, fromCol, toRow, toCol, isJump, capturedPiece) {
         }
     }
 
-    // End turn
+    // End turn - clean up any drag state before rendering
+    cleanupDragState();
     gameState.multiJumpInProgress = false;
     gameState.jumpingPiece = null;
     switchPlayer();
