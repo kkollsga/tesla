@@ -206,7 +206,9 @@ let dragState = {
     sourceData: null,
     highlightTimeout: null,
     lastHighlightedHex: null,
-    draggedFromHand: null // Tag for which insect type is being dragged from hand (not yet committed)
+    draggedFromHand: null, // Tag for which insect type is being dragged from hand (not yet committed)
+    lastClientX: 0, // Track last known position for touch events
+    lastClientY: 0
 };
 
 let selectedElement = null;
@@ -233,6 +235,7 @@ function startPan(e) {
     document.addEventListener('mouseup', endPan);
     document.addEventListener('touchmove', handlePanMoveTouch);
     document.addEventListener('touchend', endPan);
+    document.addEventListener('touchcancel', endPan);
 }
 
 function handlePanMove(e) {
@@ -260,6 +263,7 @@ function endPan(e) {
     document.removeEventListener('mouseup', endPan);
     document.removeEventListener('touchmove', handlePanMoveTouch);
     document.removeEventListener('touchend', endPan);
+    document.removeEventListener('touchcancel', endPan);
 }
 
 function handleHexagonMouseDown(e) {
@@ -328,6 +332,7 @@ function selectAndDrag(e, source, data) {
     document.addEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
     document.addEventListener('mouseup', cancelDragIfNotStarted);
     document.addEventListener('touchend', cancelDragIfNotStarted);
+    document.addEventListener('touchcancel', cancelDragIfNotStarted);
 }
 
 function selectAndDragTouch(touch, element, source, data) {
@@ -353,6 +358,7 @@ function selectAndDragTouch(touch, element, source, data) {
 
     document.addEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
     document.addEventListener('touchend', cancelDragIfNotStarted);
+    document.addEventListener('touchcancel', cancelDragIfNotStarted);
 }
 
 function beginDragOnMove(e) {
@@ -412,11 +418,13 @@ function beginDragOnMove(e) {
     document.removeEventListener('touchmove', beginDragOnMoveTouch);
     document.removeEventListener('mouseup', cancelDragIfNotStarted);
     document.removeEventListener('touchend', cancelDragIfNotStarted);
+    document.removeEventListener('touchcancel', cancelDragIfNotStarted);
 
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('touchmove', handleDragMoveTouch, { passive: false });
     document.addEventListener('mouseup', handleDragEnd);
     document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('touchcancel', handleDragEnd);
 
     handleDragMove(e);
 }
@@ -436,6 +444,7 @@ function cancelDragIfNotStarted(e) {
         document.removeEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
         document.removeEventListener('mouseup', cancelDragIfNotStarted);
         document.removeEventListener('touchend', cancelDragIfNotStarted);
+        document.removeEventListener('touchcancel', cancelDragIfNotStarted);
 
         // Reset drag state (tag was never set since drag didn't start)
         dragState.isDragging = false;
@@ -448,6 +457,10 @@ function cancelDragIfNotStarted(e) {
 
 function handleDragMove(e) {
     if (!dragState.isDragging || !dragState.dragClone) return;
+
+    // Track last known position for touch events (touchend doesn't have clientX/Y)
+    dragState.lastClientX = e.clientX;
+    dragState.lastClientY = e.clientY;
 
     dragState.dragClone.style.left = (e.clientX - dragState.dragOffsetX) + 'px';
     dragState.dragClone.style.top = (e.clientY - dragState.dragOffsetY) + 'px';
@@ -545,7 +558,11 @@ function handleDragEnd(e) {
     dragState.lastHighlightedHex = null;
 
     if (wasDragging) {
-        const dropElement = document.elementFromPoint(e.clientX, e.clientY);
+        // For touch events, touchend doesn't have clientX/Y, use last tracked position
+        const clientX = e.clientX !== undefined ? e.clientX : dragState.lastClientX;
+        const clientY = e.clientY !== undefined ? e.clientY : dragState.lastClientY;
+
+        const dropElement = document.elementFromPoint(clientX, clientY);
         const hexElement = dropElement?.closest('.hexagon');
 
         if (hexElement) {
@@ -582,15 +599,19 @@ function handleDragEnd(e) {
     dragState.draggedFromHand = null;
     dragState.highlightTimeout = null;
     dragState.lastHighlightedHex = null;
+    dragState.lastClientX = 0;
+    dragState.lastClientY = 0;
 
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('touchmove', handleDragMoveTouch, { passive: false });
     document.removeEventListener('mouseup', handleDragEnd);
     document.removeEventListener('touchend', handleDragEnd);
+    document.removeEventListener('touchcancel', handleDragEnd);
     document.removeEventListener('mousemove', beginDragOnMove);
     document.removeEventListener('touchmove', beginDragOnMoveTouch, { passive: false });
     document.removeEventListener('mouseup', cancelDragIfNotStarted);
     document.removeEventListener('touchend', cancelDragIfNotStarted);
+    document.removeEventListener('touchcancel', cancelDragIfNotStarted);
 }
 
 // ============================================
@@ -1987,7 +2008,7 @@ function updatePlayerInfo() {
             queenStatus.textContent = 'Queen: Placed ✓';
         } else {
             const turnsLeft = Math.max(0, 4 - gameState.turnCount[p]);
-            if (turnsLeft === 4) {
+            if (turnsLeft === 4 && gameConfig.tournamentRules) {
                 queenStatus.textContent = `Queen: Cannot place (turn 1)`;
             } else if (turnsLeft === 1) {
                 queenStatus.textContent = `Queen: MUST place now!`;
@@ -2395,10 +2416,9 @@ function initializeEventListeners() {
             if (id !== 'tournamentRules') {
                 // Update expansion insects in hands
                 updateExpansionInsects();
-                // Re-render to show changes
-                renderGame();
             }
-            // Tournament rules take effect immediately without re-render
+            // Re-render to show changes (updates Queen status for tournament rules, hand display for expansions)
+            renderGame();
         });
     });
 
