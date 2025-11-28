@@ -146,7 +146,7 @@ body::before {
 }
 
 .game-rules-link {
-    color: white;
+    color: #ff8800;
     font-size: 12px;
     text-align: center;
     cursor: pointer;

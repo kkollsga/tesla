@@ -88,7 +88,11 @@ let gameState = {
     turn: 0,
     selectedInsect: null,
     queenPlaced: { 1: false, 2: false },
-    turnCount: { 1: 0, 2: 0 }
+    turnCount: { 1: 0, 2: 0 },
+    // Statistics tracking
+    startTime: null,
+    moveHistory: [], // Array of {player, insect, from, to, timestamp}
+    insectMoveCount: {} // Track moves per insect type for "most active insect"
 };
 
 // Helper functions for stacked insects
@@ -140,14 +144,16 @@ const MIN_AUTO_ZOOM = 0.8;
 function hexToPixel(hex) {
     const q = hex.q;
     const r = hex.r;
-    const x = HEX_ACTUAL_SIZE * (3/2 * q);
-    const y = HEX_ACTUAL_SIZE * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+    // Pointy-top orientation
+    const x = HEX_ACTUAL_SIZE * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+    const y = HEX_ACTUAL_SIZE * (3/2 * r);
     return { x, y };
 }
 
 function pixelToHex(x, y) {
-    const q = (2/3 * x) / HEX_ACTUAL_SIZE;
-    const r = (-1/3 * x + Math.sqrt(3)/3 * y) / HEX_ACTUAL_SIZE;
+    // Pointy-top orientation
+    const q = (Math.sqrt(3)/3 * x - 1/3 * y) / HEX_ACTUAL_SIZE;
+    const r = (2/3 * y) / HEX_ACTUAL_SIZE;
     return hexRound(q, r);
 }
 
@@ -207,7 +213,8 @@ function createHexagonSVG() {
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     const points = [];
     for (let i = 0; i < 6; i++) {
-        const angle = Math.PI / 3 * i;
+        // Rotate by 30 degrees (π/6) to make pointy edge down
+        const angle = Math.PI / 3 * i + Math.PI / 6;
         const x = 50 + 45 * Math.cos(angle);
         const y = 50 + 45 * Math.sin(angle);
         points.push(`${x},${y}`);
@@ -733,6 +740,16 @@ function placeInsect(hex, insectType) {
         gameState.queenPlaced[gameState.currentPlayer] = true;
     }
 
+    // Track move history and insect move count
+    gameState.moveHistory.push({
+        player: gameState.currentPlayer,
+        insect: insectType,
+        from: null,
+        to: hexKey,
+        timestamp: Date.now()
+    });
+    gameState.insectMoveCount[insectType] = (gameState.insectMoveCount[insectType] || 0) + 1;
+
     renderGame();
     checkWinCondition();
     endTurn();
@@ -948,6 +965,16 @@ function moveInsect(insect, targetHex) {
 
     // Add insect to target position (potentially stacking on top)
     addInsectToHex(targetKey, insect);
+
+    // Track move history and insect move count
+    gameState.moveHistory.push({
+        player: gameState.currentPlayer,
+        insect: insect.insect,
+        from: currentKey,
+        to: targetKey,
+        timestamp: Date.now()
+    });
+    gameState.insectMoveCount[insect.insect] = (gameState.insectMoveCount[insect.insect] || 0) + 1;
 
     renderGame();
     checkWinCondition();
@@ -2547,26 +2574,162 @@ function centerBoard(animate = true) {
 // ============================================
 
 function showVictory() {
-    const overlay = document.createElement('div');
-    overlay.className = 'victory-overlay';
+    const winnerPlayer = gameState.winner === 1 ? 'Left' : 'Right';
+    const winnerColor = gameState.winner === 1 ? '#5599ff' : '#ffaa44';
+    const winnerColorName = gameState.winner === 1 ? 'Blue' : 'Orange';
 
-    const winner = gameState.winner === 1 ? 'Left' : 'Right';
-    const winnerColor = gameState.winner === 1 ? 'Blue' : 'Orange';
+    // Calculate game statistics
+    const gameTime = Math.floor((Date.now() - gameState.startTime) / 1000); // in seconds
 
-    overlay.innerHTML = `
-        <div class="victory-text">${winner} Wins!</div>
-        <div class="victory-subtext">${winnerColor} player has surrounded the Queen!</div>
-    `;
+    // Calculate moves per player
+    const player1Moves = gameState.moveHistory.filter(m => m.player === 1).length;
+    const player2Moves = gameState.moveHistory.filter(m => m.player === 2).length;
 
-    document.body.appendChild(overlay);
+    // Find most active insect per player
+    const player1InsectMoves = {};
+    const player2InsectMoves = {};
 
-    for (let i = 0; i < 50; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + '%';
-        confetti.style.background = Math.random() > 0.5 ? '#FFD700' : '#FFA500';
-        confetti.style.setProperty('--drift-x', (Math.random() - 0.5) * 200 + 'px');
-        document.body.appendChild(confetti);
+    gameState.moveHistory.forEach(move => {
+        if (move.player === 1) {
+            player1InsectMoves[move.insect] = (player1InsectMoves[move.insect] || 0) + 1;
+        } else {
+            player2InsectMoves[move.insect] = (player2InsectMoves[move.insect] || 0) + 1;
+        }
+    });
+
+    // Find most active for player 1
+    let player1MostActive = 'None';
+    let player1MaxMoves = 0;
+    for (let [insect, count] of Object.entries(player1InsectMoves)) {
+        if (count > player1MaxMoves) {
+            player1MaxMoves = count;
+            player1MostActive = INSECT_TYPES[insect].name;
+        }
+    }
+
+    // Find most active for player 2
+    let player2MostActive = 'None';
+    let player2MaxMoves = 0;
+    for (let [insect, count] of Object.entries(player2InsectMoves)) {
+        if (count > player2MaxMoves) {
+            player2MaxMoves = count;
+            player2MostActive = INSECT_TYPES[insect].name;
+        }
+    }
+
+    // Format game time
+    const minutes = Math.floor(gameTime / 60);
+    const seconds = gameTime % 60;
+    const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+    // Animate losing team pieces - fall off screen
+    const losingPlayer = gameState.winner === 1 ? 2 : 1;
+    const container = document.getElementById('hexagonContainer');
+    const allHexes = container.querySelectorAll('.hexagon');
+
+    allHexes.forEach(hexElement => {
+        const insects = hexElement.querySelectorAll('.insect');
+        insects.forEach(insectElement => {
+            const insectId = insectElement.dataset.insectId;
+            // Find the insect data
+            for (let hexKey of gameState.board.keys()) {
+                const stack = getInsectStack(hexKey);
+                const insect = stack?.find(i => i.id === insectId);
+                if (insect) {
+                    if (insect.player === losingPlayer) {
+                        // Losing team: fall off screen
+                        const randomDelay = Math.random() * 1000;
+                        const randomRotation = (Math.random() - 0.5) * 720;
+                        const randomX = (Math.random() - 0.5) * 500;
+
+                        setTimeout(() => {
+                            insectElement.style.transition = 'all 1.5s ease-in';
+                            insectElement.style.transform = `translateY(1000px) translateX(${randomX}px) rotate(${randomRotation}deg)`;
+                            insectElement.style.opacity = '0';
+                        }, randomDelay);
+                    } else {
+                        // Winning team: celebratory dance (jump animation)
+                        const randomDelay = Math.random() * 500;
+                        setTimeout(() => {
+                            insectElement.style.animation = 'victoryDance 1s ease-in-out infinite';
+                        }, randomDelay);
+                    }
+                    break;
+                }
+            }
+        });
+    });
+
+    // Create victory display on the board (not a modal)
+    setTimeout(() => {
+        const victoryDisplay = document.createElement('div');
+        victoryDisplay.className = 'victory-display';
+        victoryDisplay.style.cssText = `
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.98), rgba(20, 20, 30, 0.98));
+            border: 4px solid ${winnerColor};
+            border-radius: 20px;
+            padding: 30px 50px;
+            text-align: center;
+            z-index: 10000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px ${winnerColor}80;
+            animation: victorySlideInFromTop 0.5s ease-out;
+        `;
+
+        victoryDisplay.innerHTML = `
+            <div style="font-size: 48px; font-weight: bold; color: ${winnerColor}; margin-bottom: 10px; text-shadow: 0 0 20px ${winnerColor};">
+                ${winnerPlayer} Player Wins!
+            </div>
+            <div style="font-size: 20px; color: #aaa; margin-bottom: 25px;">
+                ${winnerColorName} team has surrounded the opponent's Queen Bee!
+            </div>
+            <div style="border-top: 2px solid ${winnerColor}40; padding-top: 15px; margin-top: 15px; font-size: 15px; line-height: 2;">
+                <div style="color: #999; margin-bottom: 8px; text-align: center;">
+                    Game Time: <span style="color: #fff; font-weight: bold;">${timeStr}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px; color: #ccc;">
+                    <span style="color: #5599ff; font-weight: bold;">Left moved ${player1Moves} tiles</span>
+                    <span style="margin: 0 15px; color: #666;">|</span>
+                    <span style="color: #ffaa44; font-weight: bold;">Right moved ${player2Moves} tiles</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; color: #ccc;">
+                    <span style="color: #5599ff; font-weight: bold;">${player1MostActive} (${player1MaxMoves}) was most active</span>
+                    <span style="margin: 0 15px; color: #666;">|</span>
+                    <span style="color: #ffaa44; font-weight: bold;">${player2MostActive} (${player2MaxMoves}) was most active</span>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(victoryDisplay);
+    }, 800);
+
+    // Add CSS animations if not already present
+    if (!document.getElementById('victory-animations-style')) {
+        const style = document.createElement('style');
+        style.id = 'victory-animations-style';
+        style.textContent = `
+            @keyframes victoryDance {
+                0%, 100% { transform: translateY(0) scale(1); }
+                25% { transform: translateY(-20px) scale(1.1) rotate(-5deg); }
+                50% { transform: translateY(-10px) scale(1.05) rotate(5deg); }
+                75% { transform: translateY(-20px) scale(1.1) rotate(-5deg); }
+            }
+
+            @keyframes victorySlideInFromTop {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-100px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 
@@ -2676,7 +2839,11 @@ function initGame() {
         turn: 0,
         selectedInsect: null,
         queenPlaced: { 1: false, 2: false },
-        turnCount: { 1: 0, 2: 0 }
+        turnCount: { 1: 0, 2: 0 },
+        // Statistics tracking
+        startTime: Date.now(),
+        moveHistory: [],
+        insectMoveCount: {}
     };
     initializeHand();
     renderGame();
@@ -2704,6 +2871,7 @@ function initializeEventListeners() {
         // Clear any existing victory screens
         document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
         document.querySelectorAll('.confetti').forEach(el => el.remove());
+        document.querySelectorAll('.victory-display').forEach(el => el.remove());
 
         // Start the game
         initGame();
