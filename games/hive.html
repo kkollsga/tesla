@@ -32,6 +32,7 @@
                 <!-- Left Column: Left Player -->
                 <div class="player-column">
                     <div class="game-controls">
+                        <div class="game-rules-link" id="gameRulesLink">Game Rules</div>
                         <button class="game-button" id="new-game">New Game</button>
                         <div class="zoom-controls">
                             <button class="zoom-btn" id="zoomInBtn" title="Zoom In"><i class="fas fa-plus"></i></button>
@@ -85,40 +86,24 @@
         <div class="piece-info-owner" id="pieceInfoOwner">Player 1</div>
     </div>
 
-    <div class="setup-modal" id="setupModal">
-        <div class="info-panel">
-            <div class="modal-title">Game Setup</div>
-            <div class="modal-text">
-                <h3>Base Game</h3>
-                <p>Each player starts with 11 insects:</p>
-                <ul>
-                    <li><strong>Queen Bee (1)</strong></li>
-                    <li><strong>Soldier Ants (3)</strong></li>
-                    <li><strong>Beetles (2)</strong></li>
-                    <li><strong>Grasshoppers (3)</strong></li>
-                    <li><strong>Spiders (2)</strong></li>
-                </ul>
-
-                <h3>Expansion Pieces</h3>
-                <p>Optional expansion pieces (1 per player):</p>
-
-                <div class="expansion-option">
-                    <input type="checkbox" id="expansionMosquito" class="expansion-checkbox">
-                    <label for="expansionMosquito"><strong>Mosquito:</strong> Copies abilities of adjacent insects</label>
-                </div>
-
-                <div class="expansion-option">
-                    <input type="checkbox" id="expansionLadybug" class="expansion-checkbox">
-                    <label for="expansionLadybug"><strong>Ladybug:</strong> Moves exactly 2 spaces up then 1 down</label>
-                </div>
-
-                <div class="expansion-option">
-                    <input type="checkbox" id="expansionPillbug" class="expansion-checkbox">
-                    <label for="expansionPillbug"><strong>Pillbug:</strong> Moves 1 space, can throw adjacent insects</label>
-                </div>
+    <div class="game-setup-popup" id="gameSetupPopup">
+        <div class="setup-panel">
+            <div class="setup-option">
+                <input type="checkbox" id="expansionMosquito" class="setup-checkbox">
+                <label for="expansionMosquito">Mosquito</label>
             </div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-primary" id="startGameBtn">Start Game</button>
+            <div class="setup-option">
+                <input type="checkbox" id="expansionLadybug" class="setup-checkbox">
+                <label for="expansionLadybug">Ladybug</label>
+            </div>
+            <div class="setup-option">
+                <input type="checkbox" id="expansionPillbug" class="setup-checkbox">
+                <label for="expansionPillbug">Pillbug</label>
+            </div>
+            <div class="setup-divider"></div>
+            <div class="setup-option">
+                <input type="checkbox" id="tournamentRules" class="setup-checkbox">
+                <label for="tournamentRules">Tournament Rules</label>
             </div>
         </div>
     </div>

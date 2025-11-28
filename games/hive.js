@@ -72,7 +72,8 @@ const INSECT_TYPES = {
 let gameConfig = {
     expansionMosquito: false,
     expansionLadybug: false,
-    expansionPillbug: false
+    expansionPillbug: false,
+    tournamentRules: false
 };
 
 let gameState = {
@@ -601,10 +602,10 @@ function placeInsect(hex, insectType) {
 
     console.log('Placing insect type:', insectType, 'Name:', INSECT_TYPES[insectType]?.name);
 
-    // Rule: Queen cannot be placed on first turn
-    if (insectType === 'queen' && gameState.turnCount[gameState.currentPlayer] === 0) {
-        console.log('Failed: Queen cannot be placed on first turn');
-        showPlayerMessage('Queen cannot be placed on turn 1');
+    // Tournament rule: Queen cannot be placed on first turn
+    if (gameConfig.tournamentRules && insectType === 'queen' && gameState.turnCount[gameState.currentPlayer] === 0) {
+        console.log('Failed: Tournament rules - Queen cannot be placed on first turn');
+        showPlayerMessage('Tournament rules: Queen cannot be placed on turn 1');
         return false;
     }
 
@@ -700,6 +701,15 @@ function moveInsect(insect, targetHex) {
         return;
     }
 
+    // Tournament rule: No bee can be moved in round 1
+    if (gameConfig.tournamentRules &&
+        insect.insect === 'queen' &&
+        gameState.turnCount[gameState.currentPlayer] === 0) {
+        console.log('Failed: Tournament rules - Queen cannot move on first turn');
+        showPlayerMessage('Tournament rules: Queen cannot move on turn 1');
+        return;
+    }
+
     let currentHex = null;
     for (let [hexKey, bug] of gameState.board) {
         if (bug.id === insect.id) {
@@ -780,6 +790,12 @@ function endTurn() {
     gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
     clearPlayerMessage(); // Clear message when turn ends
     renderGame();
+
+    // Close setup popup and update rules visibility after first move
+    if (gameState.turn === 1) {
+        closeGameSetup();
+    }
+    updateGameRulesVisibility();
 }
 
 let messageTimeout = null;
@@ -1931,8 +1947,8 @@ function renderHand() {
 }
 
 function canPlaceInsectType(insectType) {
-    // Rule: Queen cannot be placed on first turn
-    if (insectType === 'queen' && gameState.turnCount[gameState.currentPlayer] === 0) {
+    // Tournament rule: Queen cannot be placed on first turn
+    if (gameConfig.tournamentRules && insectType === 'queen' && gameState.turnCount[gameState.currentPlayer] === 0) {
         return false;
     }
 
@@ -2221,6 +2237,93 @@ function showVictory() {
 // GAME INITIALIZATION & EVENT LISTENERS
 // ============================================
 
+// Load game config from localStorage
+function loadGameConfig() {
+    try {
+        const saved = localStorage.getItem('hiveGameConfig');
+        if (saved) {
+            const config = JSON.parse(saved);
+            gameConfig.expansionMosquito = config.expansionMosquito || false;
+            gameConfig.expansionLadybug = config.expansionLadybug || false;
+            gameConfig.expansionPillbug = config.expansionPillbug || false;
+            gameConfig.tournamentRules = config.tournamentRules || false;
+        }
+    } catch (e) {
+        console.error('Failed to load game config:', e);
+    }
+}
+
+// Save game config to localStorage
+function saveGameConfig() {
+    try {
+        localStorage.setItem('hiveGameConfig', JSON.stringify(gameConfig));
+    } catch (e) {
+        console.error('Failed to save game config:', e);
+    }
+}
+
+// Update checkboxes from config
+function updateCheckboxes() {
+    document.getElementById('expansionMosquito').checked = gameConfig.expansionMosquito;
+    document.getElementById('expansionLadybug').checked = gameConfig.expansionLadybug;
+    document.getElementById('expansionPillbug').checked = gameConfig.expansionPillbug;
+    document.getElementById('tournamentRules').checked = gameConfig.tournamentRules;
+}
+
+// Update expansion insects in player hands based on config
+function updateExpansionInsects() {
+    for (let player of [1, 2]) {
+        const playerKey = `player${player}`;
+        if (gameState.hand[playerKey]) {
+            // Count how many of each expansion type are already on the board for this player
+            const onBoard = { mosquito: 0, ladybug: 0, pillbug: 0 };
+            for (let [, insect] of gameState.board) {
+                if (insect.player === player && onBoard.hasOwnProperty(insect.insect)) {
+                    onBoard[insect.insect]++;
+                }
+            }
+
+            // Update mosquito
+            if (gameConfig.expansionMosquito) {
+                // Add back to hand (total count minus what's on board)
+                gameState.hand[playerKey]['mosquito'] = Math.max(0, INSECT_TYPES.mosquito.count - onBoard.mosquito);
+            } else {
+                // Don't allow new ones, but keep count of what's already placed
+                gameState.hand[playerKey]['mosquito'] = 0;
+            }
+
+            // Update ladybug
+            if (gameConfig.expansionLadybug) {
+                gameState.hand[playerKey]['ladybug'] = Math.max(0, INSECT_TYPES.ladybug.count - onBoard.ladybug);
+            } else {
+                gameState.hand[playerKey]['ladybug'] = 0;
+            }
+
+            // Update pillbug
+            if (gameConfig.expansionPillbug) {
+                gameState.hand[playerKey]['pillbug'] = Math.max(0, INSECT_TYPES.pillbug.count - onBoard.pillbug);
+            } else {
+                gameState.hand[playerKey]['pillbug'] = 0;
+            }
+        }
+    }
+}
+
+// Update game rules link visibility
+function updateGameRulesVisibility() {
+    const rulesLink = document.getElementById('gameRulesLink');
+    if (gameState.turn === 0 && !gameState.gameOver) {
+        rulesLink.classList.add('visible');
+    } else {
+        rulesLink.classList.remove('visible');
+    }
+}
+
+// Close game setup popup
+function closeGameSetup() {
+    document.getElementById('gameSetupPopup').classList.remove('active');
+}
+
 function initGame() {
     gameState = {
         board: new Map(),
@@ -2236,6 +2339,7 @@ function initGame() {
     initializeHand();
     renderGame();
     centerBoard();
+    updateGameRulesVisibility();
 }
 
 // Initialize event listeners
@@ -2255,18 +2359,6 @@ function initializeEventListeners() {
     });
 
     document.getElementById('new-game').addEventListener('click', () => {
-        document.getElementById('setupModal').classList.add('active');
-    });
-
-    document.getElementById('startGameBtn').addEventListener('click', () => {
-        // Get expansion settings from checkboxes
-        gameConfig.expansionMosquito = document.getElementById('expansionMosquito').checked;
-        gameConfig.expansionLadybug = document.getElementById('expansionLadybug').checked;
-        gameConfig.expansionPillbug = document.getElementById('expansionPillbug').checked;
-
-        // Close the modal
-        document.getElementById('setupModal').classList.remove('active');
-
         // Clear any existing victory screens
         document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
         document.querySelectorAll('.confetti').forEach(el => el.remove());
@@ -2275,10 +2367,39 @@ function initializeEventListeners() {
         initGame();
     });
 
-    document.getElementById('setupModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('setupModal')) {
-            document.getElementById('setupModal').classList.remove('active');
+    // Game rules link click - open setup popup
+    document.getElementById('gameRulesLink').addEventListener('click', () => {
+        updateCheckboxes();
+        document.getElementById('gameSetupPopup').classList.add('active');
+    });
+
+    // Game setup popup - click outside to close
+    document.getElementById('gameSetupPopup').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('gameSetupPopup')) {
+            closeGameSetup();
         }
+    });
+
+    // Checkbox change listeners - apply immediately and save to localStorage
+    const checkboxIds = ['expansionMosquito', 'expansionLadybug', 'expansionPillbug', 'tournamentRules'];
+    checkboxIds.forEach(id => {
+        document.getElementById(id).addEventListener('change', (e) => {
+            if (id === 'tournamentRules') {
+                gameConfig.tournamentRules = e.target.checked;
+            } else {
+                gameConfig[id] = e.target.checked;
+            }
+            saveGameConfig();
+
+            // Apply changes immediately to current game
+            if (id !== 'tournamentRules') {
+                // Update expansion insects in hands
+                updateExpansionInsects();
+                // Re-render to show changes
+                renderGame();
+            }
+            // Tournament rules take effect immediately without re-render
+        });
     });
 
     document.getElementById('pass-turn').addEventListener('click', () => {
@@ -2304,7 +2425,7 @@ function initializeEventListeners() {
 
 // Start game on load
 window.addEventListener('load', () => {
+    loadGameConfig();
     initializeEventListeners();
-    // Show setup modal on first load
-    document.getElementById('setupModal').classList.add('active');
+    initGame();
 });
