@@ -159,10 +159,7 @@ function createHexagon(hex) {
     const svg = createHexagonSVG();
     div.appendChild(svg);
 
-    div.addEventListener('mousedown', handleHexagonMouseDown);
-    div.addEventListener('touchstart', handleHexagonTouchStart);
-
-    // Cache the element
+    // Cache the element (event listeners added via delegation)
     hexagonCache.set(hexKey, div);
     return div;
 }
@@ -372,7 +369,7 @@ function beginDragOnMove(e) {
     // Tag the insect being dragged from hand (don't modify game state yet)
     if (dragState.dragSource === 'hand') {
         dragState.draggedFromHand = dragState.sourceData;
-        renderHand(); // Re-render to show reduced count visually
+        updateHandVisualCount(); // Update count badge without full re-render (performance)
     }
 
     // For both hand and board insects, clone only the SVG and use consistent sizing
@@ -571,19 +568,19 @@ function handleDragEnd(e) {
             if (dragState.dragSource === 'hand') {
                 const placed = placeInsect(hex, dragState.sourceData);
                 if (!placed) {
-                    // Placement failed - clear the tag and re-render to restore visual count
+                    // Placement failed - clear the tag and update count (performance)
                     dragState.draggedFromHand = null;
-                    renderHand();
+                    updateHandVisualCount();
                 }
                 // If placement succeeded, placeInsect already decremented the counter and tag is cleared below
             } else if (dragState.dragSource === 'board') {
                 moveInsect(dragState.sourceData, hex);
             }
         } else {
-            // Dropped on invalid location - clear tag and re-render to restore visual count
+            // Dropped on invalid location - clear tag and update count (performance)
             if (dragState.dragSource === 'hand' && dragState.draggedFromHand) {
                 dragState.draggedFromHand = null;
-                renderHand();
+                updateHandVisualCount();
             }
         }
     }
@@ -902,7 +899,16 @@ function initializeHand() {
 // INSECT SVG CREATION
 // ============================================
 
+// SVG template cache for performance optimization
+const svgTemplateCache = new Map();
+
 function createInsectSVG(type, player) {
+    // Check cache first
+    const cacheKey = `${type}-${player}`;
+    if (svgTemplateCache.has(cacheKey)) {
+        return svgTemplateCache.get(cacheKey).cloneNode(true);
+    }
+
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 100 100');
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -943,6 +949,9 @@ function createInsectSVG(type, player) {
             createPillbugSVG(group, color);
             break;
     }
+
+    // Cache the template for future reuse
+    svgTemplateCache.set(cacheKey, svg.cloneNode(true));
 
     return svg;
 }
@@ -1863,14 +1872,25 @@ function renderBoard() {
             container.appendChild(hexElement);
         }
 
-        const existingInsects = hexElement.querySelectorAll('.insect');
-        existingInsects.forEach(el => el.remove());
-
         const insect = gameState.board.get(hexKey);
-        if (insect) {
-            const insectElement = createInsectElement(insect);
-            hexElement.appendChild(insectElement);
+        const existingInsect = hexElement.querySelector('.insect');
 
+        // Performance optimization: only update if insect changed
+        if (insect) {
+            const needsUpdate = !existingInsect || existingInsect.dataset.insectId !== insect.id;
+
+            if (needsUpdate) {
+                // Remove old insect if exists
+                if (existingInsect) {
+                    existingInsect.remove();
+                }
+
+                // Add new insect
+                const insectElement = createInsectElement(insect);
+                hexElement.appendChild(insectElement);
+            }
+
+            // Update hexagon appearance
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
                 const playerColor = insect.player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
@@ -1880,7 +1900,11 @@ function renderBoard() {
                 polygon.setAttribute('stroke-width', '2');
             }
         } else {
-            // Reset to default empty hexagon appearance
+            // No insect on this hex - remove if exists and reset appearance
+            if (existingInsect) {
+                existingInsect.remove();
+            }
+
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
                 polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
@@ -1906,7 +1930,8 @@ function createInsectElement(insect) {
     const svg = createInsectSVG(insect.insect, insect.player);
     div.appendChild(svg);
 
-    div.addEventListener('mousedown', handleHexagonMouseDown);
+    // mousedown handled by hexagon delegation
+    // contextmenu and click for piece info popup
     div.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showPieceInfo(insect, e);
@@ -1918,6 +1943,36 @@ function createInsectElement(insect) {
     });
 
     return div;
+}
+
+// Performance optimization: Update hand count without full re-render
+function updateHandVisualCount() {
+    const handArea = document.getElementById('handArea');
+    const player = gameState.currentPlayer;
+    const handData = gameState.hand[`player${player}`];
+
+    // Update visual counts for all hand insects
+    handArea.querySelectorAll('.hand-insect').forEach(insectDiv => {
+        const type = insectDiv.dataset.insectType;
+        const count = handData[type];
+        const visualCount = (dragState.draggedFromHand === type) ? count - 1 : count;
+
+        const countBadge = insectDiv.querySelector('.insect-count');
+        if (visualCount > 1) {
+            if (countBadge) {
+                countBadge.textContent = visualCount;
+            } else {
+                // Need to add badge
+                const badge = document.createElement('div');
+                badge.className = 'insect-count';
+                badge.textContent = visualCount;
+                insectDiv.appendChild(badge);
+            }
+        } else if (countBadge) {
+            // Remove badge if count is 1 or less
+            countBadge.remove();
+        }
+    });
 }
 
 function renderHand() {
@@ -1946,10 +2001,8 @@ function renderHand() {
             // Disable if: cannot be placed OR is the last one being dragged
             if (!canPlace || isBeingDragged) {
                 div.classList.add('disabled');
-            } else {
-                div.addEventListener('mousedown', handleHandInsectMouseDown);
-                div.addEventListener('touchstart', handleHandInsectTouchStart);
             }
+            // Event listeners added via delegation in initializeEventListeners
 
             const svg = createInsectSVG(type, player);
             div.appendChild(svg);
@@ -2441,6 +2494,36 @@ function initializeEventListeners() {
     document.getElementById('resetZoomBtn').addEventListener('click', () => {
         centerBoard();
     });
+
+    // Event delegation for hexagons (performance optimization)
+    const hexagonContainer = document.getElementById('hexagonContainer');
+    hexagonContainer.addEventListener('mousedown', (e) => {
+        const hexElement = e.target.closest('.hexagon');
+        if (hexElement) {
+            handleHexagonMouseDown.call(hexElement, e);
+        }
+    });
+    hexagonContainer.addEventListener('touchstart', (e) => {
+        const hexElement = e.target.closest('.hexagon');
+        if (hexElement) {
+            handleHexagonTouchStart.call(hexElement, e);
+        }
+    }, { passive: false });
+
+    // Event delegation for hand pieces (performance optimization)
+    const handArea = document.getElementById('handArea');
+    handArea.addEventListener('mousedown', (e) => {
+        const handInsect = e.target.closest('.hand-insect');
+        if (handInsect && !handInsect.classList.contains('disabled')) {
+            handleHandInsectMouseDown.call(handInsect, e);
+        }
+    });
+    handArea.addEventListener('touchstart', (e) => {
+        const handInsect = e.target.closest('.hand-insect');
+        if (handInsect && !handInsect.classList.contains('disabled')) {
+            handleHandInsectTouchStart.call(handInsect, e);
+        }
+    }, { passive: false });
 }
 
 // Start game on load
