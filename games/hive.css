@@ -19,6 +19,12 @@ body {
     padding: 10px;
 }
 
+/* Global dragging state - overrides all child cursors */
+body.dragging,
+body.dragging * {
+    cursor: grabbing !important;
+}
+
 body::before {
     content: '';
     position: absolute;
@@ -200,6 +206,9 @@ body::before {
     transform-origin: 0 0;
     --pan-x: 0px;
     --pan-y: 0px;
+}
+
+.hexagon-zoom-wrapper.animate-zoom {
     transition: transform 0.3s ease;
 }
 
@@ -215,20 +224,17 @@ body::before {
 /* ====== HEXAGON STYLES ====== */
 .hexagon {
     position: absolute;
-    cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer; /* Pointing hand for empty hexagons (panning) */
 }
 
 .hexagon svg {
     width: 100%;
     height: 100%;
-}
-
-.hexagon:hover {
-    filter: brightness(1.2);
+    pointer-events: none; /* Let events bubble to hexagon container */
 }
 
 .hexagon.valid-placement {
@@ -252,12 +258,21 @@ body::before {
     filter: drop-shadow(0 0 8px rgba(74, 159, 104, 0.9));
 }
 
-.hexagon.occupied {
+.hexagon.movable {
     cursor: grab;
 }
 
-.hexagon.occupied:hover {
-    filter: brightness(1.3);
+.hexagon.movable svg polygon {
+    filter: drop-shadow(0 0 6px rgba(74, 159, 104, 0.8));
+}
+
+.hexagon.movable:hover svg polygon {
+    filter: brightness(1.2) drop-shadow(0 0 12px rgba(74, 159, 104, 0.9));
+}
+
+/* Make non-movable occupied hexagons more subtle */
+.hexagon:not(.movable) svg polygon {
+    opacity: 0.6;
 }
 
 /* ====== INSECT STYLES ====== */
@@ -270,8 +285,12 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: grab;
     z-index: 5;
+    pointer-events: none; /* Let events bubble to hexagon */
+}
+
+.insect svg {
+    pointer-events: auto; /* Re-enable for the actual SVG */
 }
 
 .insect.dragging {
@@ -324,7 +343,7 @@ body::before {
     align-items: center;
     justify-content: center;
     position: relative;
-    cursor: grab;
+    cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
@@ -426,37 +445,23 @@ body::before {
 }
 
 .player-message {
-    margin-top: 12px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-    background: rgba(255, 68, 68, 0.15);
-    border: 1px solid rgba(255, 68, 68, 0.4);
-    color: #ff6b6b;
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease, padding 0.3s ease;
-}
-
-.player-message.show {
-    opacity: 1;
-    max-height: 100px;
-}
-
-.player-queen-status {
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #FFD700;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.player-info.active .player-queen-status {
+.player-info.active .player-message {
     opacity: 1;
+}
+
+.player-message.queen {
+    color: #FFD700;
+}
+
+.player-message.error {
+    color: #FFE680;
 }
 
 .player-status {

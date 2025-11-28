@@ -130,7 +130,7 @@ const HEX_SIZE = 50;
 const HEX_MARGIN = 2;
 const HEX_ACTUAL_SIZE = HEX_SIZE - HEX_MARGIN;
 const MIN_ZOOM = 0.3;
-const MAX_ZOOM = 1.8;
+const MAX_ZOOM = 1.4;
 const MIN_AUTO_ZOOM = 0.8;
 
 // ============================================
@@ -401,6 +401,9 @@ function beginDragOnMove(e) {
 
     dragState.isDragging = true;
 
+    // Set global cursor to grabbing during drag
+    document.body.classList.add('dragging');
+
     // Tag the insect being dragged from hand (don't modify game state yet)
     if (dragState.dragSource === 'hand') {
         dragState.draggedFromHand = dragState.sourceData;
@@ -548,10 +551,9 @@ function updateDropZoneHighlight(x, y) {
 
     if (dragState.dragSource === 'hand') {
         const isOccupied = isHexOccupied(hexKey);
-        const isBeetle = dragState.draggedFromHand === 'beetle';
 
-        // Beetles can be placed on occupied hexes (climbing), others cannot
-        const canPlace = (!isOccupied || isBeetle) && canPlaceInsect(hex);
+        // Cannot place on occupied hexes (beetles can only climb when moving, not placing)
+        const canPlace = !isOccupied && canPlaceInsect(hex);
 
         if (canPlace) {
             hexElement.style.setProperty('--player-color', playerColor);
@@ -658,6 +660,9 @@ function handleDragEnd(e) {
     dragState.draggedFromHand = null;
     dragState.highlightTimeout = null;
     dragState.lastHighlightedHex = null;
+
+    // Reset cursor
+    document.body.classList.remove('dragging');
     dragState.lastClientX = 0;
     dragState.lastClientY = 0;
 
@@ -698,8 +703,8 @@ function placeInsect(hex, insectType) {
         return false;
     }
 
-    // Only beetles can be placed on occupied hexes (climbing)
-    if (isHexOccupied(hexKey) && insectType !== 'beetle') {
+    // Cannot place on occupied hexes (beetles can only climb when moving, not placing)
+    if (isHexOccupied(hexKey)) {
         console.log('Failed: Hexagon already occupied');
         showPlayerMessage('Space already occupied');
         return false;
@@ -1017,17 +1022,20 @@ let messageTimeout = null;
 function showPlayerMessage(message) {
     const messageEl = document.getElementById(`player${gameState.currentPlayer}-message`);
     if (messageEl) {
+        // Remove queen class and add error class
+        messageEl.classList.remove('queen');
+        messageEl.classList.add('error');
         messageEl.textContent = message;
-        messageEl.classList.add('show');
 
         // Clear any existing timeout
         if (messageTimeout) {
             clearTimeout(messageTimeout);
         }
 
-        // Auto-hide after 3 seconds
+        // Auto-hide error after 3 seconds and restore queen message if needed
         messageTimeout = setTimeout(() => {
-            messageEl.classList.remove('show');
+            messageEl.classList.remove('error');
+            updatePlayerInfo(); // Restore queen message or clear
             messageTimeout = null;
         }, 3000);
     }
@@ -1037,13 +1045,15 @@ function clearPlayerMessage() {
     for (let p = 1; p <= 2; p++) {
         const messageEl = document.getElementById(`player${p}-message`);
         if (messageEl) {
-            messageEl.classList.remove('show');
+            messageEl.classList.remove('error', 'queen');
         }
     }
     if (messageTimeout) {
         clearTimeout(messageTimeout);
         messageTimeout = null;
     }
+    // Restore queen messages if needed
+    updatePlayerInfo();
 }
 
 function checkWinCondition() {
@@ -2093,6 +2103,12 @@ function renderBoard() {
                     const insectElement = createInsectElement(insect);
                     insectElement.style.position = 'absolute';
                     insectElement.style.zIndex = (10 + index).toString();
+
+                    // Disable pointer events on all except the top insect
+                    if (index < stack.length - 1) {
+                        insectElement.style.pointerEvents = 'none';
+                    }
+
                     hexElement.appendChild(insectElement);
                 });
             }
@@ -2106,6 +2122,13 @@ function renderBoard() {
                 polygon.setAttribute('stroke', strokeColor);
                 polygon.setAttribute('stroke-width', '2');
             }
+
+            // Mark hexagon as movable if it belongs to current player and queen is placed
+            if (topInsect.player === gameState.currentPlayer && gameState.queenPlaced[gameState.currentPlayer]) {
+                hexElement.classList.add('movable');
+            } else {
+                hexElement.classList.remove('movable');
+            }
         } else {
             // No insects on this hex - remove if exists and reset appearance
             existingInsects.forEach(el => el.remove());
@@ -2116,6 +2139,9 @@ function renderBoard() {
                 polygon.setAttribute('stroke', '#2d7a4f');
                 polygon.setAttribute('stroke-width', '2');
             }
+
+            // Remove movable class from empty hexagons
+            hexElement.classList.remove('movable');
         }
     }
 
@@ -2261,18 +2287,26 @@ function updatePlayerInfo() {
         const isActive = p === gameState.currentPlayer && !gameState.gameOver;
         info.classList.toggle('active', isActive);
 
-        const queenStatus = document.getElementById(`player${p}-queen`);
-        if (gameState.queenPlaced[p]) {
-            queenStatus.textContent = 'Queen: Placed ✓';
-        } else {
-            const turnsLeft = Math.max(0, 4 - gameState.turnCount[p]);
-            if (turnsLeft === 4 && gameConfig.tournamentRules) {
-                queenStatus.textContent = `Queen: Cannot place (turn 1)`;
-            } else if (turnsLeft === 1) {
-                queenStatus.textContent = `Queen: MUST place now!`;
-            } else {
-                queenStatus.textContent = `Queen: ${turnsLeft} turns left`;
+        // Update persistent queen status messages
+        const messageEl = document.getElementById(`player${p}-message`);
+        if (!gameState.queenPlaced[p]) {
+            // Queen not placed - show persistent queen message (unless error is active)
+            if (!messageEl.classList.contains('error')) {
+                messageEl.classList.remove('error');
+                messageEl.classList.add('queen');
+                const turnsLeft = Math.max(0, 4 - gameState.turnCount[p]);
+                if (turnsLeft === 4 && gameConfig.tournamentRules) {
+                    messageEl.textContent = `Queen: Cannot place (turn 1)`;
+                } else if (turnsLeft === 1) {
+                    messageEl.textContent = `Queen: MUST place now!`;
+                } else {
+                    messageEl.textContent = `Queen: ${turnsLeft} turns left`;
+                }
             }
+        } else if (!messageEl.classList.contains('error')) {
+            // Queen placed and no error message - clear the message
+            messageEl.classList.remove('queen');
+            messageEl.textContent = '';
         }
 
         const status = document.getElementById(`player${p}-status`);
@@ -2367,12 +2401,17 @@ function updateBoardZoom() {
 
 // Single source of truth for centering and zooming the board
 // Considers all pieces, highlighted hexagons, and ensures everything is visible
-function centerBoard() {
+function centerBoard(animate = true) {
     const boardArea = document.getElementById('boardArea');
     const wrapper = document.querySelector('.hexagon-zoom-wrapper');
 
     if (!boardArea || !wrapper) {
         return;
+    }
+
+    // Add animation class for smooth centering
+    if (animate) {
+        wrapper.classList.add('animate-zoom');
     }
 
     const boardRect = boardArea.getBoundingClientRect();
@@ -2385,6 +2424,9 @@ function centerBoard() {
         wrapper.style.setProperty('--pan-x', '0px');
         wrapper.style.setProperty('--pan-y', '0px');
         updateBoardZoom();
+        if (animate) {
+            setTimeout(() => wrapper.classList.remove('animate-zoom'), 300);
+        }
         return;
     }
 
@@ -2403,9 +2445,9 @@ function centerBoard() {
         }
     });
 
-    // If nothing to show, center on grid origin (hex 0,0)
+    // If nothing to show, center on grid origin (hex 0,0) at max zoom
     if (hexesToShow.size === 0) {
-        currentZoom = 1;
+        currentZoom = MAX_ZOOM;
         // Center hex (0,0) in the viewport
         // Hex (0,0) is at pixel position (0,0) in container coordinates
         // We want it at the center of the viewport
@@ -2414,6 +2456,9 @@ function centerBoard() {
         wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
         wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
         updateBoardZoom();
+        if (animate) {
+            setTimeout(() => wrapper.classList.remove('animate-zoom'), 300);
+        }
         return;
     }
 
@@ -2435,6 +2480,9 @@ function centerBoard() {
         wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
         wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
         updateBoardZoom();
+        if (animate) {
+            setTimeout(() => wrapper.classList.remove('animate-zoom'), 300);
+        }
         return;
     }
 
@@ -2460,6 +2508,9 @@ function centerBoard() {
         wrapper.style.setProperty('--pan-x', viewportCenterX + 'px');
         wrapper.style.setProperty('--pan-y', viewportCenterY + 'px');
         updateBoardZoom();
+        if (animate) {
+            setTimeout(() => wrapper.classList.remove('animate-zoom'), 300);
+        }
         return;
     }
 
@@ -2482,6 +2533,13 @@ function centerBoard() {
     wrapper.style.setProperty('--pan-y', panY + 'px');
 
     updateBoardZoom();
+
+    // Remove animation class after transition completes
+    if (animate) {
+        setTimeout(() => {
+            wrapper.classList.remove('animate-zoom');
+        }, 300);
+    }
 }
 
 // ============================================
@@ -2622,7 +2680,7 @@ function initGame() {
     };
     initializeHand();
     renderGame();
-    centerBoard();
+    centerBoard(false); // Disable animation during initialization
     updateGameRulesVisibility();
 }
 
