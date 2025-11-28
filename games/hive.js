@@ -77,7 +77,7 @@ let gameConfig = {
 };
 
 let gameState = {
-    board: new Map(), // key: hex.toString(), value: { player: 1|2, insect: type, id: unique }
+    board: new Map(), // key: hex.toString(), value: Array of insects (stacked, top = last)
     hand: {
         player1: {},
         player2: {}
@@ -90,6 +90,41 @@ let gameState = {
     queenPlaced: { 1: false, 2: false },
     turnCount: { 1: 0, 2: 0 }
 };
+
+// Helper functions for stacked insects
+function getTopInsect(hexKey) {
+    const stack = gameState.board.get(hexKey);
+    if (!stack || stack.length === 0) return null;
+    return stack[stack.length - 1];
+}
+
+function getInsectStack(hexKey) {
+    return gameState.board.get(hexKey) || [];
+}
+
+function isHexOccupied(hexKey) {
+    const stack = gameState.board.get(hexKey);
+    return stack && stack.length > 0;
+}
+
+function addInsectToHex(hexKey, insect) {
+    if (!gameState.board.has(hexKey)) {
+        gameState.board.set(hexKey, []);
+    }
+    gameState.board.get(hexKey).push(insect);
+}
+
+function removeTopInsect(hexKey) {
+    const stack = gameState.board.get(hexKey);
+    if (stack && stack.length > 0) {
+        const removed = stack.pop();
+        if (stack.length === 0) {
+            gameState.board.delete(hexKey);
+        }
+        return removed;
+    }
+    return null;
+}
 
 const HEX_SIZE = 50;
 const HEX_MARGIN = 2;
@@ -268,7 +303,7 @@ function handleHexagonMouseDown(e) {
     if (!hexElement.dataset.hex) return;
 
     const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
-    const insect = gameState.board.get(hex.toString());
+    const insect = getTopInsect(hex.toString());
 
     if (insect && insect.player === gameState.currentPlayer) {
         selectAndDrag(e, 'board', insect);
@@ -283,10 +318,10 @@ function handleHexagonTouchStart(e) {
     if (!hexElement.dataset.hex) return;
 
     const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
-    const insect = gameState.board.get(hex.toString());
+    const insect = getTopInsect(hex.toString());
 
     if (insect && insect.player === gameState.currentPlayer) {
-        const insectElement = hexElement.querySelector('.insect');
+        const insectElement = hexElement.querySelector('.insect, .stacked-insect');
         if (insectElement) {
             const touch = e.touches[0];
             selectAndDragTouch(touch, insectElement, 'board', insect);
@@ -487,7 +522,7 @@ function updateDropZoneHighlight(x, y) {
     if (!hexElement || !hexElement.dataset.hex) {
         // Clear previous highlight if we're not over a valid hexagon
         if (dragState.lastHighlightedHex) {
-            dragState.lastHighlightedHex.classList.remove('valid-move');
+            dragState.lastHighlightedHex.classList.remove('valid-move', 'invalid-move');
             dragState.lastHighlightedHex.style.removeProperty('--player-color');
             dragState.lastHighlightedHex = null;
         }
@@ -503,7 +538,7 @@ function updateDropZoneHighlight(x, y) {
 
     // Clear previous highlight
     if (dragState.lastHighlightedHex) {
-        dragState.lastHighlightedHex.classList.remove('valid-move');
+        dragState.lastHighlightedHex.classList.remove('valid-move', 'invalid-move');
         dragState.lastHighlightedHex.style.removeProperty('--player-color');
         dragState.lastHighlightedHex = null;
     }
@@ -512,15 +547,42 @@ function updateDropZoneHighlight(x, y) {
     const playerColor = gameState.currentPlayer === 1 ? '#5599ff' : '#ffaa44';
 
     if (dragState.dragSource === 'hand') {
-        if (!gameState.board.has(hexKey) && canPlaceInsect(hex)) {
+        const isOccupied = isHexOccupied(hexKey);
+        const isBeetle = dragState.draggedFromHand === 'beetle';
+
+        // Beetles can be placed on occupied hexes (climbing), others cannot
+        const canPlace = (!isOccupied || isBeetle) && canPlaceInsect(hex);
+
+        if (canPlace) {
             hexElement.style.setProperty('--player-color', playerColor);
             hexElement.classList.add('valid-move');
             dragState.lastHighlightedHex = hexElement;
+        } else {
+            // Invalid placement
+            hexElement.classList.add('invalid-move');
+            dragState.lastHighlightedHex = hexElement;
         }
     } else if (dragState.dragSource === 'board') {
-        if (!gameState.board.has(hexKey)) {
+        // Get the insect being moved
+        const insect = dragState.sourceData;
+
+        // Find current position
+        let fromHex = null;
+        for (let hKey of gameState.board.keys()) {
+            const stack = getInsectStack(hKey);
+            if (stack && stack.some(bug => bug.id === insect.id)) {
+                fromHex = Hex.fromString(hKey);
+                break;
+            }
+        }
+
+        if (fromHex && isValidMove(insect, fromHex, hex)) {
             hexElement.style.setProperty('--player-color', playerColor);
             hexElement.classList.add('valid-move');
+            dragState.lastHighlightedHex = hexElement;
+        } else {
+            // Invalid move
+            hexElement.classList.add('invalid-move');
             dragState.lastHighlightedHex = hexElement;
         }
     }
@@ -547,9 +609,9 @@ function handleDragEnd(e) {
         label.classList.remove('show');
     });
 
-    // Clear all valid-move highlights (belt and suspenders approach)
-    document.querySelectorAll('.hexagon.valid-move').forEach(hex => {
-        hex.classList.remove('valid-move');
+    // Clear all valid-move and invalid-move highlights (belt and suspenders approach)
+    document.querySelectorAll('.hexagon.valid-move, .hexagon.invalid-move').forEach(hex => {
+        hex.classList.remove('valid-move', 'invalid-move');
         hex.style.removeProperty('--player-color');
     });
     dragState.lastHighlightedHex = null;
@@ -636,7 +698,8 @@ function placeInsect(hex, insectType) {
         return false;
     }
 
-    if (gameState.board.has(hexKey)) {
+    // Only beetles can be placed on occupied hexes (climbing)
+    if (isHexOccupied(hexKey) && insectType !== 'beetle') {
         console.log('Failed: Hexagon already occupied');
         showPlayerMessage('Space already occupied');
         return false;
@@ -649,7 +712,7 @@ function placeInsect(hex, insectType) {
     }
 
     const insectId = `${gameState.currentPlayer}-${insectType}-${Date.now()}`;
-    gameState.board.set(hexKey, {
+    addInsectToHex(hexKey, {
         player: gameState.currentPlayer,
         insect: insectType,
         id: insectId
@@ -679,9 +742,10 @@ function canPlaceInsect(hex) {
     // Count pieces on the board for each player
     let currentPlayerPieces = 0;
     let opponentPieces = 0;
-    for (let [hexKey, insect] of gameState.board) {
-        if (insect.player === currentPlayer) currentPlayerPieces++;
-        if (insect.player === opponentPlayer) opponentPieces++;
+    for (let hexKey of gameState.board.keys()) {
+        const insect = getTopInsect(hexKey);
+        if (insect && insect.player === currentPlayer) currentPlayerPieces++;
+        if (insect && insect.player === opponentPlayer) opponentPieces++;
     }
 
     // First piece: can be placed anywhere (no restrictions)
@@ -692,23 +756,131 @@ function canPlaceInsect(hex) {
     // Second piece (opponent's first piece already placed): must touch opponent
     if (currentPlayerPieces === 0 && opponentPieces > 0) {
         return neighbors.some(n => {
-            const insect = gameState.board.get(n.toString());
+            const insect = getTopInsect(n.toString());
             return insect && insect.player === opponentPlayer;
         });
     }
 
     // After first piece: must touch friendly pieces only, NOT opponent pieces
     const hasFriendlyNeighbor = neighbors.some(n => {
-        const insect = gameState.board.get(n.toString());
+        const insect = getTopInsect(n.toString());
         return insect && insect.player === currentPlayer;
     });
 
     const hasOpponentNeighbor = neighbors.some(n => {
-        const insect = gameState.board.get(n.toString());
+        const insect = getTopInsect(n.toString());
         return insect && insect.player === opponentPlayer;
     });
 
     return hasFriendlyNeighbor && !hasOpponentNeighbor;
+}
+
+// ============================================
+// MOVEMENT VALIDATION
+// ============================================
+
+// Check if a move is valid for an insect
+function isValidMove(insect, fromHex, toHex) {
+    // Basic rule: Target must be unoccupied (unless beetle/mosquito climbing)
+    const targetOccupied = isHexOccupied(toHex.toString());
+
+    if (targetOccupied) {
+        // Only beetle and mosquito (when copying beetle) can climb
+        const canClimb = insect.insect === 'beetle' ||
+                        (insect.insect === 'mosquito' && canMosquitoClimbAsBeelle());
+        if (!canClimb) {
+            return false;
+        }
+    }
+
+    // Basic rule: Target must touch at least one other insect (connectivity)
+    const neighbors = toHex.getNeighbors();
+    const touchesOtherInsect = neighbors.some(n => {
+        const neighborKey = n.toString();
+        // Don't count the hex we're moving from
+        if (neighborKey === fromHex.toString()) return false;
+        return isHexOccupied(neighborKey);
+    });
+
+    if (!touchesOtherInsect && gameState.board.size > 1) {
+        return false;
+    }
+
+    // Insect-specific movement validation (placeholder for pathfinding)
+    return canInsectReach(insect, fromHex, toHex);
+}
+
+// Placeholder: Check if mosquito is adjacent to a beetle
+function canMosquitoClimbAsBeelle() {
+    // TODO: Implement mosquito adjacent beetle check
+    return false;
+}
+
+// Insect-specific pathfinding (placeholders)
+function canInsectReach(insect, fromHex, toHex) {
+    const insectType = insect.insect;
+
+    switch (insectType) {
+        case 'queen':
+            return canQueenReach(fromHex, toHex);
+        case 'ant':
+            return canAntReach(fromHex, toHex);
+        case 'beetle':
+            return canBeetleReach(fromHex, toHex);
+        case 'hopper':
+            return canHopperReach(fromHex, toHex);
+        case 'spider':
+            return canSpiderReach(fromHex, toHex);
+        case 'mosquito':
+            return canMosquitoReach(fromHex, toHex);
+        case 'ladybug':
+            return canLadybugReach(fromHex, toHex);
+        case 'pillbug':
+            return canPillbugReach(fromHex, toHex);
+        default:
+            return false;
+    }
+}
+
+// Placeholder pathfinding functions - TODO: Implement actual movement rules
+function canQueenReach(fromHex, toHex) {
+    // Queen moves 1 space
+    return fromHex.distance(toHex) === 1;
+}
+
+function canAntReach(fromHex, toHex) {
+    // Ant can move any distance around the hive
+    return true; // Placeholder - needs pathfinding
+}
+
+function canBeetleReach(fromHex, toHex) {
+    // Beetle moves 1 space, can climb
+    return fromHex.distance(toHex) === 1;
+}
+
+function canHopperReach(fromHex, toHex) {
+    // Grasshopper jumps in straight line over insects
+    return true; // Placeholder - needs line-of-sight check
+}
+
+function canSpiderReach(fromHex, toHex) {
+    // Spider moves exactly 3 spaces
+    return fromHex.distance(toHex) === 3; // Placeholder - needs pathfinding
+}
+
+function canMosquitoReach(fromHex, toHex) {
+    // Mosquito copies adjacent insects
+    return true; // Placeholder - needs adjacent insect check
+}
+
+function canLadybugReach(fromHex, toHex) {
+    // Ladybug moves 2 up, 1 down
+    return fromHex.distance(toHex) <= 3; // Placeholder - needs specific pathfinding
+}
+
+function canPillbugReach(fromHex, toHex) {
+    // Pillbug moves 1 space
+    return fromHex.distance(toHex) === 1;
 }
 
 function moveInsect(insect, targetHex) {
@@ -729,8 +901,10 @@ function moveInsect(insect, targetHex) {
     }
 
     let currentHex = null;
-    for (let [hexKey, bug] of gameState.board) {
-        if (bug.id === insect.id) {
+    // Search through all hexes and their stacks to find the insect
+    for (let hexKey of gameState.board.keys()) {
+        const stack = getInsectStack(hexKey);
+        if (stack && stack.some(bug => bug.id === insect.id)) {
             currentHex = Hex.fromString(hexKey);
             break;
         }
@@ -739,47 +913,71 @@ function moveInsect(insect, targetHex) {
     if (!currentHex) return;
 
     const targetKey = targetHex.toString();
-    if (gameState.board.has(targetKey)) {
-        showPlayerMessage('Space already occupied');
+
+    // Validate the move
+    if (!isValidMove(insect, currentHex, targetHex)) {
+        showPlayerMessage('Invalid move for this insect');
         return;
     }
 
     // Rule: Cannot move if it breaks hive connectivity (One Hive rule)
-    if (!isHiveConnectedWithout(currentHex)) {
+    if (!isHiveConnectedWithout(currentHex, insect.id)) {
         console.log('Failed: Moving this insect would break hive connectivity');
         showPlayerMessage('Move would split the hive');
         return;
     }
 
-    gameState.board.delete(currentHex.toString());
-    gameState.board.set(targetKey, insect);
+    // Remove insect from current position (only the top one if stacked)
+    const currentKey = currentHex.toString();
+    const stack = getInsectStack(currentKey);
+    if (stack) {
+        // Find and remove the specific insect from the stack
+        const insectIndex = stack.findIndex(bug => bug.id === insect.id);
+        if (insectIndex !== -1) {
+            stack.splice(insectIndex, 1);
+            if (stack.length === 0) {
+                gameState.board.delete(currentKey);
+            }
+        }
+    }
+
+    // Add insect to target position (potentially stacking on top)
+    addInsectToHex(targetKey, insect);
 
     renderGame();
     checkWinCondition();
     endTurn();
 }
 
-function isHiveConnectedWithout(excludeHex) {
-    // Check if the hive remains connected when removing the insect at excludeHex
+function isHiveConnectedWithout(excludeHex, excludeInsectId) {
+    // Check if the hive remains connected when removing a specific insect
     const excludeKey = excludeHex.toString();
 
-    // Get all insects except the one at excludeHex
-    const remainingInsects = [];
-    for (let [hexKey, insect] of gameState.board) {
-        if (hexKey !== excludeKey) {
-            remainingInsects.push(hexKey);
+    // Get all occupied hexes, excluding the one if it would become empty
+    const remainingHexes = [];
+    for (let hexKey of gameState.board.keys()) {
+        if (hexKey === excludeKey) {
+            // Check if this hex would still be occupied after removing the insect
+            const stack = getInsectStack(hexKey);
+            if (stack && stack.length > 1) {
+                // Other insects remain, so this hex is still occupied
+                remainingHexes.push(hexKey);
+            }
+            // If stack.length === 1, this hex becomes empty, so don't include it
+        } else {
+            remainingHexes.push(hexKey);
         }
     }
 
-    // If only one or zero insects remain, they're always connected
-    if (remainingInsects.length <= 1) {
+    // If only one or zero hexes remain, they're always connected
+    if (remainingHexes.length <= 1) {
         return true;
     }
 
-    // Use BFS to check if all remaining insects are connected
+    // Use BFS to check if all remaining hexes are connected
     const visited = new Set();
-    const queue = [remainingInsects[0]]; // Start from first remaining insect
-    visited.add(remainingInsects[0]);
+    const queue = [remainingHexes[0]]; // Start from first remaining hex
+    visited.add(remainingHexes[0]);
 
     while (queue.length > 0) {
         const currentKey = queue.shift();
@@ -788,18 +986,16 @@ function isHiveConnectedWithout(excludeHex) {
 
         for (let neighbor of neighbors) {
             const neighborKey = neighbor.toString();
-            // Check if this neighbor has an insect and hasn't been visited
-            if (gameState.board.has(neighborKey) &&
-                neighborKey !== excludeKey &&
-                !visited.has(neighborKey)) {
+            // Check if this neighbor is in our remaining hexes and hasn't been visited
+            if (remainingHexes.includes(neighborKey) && !visited.has(neighborKey)) {
                 visited.add(neighborKey);
                 queue.push(neighborKey);
             }
         }
     }
 
-    // The hive is connected if we visited all remaining insects
-    return visited.size === remainingInsects.length;
+    // The hive is connected if we visited all remaining hexes
+    return visited.size === remainingHexes.length;
 }
 
 function endTurn() {
@@ -851,20 +1047,25 @@ function clearPlayerMessage() {
 }
 
 function checkWinCondition() {
-    for (let [hexKey, insect] of gameState.board) {
-        if (insect.insect === 'queen') {
-            const hex = Hex.fromString(hexKey);
-            const neighbors = hex.getNeighbors();
-            const adjacentInsects = neighbors.filter(n => {
-                const adj = gameState.board.get(n.toString());
-                return adj && adj.player !== insect.player;
-            });
+    for (let hexKey of gameState.board.keys()) {
+        const stack = getInsectStack(hexKey);
+        // Check if there's a queen in this stack (look at bottom insect, queens can't be on top)
+        if (stack && stack.length > 0) {
+            const queenInStack = stack.find(insect => insect.insect === 'queen');
+            if (queenInStack) {
+                const hex = Hex.fromString(hexKey);
+                const neighbors = hex.getNeighbors();
+                const adjacentInsects = neighbors.filter(n => {
+                    const adj = getTopInsect(n.toString());
+                    return adj !== null;
+                });
 
-            if (adjacentInsects.length === 6) {
-                gameState.gameOver = true;
-                gameState.winner = insect.player === 1 ? 2 : 1;
-                showVictory();
-                return;
+                if (adjacentInsects.length === 6) {
+                    gameState.gameOver = true;
+                    gameState.winner = queenInStack.player === 1 ? 2 : 1;
+                    showVictory();
+                    return;
+                }
             }
         }
     }
@@ -1872,38 +2073,42 @@ function renderBoard() {
             container.appendChild(hexElement);
         }
 
-        const insect = gameState.board.get(hexKey);
-        const existingInsect = hexElement.querySelector('.insect');
+        const stack = getInsectStack(hexKey);
+        const topInsect = getTopInsect(hexKey);
+        const existingInsects = hexElement.querySelectorAll('.insect, .stacked-insect');
 
-        // Performance optimization: only update if insect changed
-        if (insect) {
-            const needsUpdate = !existingInsect || existingInsect.dataset.insectId !== insect.id;
+        // Performance optimization: only update if stack changed
+        if (stack && stack.length > 0) {
+            // Check if we need to update the display by comparing full stack
+            const stackIds = stack.map(i => i.id).join(',');
+            const existingIds = Array.from(existingInsects).map(el => el.dataset.insectId).join(',');
+            const needsUpdate = stackIds !== existingIds;
 
             if (needsUpdate) {
-                // Remove old insect if exists
-                if (existingInsect) {
-                    existingInsect.remove();
-                }
+                // Remove all existing insects
+                existingInsects.forEach(el => el.remove());
 
-                // Add new insect
-                const insectElement = createInsectElement(insect);
-                hexElement.appendChild(insectElement);
+                // Render all insects in the stack with incremental z-index
+                stack.forEach((insect, index) => {
+                    const insectElement = createInsectElement(insect);
+                    insectElement.style.position = 'absolute';
+                    insectElement.style.zIndex = (10 + index).toString();
+                    hexElement.appendChild(insectElement);
+                });
             }
 
-            // Update hexagon appearance
+            // Update hexagon appearance based on top insect
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
-                const playerColor = insect.player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
-                const strokeColor = insect.player === 1 ? '#5599ff' : '#ffaa44';
+                const playerColor = topInsect.player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
+                const strokeColor = topInsect.player === 1 ? '#5599ff' : '#ffaa44';
                 polygon.setAttribute('fill', playerColor);
                 polygon.setAttribute('stroke', strokeColor);
                 polygon.setAttribute('stroke-width', '2');
             }
         } else {
-            // No insect on this hex - remove if exists and reset appearance
-            if (existingInsect) {
-                existingInsect.remove();
-            }
+            // No insects on this hex - remove if exists and reset appearance
+            existingInsects.forEach(el => el.remove());
 
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
@@ -2351,9 +2556,14 @@ function updateExpansionInsects() {
         if (gameState.hand[playerKey]) {
             // Count how many of each expansion type are already on the board for this player
             const onBoard = { mosquito: 0, ladybug: 0, pillbug: 0 };
-            for (let [, insect] of gameState.board) {
-                if (insect.player === player && onBoard.hasOwnProperty(insect.insect)) {
-                    onBoard[insect.insect]++;
+            for (let hexKey of gameState.board.keys()) {
+                const stack = getInsectStack(hexKey);
+                if (stack) {
+                    for (let insect of stack) {
+                        if (insect.player === player && onBoard.hasOwnProperty(insect.insect)) {
+                            onBoard[insect.insect]++;
+                        }
+                    }
                 }
             }
 

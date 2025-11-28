@@ -242,6 +242,12 @@ body::before {
     filter: drop-shadow(0 0 3px var(--player-color, #4a9f68));
 }
 
+.hexagon.invalid-move svg polygon {
+    stroke: rgba(255, 100, 100, 0.4) !important;
+    stroke-width: 2 !important;
+    fill: rgba(255, 100, 100, 0.1) !important;
+}
+
 .insect.selected {
     filter: drop-shadow(0 0 8px rgba(74, 159, 104, 0.9));
 }
