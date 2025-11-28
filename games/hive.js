@@ -76,6 +76,175 @@ let gameConfig = {
     tournamentRules: false
 };
 
+// Centralized theme color definitions (organized by UI component)
+const THEME_COLORS = {
+    green: {
+        // === HEXAGONS ===
+        'hexagon-empty': '#071508',
+        'hexagon-stroke': '#1a4530',
+        'hexagon-glow': 'rgba(45, 122, 79, 0.8)',
+        'valid-move-glow': 'rgba(74, 159, 104, 0.9)',
+
+        // === BOARD AREA ===
+        'board-area-gradient-start': 'rgba(26, 71, 42, 0.3)',
+        'board-area-gradient-end': 'rgba(13, 42, 24, 0.3)',
+        'board-dark': '#050f08',
+
+        // === HAND AREA ===
+        'hand-border': '#2d7a4f',
+        'hand-insect-bg-start': '#1a4530',
+        'hand-insect-bg-end': '#0d2a18',
+        'hand-insect-border': '#2d7a4f',
+        'hand-insect-hover': '#6bb98a',
+        'hand-insect-shadow': 'rgba(45, 122, 79, 0.1)',
+        'hand-insect-hover-shadow': 'rgba(45, 122, 79, 0.6)',
+
+        // === BUTTONS ===
+        'button-background': 'rgba(45, 122, 79, 0.5)',
+        'button-border': '#2d7a4f',
+        'button-border-opacity': 'rgba(45, 122, 79, 0.3)',
+        'button-hover-bg': '#3d9a5f',
+        'button-hover-border': 'rgba(45, 122, 79, 0.6)',
+        'button-hover-shadow': 'rgba(45, 122, 79, 0.2)',
+        'button-active-light': '#3d9a5f',
+        'button-active-bg-end': '#2a5540',
+
+        // === PLAYER INFO ===
+        'player-info-bg': '#0a1f13',
+        'player-message-bg': '#0a1f13',
+        'player-dragging-label': '#4a9f68',
+
+        // === MODALS & POPUPS ===
+        'modal-border': '#2d7a4f',
+        'modal-bg': 'rgba(13, 42, 24, 0.95)',
+        'piece-info-popup-bg': 'rgba(13, 42, 24, 0.95)',
+        'piece-info-popup-border': '#4a9f68',
+        'popup-background': 'rgba(45, 122, 79, 0.1)',
+
+        // === BODY & CONTAINER ===
+        'body-bg-light': '#1a472a',
+        'body-bg-dark': '#0a1f13',
+        'container-bg-start': '#1a472a',
+        'container-bg-end': '#0d2a18',
+        'wrapper-gradient-start': 'rgba(45, 122, 79, 0.5)',
+        'wrapper-gradient-end': 'rgba(45, 122, 79, 0.1)',
+
+        // === MISC ===
+        'default-accent': '#4a9f68',
+        'game-rules-link': '#ff8800'
+    },
+    blue: {
+        // === HEXAGONS ===
+        'hexagon-empty': '#051020',
+        'hexagon-stroke': '#2255aa',
+        'hexagon-glow': 'rgba(85, 153, 255, 0.8)',
+        'valid-move-glow': 'rgba(100, 170, 255, 0.9)',
+
+        // === BOARD AREA ===
+        'board-area-gradient-start': 'rgba(40, 70, 130, 0.3)',
+        'board-area-gradient-end': 'rgba(25, 42, 75, 0.3)',
+        'board-dark': '#030c18',
+
+        // === HAND AREA ===
+        'hand-border': '#5599ff',
+        'hand-insect-bg-start': '#1a3d77',
+        'hand-insect-bg-end': '#0d2550',
+        'hand-insect-border': '#5599ff',
+        'hand-insect-hover': '#88bbff',
+        'hand-insect-shadow': 'rgba(85, 153, 255, 0.05)',
+        'hand-insect-hover-shadow': 'rgba(85, 153, 255, 0.6)',
+
+        // === BUTTONS ===
+        'button-background': 'rgba(85, 153, 255, 0.5)',
+        'button-border': '#5599ff',
+        'button-border-opacity': 'rgba(85, 153, 255, 0.3)',
+        'button-hover-bg': '#66aaff',
+        'button-hover-border': 'rgba(85, 153, 255, 0.6)',
+        'button-hover-shadow': 'rgba(85, 153, 255, 0.2)',
+        'button-active-light': '#66aaff',
+        'button-active-bg-end': '#3377cc',
+
+        // === PLAYER INFO ===
+        'player-info-bg': '#0a1a35',
+        'player-message-bg': '#0a1a35',
+        'player-dragging-label': '#5599ff',
+
+        // === MODALS & POPUPS ===
+        'modal-border': '#5599ff',
+        'modal-bg': 'rgba(25, 50, 90, 0.95)',
+        'piece-info-popup-bg': 'rgba(25, 50, 90, 0.95)',
+        'piece-info-popup-border': '#5599ff',
+        'popup-background': 'rgba(85, 153, 255, 0.05)',
+
+        // === BODY & CONTAINER ===
+        'body-bg-light': '#1a3a6a',
+        'body-bg-dark': '#0a1a35',
+        'container-bg-start': '#1a3a6a',
+        'container-bg-end': '#0d2550',
+        'wrapper-gradient-start': 'rgba(85, 153, 255, 0.5)',
+        'wrapper-gradient-end': 'rgba(85, 153, 255, 0.05)',
+
+        // === MISC ===
+        'default-accent': '#5599ff',
+        'game-rules-link': '#88bbff'
+    },
+    orange: {
+        // === HEXAGONS ===
+        'hexagon-empty': '#201508',
+        'hexagon-stroke': '#cc7722',
+        'hexagon-glow': 'rgba(255, 170, 68, 0.8)',
+        'valid-move-glow': 'rgba(255, 190, 100, 0.9)',
+
+        // === BOARD AREA ===
+        'board-area-gradient-start': 'rgba(130, 85, 35, 0.3)',
+        'board-area-gradient-end': 'rgba(75, 50, 20, 0.3)',
+        'board-dark': '#150c05',
+
+        // === HAND AREA ===
+        'hand-border': '#ffaa44',
+        'hand-insect-bg-start': '#995522',
+        'hand-insect-bg-end': '#503510',
+        'hand-insect-border': '#ffaa44',
+        'hand-insect-hover': '#ffcc88',
+        'hand-insect-shadow': 'rgba(255, 170, 68, 0.05)',
+        'hand-insect-hover-shadow': 'rgba(255, 170, 68, 0.6)',
+
+        // === BUTTONS ===
+        'button-background': 'rgba(255, 170, 68, 0.5)',
+        'button-border': '#ffaa44',
+        'button-border-opacity': 'rgba(255, 170, 68, 0.3)',
+        'button-hover-bg': '#ffbb66',
+        'button-hover-border': 'rgba(255, 170, 68, 0.6)',
+        'button-hover-shadow': 'rgba(255, 170, 68, 0.2)',
+        'button-active-light': '#ffbb66',
+        'button-active-bg-end': '#dd8833',
+
+        // === PLAYER INFO ===
+        'player-info-bg': '#352510',
+        'player-message-bg': '#352510',
+        'player-dragging-label': '#ffaa44',
+
+        // === MODALS & POPUPS ===
+        'modal-border': '#ffaa44',
+        'modal-bg': 'rgba(90, 60, 25, 0.95)',
+        'piece-info-popup-bg': 'rgba(90, 60, 25, 0.95)',
+        'piece-info-popup-border': '#ffaa44',
+        'popup-background': 'rgba(255, 170, 68, 0.05)',
+
+        // === BODY & CONTAINER ===
+        'body-bg-light': '#6a4a1a',
+        'body-bg-dark': '#352510',
+        'container-bg-start': '#6a4a1a',
+        'container-bg-end': '#503510',
+        'wrapper-gradient-start': 'rgba(255, 170, 68, 0.5)',
+        'wrapper-gradient-end': 'rgba(255, 170, 68, 0.05)',
+
+        // === MISC ===
+        'default-accent': '#ffaa44',
+        'game-rules-link': '#dd6611'
+    }
+};
+
 let gameState = {
     board: new Map(), // key: hex.toString(), value: Array of insects (stacked, top = last)
     hand: {
@@ -220,8 +389,8 @@ function createHexagonSVG() {
         points.push(`${x},${y}`);
     }
     polygon.setAttribute('points', points.join(' '));
-    polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
-    polygon.setAttribute('stroke', '#2d7a4f');
+    polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
+    polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
     polygon.setAttribute('stroke-width', '2');
 
     // Add smooth transitions for fill and stroke
@@ -2162,8 +2331,8 @@ function renderBoard() {
 
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
-                polygon.setAttribute('fill', 'rgba(45, 122, 79, 0.3)');
-                polygon.setAttribute('stroke', '#2d7a4f');
+                polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
+                polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
                 polygon.setAttribute('stroke-width', '2');
             }
 
@@ -2238,10 +2407,16 @@ function renderHand() {
     const player = gameState.currentPlayer;
     const handData = gameState.hand[`player${player}`];
 
+    if (!handData) return; // Safety check
+
     handArea.innerHTML = '';
 
+    // Get current theme
+    const currentTheme = loadThemeColor();
+    const theme = THEME_COLORS[currentTheme];
+
     for (let type in INSECT_TYPES) {
-        let count = handData[type];
+        let count = handData[type] || 0;
 
         // If this insect type is being dragged, show reduced count visually
         const visualCount = (dragState.draggedFromHand === type) ? count - 1 : count;
@@ -2252,6 +2427,11 @@ function renderHand() {
             const div = document.createElement('div');
             div.className = 'hand-insect';
             div.dataset.insectType = type;
+
+            // Apply theme colors (hand insects match theme: green/blue/orange)
+            div.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
+            div.style.borderColor = theme['hand-insect-border'];
+            div.style.boxShadow = `0 4px 12px rgba(0,0,0,0.4)`;
 
             // Check if this insect can be placed
             const canPlace = canPlaceInsectType(type);
@@ -2578,46 +2758,8 @@ function showVictory() {
     const winnerColor = gameState.winner === 1 ? '#5599ff' : '#ffaa44';
     const winnerColorName = gameState.winner === 1 ? 'Blue' : 'Orange';
 
-    // Calculate game statistics
+    // Calculate game duration
     const gameTime = Math.floor((Date.now() - gameState.startTime) / 1000); // in seconds
-
-    // Calculate moves per player
-    const player1Moves = gameState.moveHistory.filter(m => m.player === 1).length;
-    const player2Moves = gameState.moveHistory.filter(m => m.player === 2).length;
-
-    // Find most active insect per player
-    const player1InsectMoves = {};
-    const player2InsectMoves = {};
-
-    gameState.moveHistory.forEach(move => {
-        if (move.player === 1) {
-            player1InsectMoves[move.insect] = (player1InsectMoves[move.insect] || 0) + 1;
-        } else {
-            player2InsectMoves[move.insect] = (player2InsectMoves[move.insect] || 0) + 1;
-        }
-    });
-
-    // Find most active for player 1
-    let player1MostActive = 'None';
-    let player1MaxMoves = 0;
-    for (let [insect, count] of Object.entries(player1InsectMoves)) {
-        if (count > player1MaxMoves) {
-            player1MaxMoves = count;
-            player1MostActive = INSECT_TYPES[insect].name;
-        }
-    }
-
-    // Find most active for player 2
-    let player2MostActive = 'None';
-    let player2MaxMoves = 0;
-    for (let [insect, count] of Object.entries(player2InsectMoves)) {
-        if (count > player2MaxMoves) {
-            player2MaxMoves = count;
-            player2MostActive = INSECT_TYPES[insect].name;
-        }
-    }
-
-    // Format game time
     const minutes = Math.floor(gameTime / 60);
     const seconds = gameTime % 60;
     const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
@@ -2629,6 +2771,9 @@ function showVictory() {
 
     allHexes.forEach(hexElement => {
         const insects = hexElement.querySelectorAll('.insect');
+        let hasWinningPiece = false;
+        let hasLosingPiece = false;
+
         insects.forEach(insectElement => {
             const insectId = insectElement.dataset.insectId;
             // Find the insect data
@@ -2637,6 +2782,7 @@ function showVictory() {
                 const insect = stack?.find(i => i.id === insectId);
                 if (insect) {
                     if (insect.player === losingPlayer) {
+                        hasLosingPiece = true;
                         // Losing team: fall off screen
                         const randomDelay = Math.random() * 1000;
                         const randomRotation = (Math.random() - 0.5) * 720;
@@ -2648,6 +2794,7 @@ function showVictory() {
                             insectElement.style.opacity = '0';
                         }, randomDelay);
                     } else {
+                        hasWinningPiece = true;
                         // Winning team: celebratory dance (jump animation)
                         const randomDelay = Math.random() * 500;
                         setTimeout(() => {
@@ -2658,6 +2805,18 @@ function showVictory() {
                 }
             }
         });
+
+        // If hexagon only has losing pieces, reset to theme color (remove player coloring)
+        if (hasLosingPiece && !hasWinningPiece) {
+            const polygon = hexElement.querySelector('svg polygon');
+            if (polygon) {
+                setTimeout(() => {
+                    polygon.style.transition = 'fill 1.5s ease-in, stroke 1.5s ease-in';
+                    polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
+                    polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
+                }, 1200); // Delay slightly after pieces start falling
+            }
+        }
     });
 
     // Create victory display on the board (not a modal)
@@ -2686,19 +2845,9 @@ function showVictory() {
             <div style="font-size: 20px; color: #aaa; margin-bottom: 25px;">
                 ${winnerColorName} team has surrounded the opponent's Queen Bee!
             </div>
-            <div style="border-top: 2px solid ${winnerColor}40; padding-top: 15px; margin-top: 15px; font-size: 15px; line-height: 2;">
-                <div style="color: #999; margin-bottom: 8px; text-align: center;">
-                    Game Time: <span style="color: #fff; font-weight: bold;">${timeStr}</span>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px; color: #ccc;">
-                    <span style="color: #5599ff; font-weight: bold;">Left moved ${player1Moves} tiles</span>
-                    <span style="margin: 0 15px; color: #666;">|</span>
-                    <span style="color: #ffaa44; font-weight: bold;">Right moved ${player2Moves} tiles</span>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; color: #ccc;">
-                    <span style="color: #5599ff; font-weight: bold;">${player1MostActive} (${player1MaxMoves}) was most active</span>
-                    <span style="margin: 0 15px; color: #666;">|</span>
-                    <span style="color: #ffaa44; font-weight: bold;">${player2MostActive} (${player2MaxMoves}) was most active</span>
+            <div style="border-top: 2px solid ${winnerColor}40; padding-top: 15px; margin-top: 15px; font-size: 16px;">
+                <div style="color: #999; text-align: center;">
+                    Game Duration: <span style="color: #fff; font-weight: bold;">${timeStr}</span>
                 </div>
             </div>
         `;
@@ -2730,6 +2879,145 @@ function showVictory() {
             }
         `;
         document.head.appendChild(style);
+    }
+
+    // Save victor's theme color
+    const themeColor = gameState.winner === 1 ? 'blue' : 'orange';
+    saveThemeColor(themeColor);
+    applyThemeColor(themeColor);
+}
+
+// ============================================
+// THEME COLOR SYSTEM
+// ============================================
+
+function saveThemeColor(color) {
+    try {
+        localStorage.setItem('hiveThemeColor', color);
+    } catch (e) {
+        console.error('Failed to save theme color:', e);
+    }
+}
+
+function loadThemeColor() {
+    try {
+        const saved = localStorage.getItem('hiveThemeColor');
+        return saved || 'green'; // Default to green
+    } catch (e) {
+        console.error('Failed to load theme color:', e);
+        return 'green';
+    }
+}
+
+// Helper function to get current theme colors
+function getThemeColor(key) {
+    const currentTheme = loadThemeColor();
+    return THEME_COLORS[currentTheme][key];
+}
+
+function applyThemeColor(color) {
+    const theme = THEME_COLORS[color] || THEME_COLORS.green;
+
+    // Update CSS custom properties
+    document.documentElement.style.setProperty('--theme-hexagon-empty', theme['hexagon-empty']);
+    document.documentElement.style.setProperty('--theme-hexagon-stroke', theme['hexagon-stroke']);
+    document.documentElement.style.setProperty('--theme-board-dark', theme['board-dark']);
+    document.documentElement.style.setProperty('--theme-button-background', theme['button-background']);
+    document.documentElement.style.setProperty('--theme-button-border', theme['button-border']);
+
+    // Apply theme to UI elements
+    applyThemeToUI(theme);
+
+    // Re-render the game to apply new colors
+    if (gameState.board) {
+        renderGame();
+    }
+}
+
+function applyThemeToUI(theme) {
+    // Update all buttons with gradients
+    const gameButtons = document.querySelectorAll('.game-button');
+    gameButtons.forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
+        btn.style.borderColor = theme['button-border'];
+    });
+
+    // Update zoom buttons with gradients
+    const zoomButtons = document.querySelectorAll('.zoom-btn');
+    zoomButtons.forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
+        btn.style.borderColor = theme['button-border'];
+    });
+
+    // Update game container
+    const gameContainer = document.querySelector('.game-container');
+    if (gameContainer) {
+        gameContainer.style.background = `linear-gradient(135deg, ${theme['container-bg-start']}, ${theme['container-bg-end']})`;
+    }
+
+    // Update game wrapper
+    const gameWrapper = document.querySelector('.game-wrapper');
+    if (gameWrapper) {
+        gameWrapper.style.background = `linear-gradient(135deg, ${theme['wrapper-gradient-start']}, ${theme['wrapper-gradient-end']})`;
+    }
+
+    // Update board area with dark background
+    const boardArea = document.querySelector('.board-area');
+    if (boardArea) {
+        boardArea.style.backgroundColor = theme['board-dark'];
+        boardArea.style.borderColor = theme['hexagon-stroke'];
+    }
+
+    // Update hand area
+    const handArea = document.querySelector('.hand-area');
+    if (handArea) {
+        handArea.style.borderColor = theme['hand-border'];
+    }
+
+    // Update hand insect circles (match theme: green/blue/orange)
+    const handInsects = document.querySelectorAll('.hand-insect');
+    handInsects.forEach(insect => {
+        insect.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
+        insect.style.borderColor = theme['hand-insect-border'];
+        insect.style.boxShadow = `0 4px 12px rgba(0,0,0,0.4)`;
+    });
+
+    // Update player info backgrounds
+    const playerInfos = document.querySelectorAll('.player-info');
+    playerInfos.forEach(info => {
+        info.style.backgroundColor = theme['player-info-bg'];
+    });
+
+    // Update player dragging labels
+    const draggingLabels = document.querySelectorAll('.player-dragging-label');
+    draggingLabels.forEach(label => {
+        label.style.color = theme['player-dragging-label'];
+    });
+
+    // Update game rules link
+    const gameRulesLink = document.querySelector('.game-rules-link');
+    if (gameRulesLink) {
+        gameRulesLink.style.color = theme['game-rules-link'];
+    }
+
+    // Update modals
+    const modals = document.querySelectorAll('.info-panel, .setup-panel');
+    modals.forEach(modal => {
+        modal.style.background = `linear-gradient(135deg, ${theme['container-bg-start']}, ${theme['container-bg-end']})`;
+        modal.style.borderColor = theme['modal-border'];
+    });
+
+    // Update piece info popup
+    const pieceInfoPopup = document.querySelector('.piece-info-popup');
+    if (pieceInfoPopup) {
+        pieceInfoPopup.style.backgroundColor = theme['piece-info-popup-bg'];
+        pieceInfoPopup.style.borderColor = theme['piece-info-popup-border'];
+    }
+
+    // Update game setup popup background
+    const setupPopup = document.querySelector('.game-setup-popup');
+    if (setupPopup) {
+        setupPopup.style.backgroundColor = theme['popup-background'];
     }
 }
 
@@ -2846,6 +3134,7 @@ function initGame() {
         insectMoveCount: {}
     };
     initializeHand();
+    // Keep current theme (don't reset on new game)
     renderGame();
     centerBoard(false); // Disable animation during initialization
     updateGameRulesVisibility();
@@ -3003,6 +3292,14 @@ function initializeEventListeners() {
 // Start game on load
 window.addEventListener('load', () => {
     loadGameConfig();
+    // Reset theme to green on page refresh
+    saveThemeColor('green');
+    applyThemeColor('green');
     initializeEventListeners();
     initGame();
+
+    // Prevent text selection and dragging globally
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    document.addEventListener('selectstart', (e) => e.preventDefault());
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 });
