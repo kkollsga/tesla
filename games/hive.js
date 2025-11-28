@@ -2499,14 +2499,33 @@ function initializeEventListeners() {
     const hexagonContainer = document.getElementById('hexagonContainer');
     hexagonContainer.addEventListener('mousedown', (e) => {
         const hexElement = e.target.closest('.hexagon');
-        if (hexElement) {
-            handleHexagonMouseDown.call(hexElement, e);
+        if (hexElement && hexElement.dataset.hex) {
+            // Wrap event with correct currentTarget
+            const delegatedEvent = {
+                ...e,
+                currentTarget: hexElement,
+                target: e.target,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+            };
+            handleHexagonMouseDown.call(hexElement, delegatedEvent);
         }
     });
     hexagonContainer.addEventListener('touchstart', (e) => {
         const hexElement = e.target.closest('.hexagon');
-        if (hexElement) {
-            handleHexagonTouchStart.call(hexElement, e);
+        if (hexElement && hexElement.dataset.hex) {
+            // Wrap event with correct currentTarget
+            const delegatedEvent = {
+                ...e,
+                currentTarget: hexElement,
+                target: e.target,
+                touches: e.touches,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+            };
+            handleHexagonTouchStart.call(hexElement, delegatedEvent);
         }
     }, { passive: false });
 
@@ -2515,13 +2534,32 @@ function initializeEventListeners() {
     handArea.addEventListener('mousedown', (e) => {
         const handInsect = e.target.closest('.hand-insect');
         if (handInsect && !handInsect.classList.contains('disabled')) {
-            handleHandInsectMouseDown.call(handInsect, e);
+            // Wrap event with correct currentTarget
+            const delegatedEvent = {
+                ...e,
+                currentTarget: handInsect,
+                target: e.target,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+            };
+            handleHandInsectMouseDown.call(handInsect, delegatedEvent);
         }
     });
     handArea.addEventListener('touchstart', (e) => {
         const handInsect = e.target.closest('.hand-insect');
         if (handInsect && !handInsect.classList.contains('disabled')) {
-            handleHandInsectTouchStart.call(handInsect, e);
+            // Wrap event with correct currentTarget
+            const delegatedEvent = {
+                ...e,
+                currentTarget: handInsect,
+                target: e.target,
+                touches: e.touches,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+            };
+            handleHandInsectTouchStart.call(handInsect, delegatedEvent);
         }
     }, { passive: false });
 }
