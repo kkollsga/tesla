@@ -281,6 +281,16 @@ body::before {
     filter: brightness(1.2) drop-shadow(0 0 12px rgba(74, 159, 104, 0.9));
 }
 
+/* Throwable pieces (can be thrown by pillbug) */
+.hexagon.throwable svg polygon {
+    filter: drop-shadow(0 0 6px rgba(255, 170, 68, 0.6));
+    stroke-dasharray: 4 2;
+}
+
+.hexagon.throwable:hover svg polygon {
+    filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 170, 68, 0.9));
+}
+
 /* Make non-movable occupied hexagons more subtle */
 .hexagon:not(.movable) svg polygon {
     opacity: 0.6;

@@ -55,6 +55,1188 @@ class Hex {
 }
 
 // ============================================
+// MOVEMENT SYSTEM & PATHFINDING
+// ============================================
+
+class MovementSystem {
+    constructor() {
+        this.currentPath = null; // Store the current path for visualization
+        this.pathElement = null; // SVG path element for visualization
+    }
+
+    /**
+     * Draw the movement path on the board
+     * @param {Array<Hex>} path - Array of Hex coordinates forming the path
+     * @param {string} playerColor - Color for the path
+     * @param {boolean} isValid - Whether the path reaches the target successfully
+     */
+    drawPath(path, playerColor, isValid) {
+        // Remove existing path if any
+        this.clearPath();
+
+        if (!path || path.length < 2) {
+            return;
+        }
+
+        const container = document.getElementById('hexagonContainer');
+        if (!container) return;
+
+        // Create SVG element for the path
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'movement-path');
+        svg.style.position = 'absolute';
+        svg.style.left = '0';
+        svg.style.top = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '5';
+        svg.style.overflow = 'visible';
+
+        // Create the path element
+        const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+        // Build the path data
+        let pathData = '';
+        for (let i = 0; i < path.length; i++) {
+            const hex = path[i];
+            const pos = hexToPixel(hex);
+
+            if (i === 0) {
+                pathData += `M ${pos.x} ${pos.y}`;
+            } else {
+                pathData += ` L ${pos.x} ${pos.y}`;
+            }
+        }
+
+        pathElement.setAttribute('d', pathData);
+        pathElement.setAttribute('fill', 'none');
+
+        // Use player color with transparency
+        const pathColor = isValid ? playerColor : '#ff4444';
+        pathElement.setAttribute('stroke', pathColor);
+        pathElement.setAttribute('stroke-width', '8');
+        pathElement.setAttribute('stroke-opacity', '0.4');
+        pathElement.setAttribute('stroke-linecap', 'round');
+        pathElement.setAttribute('stroke-linejoin', 'round');
+
+        // Add dashed style for invalid paths
+        if (!isValid) {
+            pathElement.setAttribute('stroke-dasharray', '10 5');
+        }
+
+        svg.appendChild(pathElement);
+        container.appendChild(svg);
+
+        this.pathElement = svg;
+    }
+
+    /**
+     * Clear the current path visualization
+     */
+    clearPath() {
+        if (this.pathElement && this.pathElement.parentNode) {
+            this.pathElement.parentNode.removeChild(this.pathElement);
+        }
+        this.pathElement = null;
+        this.currentPath = null;
+    }
+
+    // ==========================================
+    // ANT PATHFINDING
+    // ==========================================
+
+    /**
+     * Find the shortest path for an ant from start to target
+     * Ants can walk unlimited distance but cannot pass through gates
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findAntPath(fromHex, toHex, movingInsectId) {
+        // BFS to find shortest path
+        const queue = [{ hex: fromHex, path: [fromHex] }];
+        const visited = new Set([fromHex.toString()]);
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const currentHex = current.hex;
+            const currentPath = current.path;
+
+            // Found the target
+            if (currentHex.equals(toHex)) {
+                return { success: true, path: currentPath, blockedAt: null };
+            }
+
+            // Get valid neighbors (walking moves)
+            const neighbors = this.getWalkingNeighbors(currentHex, movingInsectId);
+
+            for (const neighbor of neighbors) {
+                const neighborKey = neighbor.toString();
+                if (!visited.has(neighborKey)) {
+                    visited.add(neighborKey);
+                    queue.push({
+                        hex: neighbor,
+                        path: [...currentPath, neighbor]
+                    });
+                }
+            }
+        }
+
+        // No path found - return the longest path we explored toward the target
+        const longestPath = this.findLongestPathToward(fromHex, toHex, movingInsectId);
+        return {
+            success: false,
+            path: longestPath.path,
+            blockedAt: longestPath.path[longestPath.path.length - 1]
+        };
+    }
+
+    /**
+     * Get valid walking neighbors for a hex
+     * Walking means sliding along the edge of the hive without passing through gates
+     */
+    getWalkingNeighbors(hex, movingInsectId) {
+        const allNeighbors = hex.getNeighbors();
+        const validNeighbors = [];
+
+        for (const neighbor of allNeighbors) {
+            const neighborKey = neighbor.toString();
+
+            // Cannot walk to occupied hexes (unless it's where we're moving from, which is handled elsewhere)
+            if (isHexOccupied(neighborKey)) {
+                // Check if this is the insect's own position (which will become empty)
+                const stack = getInsectStack(neighborKey);
+                if (!stack || stack.length === 0 ||
+                    (stack.length === 1 && stack[0].id === movingInsectId)) {
+                    // This hex will be empty after the move, skip it
+                    continue;
+                } else {
+                    // Hex is occupied by another insect
+                    continue;
+                }
+            }
+
+            // Check if this move would pass through a gate
+            if (this.isGate(hex, neighbor, movingInsectId)) {
+                continue;
+            }
+
+            // Must maintain hive connectivity - neighbor must touch at least one other insect
+            // (not counting the insect being moved)
+            if (!this.touchesHive(neighbor, movingInsectId, hex)) {
+                continue;
+            }
+
+            validNeighbors.push(neighbor);
+        }
+
+        return validNeighbors;
+    }
+
+    /**
+     * Check if moving from hex1 to hex2 would pass through a gate
+     * A gate is when two adjacent occupied hexes create a narrow passage
+     */
+    isGate(fromHex, toHex, movingInsectId) {
+        // Get the two hexes that are common neighbors of both fromHex and toHex
+        const fromNeighbors = fromHex.getNeighbors();
+        const toNeighbors = toHex.getNeighbors();
+
+        const commonNeighbors = fromNeighbors.filter(fHex =>
+            toNeighbors.some(tHex => fHex.equals(tHex))
+        );
+
+        if (commonNeighbors.length !== 2) {
+            // This shouldn't happen for adjacent hexes, but just in case
+            return false;
+        }
+
+        // Check if both common neighbors are occupied
+        let occupiedCount = 0;
+        for (const commonHex of commonNeighbors) {
+            const hexKey = commonHex.toString();
+            if (isHexOccupied(hexKey)) {
+                // Don't count the insect being moved
+                const stack = getInsectStack(hexKey);
+                if (stack && stack.length > 0) {
+                    // If this hex only has the moving insect, don't count it as occupied
+                    if (stack.length === 1 && stack[0].id === movingInsectId) {
+                        continue;
+                    }
+                    occupiedCount++;
+                }
+            }
+        }
+
+        // It's a gate if both common neighbors are occupied
+        return occupiedCount === 2;
+    }
+
+    /**
+     * Check if a hex touches the hive (has at least one occupied neighbor)
+     */
+    touchesHive(hex, movingInsectId, excludeHex = null) {
+        const neighbors = hex.getNeighbors();
+
+        for (const neighbor of neighbors) {
+            // Don't count the hex we're moving from
+            if (excludeHex && neighbor.equals(excludeHex)) {
+                continue;
+            }
+
+            const neighborKey = neighbor.toString();
+            if (isHexOccupied(neighborKey)) {
+                // Don't count if this hex only contains the moving insect
+                const stack = getInsectStack(neighborKey);
+                if (stack && stack.length > 0) {
+                    if (stack.length === 1 && stack[0].id === movingInsectId) {
+                        continue;
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Find the longest valid path toward the target when no complete path exists
+     */
+    findLongestPathToward(fromHex, toHex, movingInsectId) {
+        let bestPath = [fromHex];
+        let bestDistance = fromHex.distance(toHex);
+
+        const visited = new Set([fromHex.toString()]);
+        const queue = [{ hex: fromHex, path: [fromHex] }];
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const currentHex = current.hex;
+            const currentPath = current.path;
+            const distanceToTarget = currentHex.distance(toHex);
+
+            // Update best path if this is closer to the target
+            if (distanceToTarget < bestDistance ||
+                (distanceToTarget === bestDistance && currentPath.length > bestPath.length)) {
+                bestDistance = distanceToTarget;
+                bestPath = currentPath;
+            }
+
+            // Explore neighbors
+            const neighbors = this.getWalkingNeighbors(currentHex, movingInsectId);
+            for (const neighbor of neighbors) {
+                const neighborKey = neighbor.toString();
+                if (!visited.has(neighborKey)) {
+                    visited.add(neighborKey);
+                    queue.push({
+                        hex: neighbor,
+                        path: [...currentPath, neighbor]
+                    });
+                }
+            }
+        }
+
+        return { path: bestPath };
+    }
+
+    // ==========================================
+    // GRASSHOPPER PATHFINDING
+    // ==========================================
+
+    /**
+     * Find valid grasshopper jump to target
+     * Grasshoppers jump in straight lines over occupied hexes with no gaps
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findHopperPath(fromHex, toHex, movingInsectId) {
+        // Get all 6 hex directions
+        const directions = [
+            { q: 1, r: 0 },   // East
+            { q: 1, r: -1 },  // Northeast
+            { q: 0, r: -1 },  // Northwest
+            { q: -1, r: 0 },  // West
+            { q: -1, r: 1 },  // Southwest
+            { q: 0, r: 1 }    // Southeast
+        ];
+
+        // Check each direction
+        for (const dir of directions) {
+            const landingHex = this.findHopperLanding(fromHex, dir, movingInsectId);
+
+            if (landingHex && landingHex.equals(toHex)) {
+                // Found a valid jump to the target
+                // Build the path showing the jump
+                const jumpPath = this.buildHopperJumpPath(fromHex, toHex, dir, movingInsectId);
+                return { success: true, path: jumpPath, blockedAt: null };
+            }
+        }
+
+        // No valid jump to target - return empty path
+        return { success: false, path: [fromHex], blockedAt: fromHex };
+    }
+
+    /**
+     * Find where a grasshopper lands when jumping in a given direction
+     * Returns the landing hex or null if jump is invalid
+     */
+    findHopperLanding(fromHex, direction, movingInsectId) {
+        let currentHex = new Hex(fromHex.q + direction.q, fromHex.r + direction.r);
+        let jumpedOverCount = 0;
+
+        // Move in the direction while hexes are occupied
+        while (true) {
+            const hexKey = currentHex.toString();
+            const isOccupied = isHexOccupied(hexKey);
+
+            // Check if this hex contains only the moving insect
+            const stack = getInsectStack(hexKey);
+            const isMovingInsectOnly = stack && stack.length === 1 && stack[0].id === movingInsectId;
+
+            if (!isOccupied || isMovingInsectOnly) {
+                // Found an empty hex (or the hex we're moving from)
+                if (jumpedOverCount === 0) {
+                    // Must jump over at least one insect
+                    return null;
+                }
+                // This is the landing spot
+                return currentHex;
+            }
+
+            // This hex is occupied, continue jumping
+            jumpedOverCount++;
+            currentHex = new Hex(currentHex.q + direction.q, currentHex.r + direction.r);
+
+            // Safety check: don't search too far
+            if (jumpedOverCount > 50) {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Build the visual path for a grasshopper jump
+     * Shows the arc from start to end, passing over all jumped hexes
+     */
+    buildHopperJumpPath(fromHex, toHex, direction, movingInsectId) {
+        const path = [fromHex];
+        let currentHex = new Hex(fromHex.q + direction.q, fromHex.r + direction.r);
+
+        // Add all jumped-over hexes to show the path
+        while (!currentHex.equals(toHex)) {
+            path.push(currentHex);
+            currentHex = new Hex(currentHex.q + direction.q, currentHex.r + direction.r);
+        }
+
+        path.push(toHex);
+        return path;
+    }
+
+    /**
+     * Get all valid grasshopper landing positions from a hex
+     */
+    getHopperLandings(fromHex, movingInsectId) {
+        const directions = [
+            { q: 1, r: 0 },   // East
+            { q: 1, r: -1 },  // Northeast
+            { q: 0, r: -1 },  // Northwest
+            { q: -1, r: 0 },  // West
+            { q: -1, r: 1 },  // Southwest
+            { q: 0, r: 1 }    // Southeast
+        ];
+
+        const landings = [];
+        for (const dir of directions) {
+            const landing = this.findHopperLanding(fromHex, dir, movingInsectId);
+            if (landing) {
+                landings.push(landing);
+            }
+        }
+
+        return landings;
+    }
+
+    // ==========================================
+    // PLACEHOLDER METHODS FOR OTHER INSECTS
+    // ==========================================
+
+    // ==========================================
+    // QUEEN PATHFINDING
+    // ==========================================
+
+    /**
+     * Find a valid queen path to target
+     * Queen walks exactly 1 space (same walking rules as ant/spider)
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findQueenPath(fromHex, toHex, movingInsectId) {
+        // Queen can only move 1 space
+        if (fromHex.distance(toHex) !== 1) {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+
+        // Check if this is a valid walking move (no gates, maintains connectivity)
+        const walkingNeighbors = this.getWalkingNeighbors(fromHex, movingInsectId);
+        const canReach = walkingNeighbors.some(neighbor => neighbor.equals(toHex));
+
+        if (canReach) {
+            return { success: true, path: [fromHex, toHex], blockedAt: null };
+        } else {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+    }
+
+    // ==========================================
+    // BEETLE PATHFINDING
+    // ==========================================
+
+    /**
+     * Find a valid beetle path to target
+     * Beetle moves exactly 1 space but can climb onto/over other insects
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findBeetlePath(fromHex, toHex, movingInsectId) {
+        // Beetle can only move 1 space
+        if (fromHex.distance(toHex) !== 1) {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+
+        // Check if this is a valid beetle move
+        const validNeighbors = this.getBeetleNeighbors(fromHex, movingInsectId);
+        const canReach = validNeighbors.some(neighbor => neighbor.equals(toHex));
+
+        if (canReach) {
+            return { success: true, path: [fromHex, toHex], blockedAt: null };
+        } else {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+    }
+
+    /**
+     * Get valid neighbors for a beetle move
+     * Beetles can move to both empty hexes (like walking) and occupied hexes (climbing)
+     */
+    getBeetleNeighbors(fromHex, movingInsectId) {
+        const allNeighbors = fromHex.getNeighbors();
+        const validNeighbors = [];
+
+        // Check if beetle is currently on top of the hive
+        const fromStack = getInsectStack(fromHex.toString());
+        const isOnTop = fromStack && fromStack.length > 1;
+
+        for (const neighbor of allNeighbors) {
+            const neighborKey = neighbor.toString();
+            const neighborStack = getInsectStack(neighborKey);
+            const isNeighborOccupied = neighborStack && neighborStack.length > 0 &&
+                !(neighborStack.length === 1 && neighborStack[0].id === movingInsectId);
+
+            if (isOnTop) {
+                // Beetle is on top of the hive - can move to any adjacent hex (occupied or empty)
+                // Must maintain at least one common neighbor with occupied hexes (can't break away completely)
+                if (this.canBeetleMoveOnHive(fromHex, neighbor, movingInsectId)) {
+                    validNeighbors.push(neighbor);
+                }
+            } else {
+                // Beetle is on the ground
+                if (isNeighborOccupied) {
+                    // Can climb onto occupied hex (no gate restriction, unlimited stacking)
+                    // Works regardless of stack height at destination
+                    validNeighbors.push(neighbor);
+                } else {
+                    // Moving to empty hex - use normal walking rules (no gates)
+                    if (!this.isGate(fromHex, neighbor, movingInsectId) &&
+                        this.touchesHive(neighbor, movingInsectId, fromHex)) {
+                        validNeighbors.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        return validNeighbors;
+    }
+
+    /**
+     * Check if a beetle on top of the hive can move to a neighbor
+     * When on top, beetle must maintain contact with the hive
+     * Beetles can stack infinitely - no height limit
+     */
+    canBeetleMoveOnHive(fromHex, toHex, movingInsectId) {
+        // Check if destination is occupied
+        const toStack = getInsectStack(toHex.toString());
+        const isToOccupied = toStack && toStack.length > 0 &&
+            !(toStack.length === 1 && toStack[0].id === movingInsectId);
+
+        // Special case: moving to another occupied hex (unlimited stacking)
+        // Beetle can always climb onto another stack, regardless of height
+        if (isToOccupied) {
+            return true;
+        }
+
+        // Moving to an empty hex - need to verify connection to hive
+        // Get common neighbors of fromHex and toHex
+        const fromNeighbors = fromHex.getNeighbors();
+        const toNeighbors = toHex.getNeighbors();
+
+        const commonNeighbors = fromNeighbors.filter(fHex =>
+            toNeighbors.some(tHex => fHex.equals(tHex))
+        );
+
+        // At least one common neighbor must be occupied (maintaining connection to hive)
+        for (const commonHex of commonNeighbors) {
+            const hexKey = commonHex.toString();
+            const stack = getInsectStack(hexKey);
+
+            if (stack && stack.length > 0) {
+                // Don't count if this hex only contains the moving beetle
+                if (stack.length === 1 && stack[0].id === movingInsectId) {
+                    continue;
+                }
+                return true; // Found an occupied common neighbor
+            }
+        }
+
+        // Moving down to an empty hex - must still touch the hive at destination
+        return this.touchesHive(toHex, movingInsectId, fromHex);
+    }
+
+    // ==========================================
+    // SPIDER PATHFINDING
+    // ==========================================
+
+    /**
+     * Find a valid spider path to target
+     * Spiders must walk exactly 3 spaces - no more, no less
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findSpiderPath(fromHex, toHex, movingInsectId) {
+        // BFS to find all paths of exactly 3 steps
+        const queue = [{ hex: fromHex, path: [fromHex] }];
+        const visited = new Map(); // Track visited hexes at each step
+        visited.set(`${fromHex.toString()}-0`, true);
+
+        let validPaths = []; // Store all valid 3-step paths to the target
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const currentHex = current.hex;
+            const currentPath = current.path;
+            const steps = currentPath.length - 1; // Number of steps taken
+
+            // If we've taken 3 steps, check if we're at the target
+            if (steps === 3) {
+                if (currentHex.equals(toHex)) {
+                    validPaths.push(currentPath);
+                }
+                continue; // Don't explore further from 3-step positions
+            }
+
+            // If we've taken fewer than 3 steps, continue exploring
+            if (steps < 3) {
+                const neighbors = this.getWalkingNeighbors(currentHex, movingInsectId);
+
+                for (const neighbor of neighbors) {
+                    const neighborKey = neighbor.toString();
+                    const visitKey = `${neighborKey}-${steps + 1}`;
+
+                    // Spider rule: cannot revisit a hex during the same move
+                    const alreadyInPath = currentPath.some(hex => hex.equals(neighbor));
+
+                    if (!visited.has(visitKey) && !alreadyInPath) {
+                        visited.set(visitKey, true);
+                        queue.push({
+                            hex: neighbor,
+                            path: [...currentPath, neighbor]
+                        });
+                    }
+                }
+            }
+        }
+
+        // If we found valid paths, return the first one (shortest/BFS order)
+        if (validPaths.length > 0) {
+            return { success: true, path: validPaths[0], blockedAt: null };
+        }
+
+        // No valid path found - try to find the longest valid path toward the target
+        const partialPath = this.findLongestSpiderPathToward(fromHex, toHex, movingInsectId);
+        return {
+            success: false,
+            path: partialPath.path,
+            blockedAt: partialPath.path[partialPath.path.length - 1]
+        };
+    }
+
+    /**
+     * Find the longest valid spider path toward the target (up to 3 steps)
+     * Used when no complete 3-step path exists
+     */
+    findLongestSpiderPathToward(fromHex, toHex, movingInsectId) {
+        let bestPath = [fromHex];
+        let bestDistance = fromHex.distance(toHex);
+
+        const queue = [{ hex: fromHex, path: [fromHex] }];
+        const visited = new Map();
+        visited.set(`${fromHex.toString()}-0`, true);
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const currentHex = current.hex;
+            const currentPath = current.path;
+            const steps = currentPath.length - 1;
+            const distanceToTarget = currentHex.distance(toHex);
+
+            // Update best path if this is closer to the target
+            if (distanceToTarget < bestDistance ||
+                (distanceToTarget === bestDistance && currentPath.length > bestPath.length)) {
+                bestDistance = distanceToTarget;
+                bestPath = currentPath;
+            }
+
+            // Only explore up to 3 steps
+            if (steps < 3) {
+                const neighbors = this.getWalkingNeighbors(currentHex, movingInsectId);
+
+                for (const neighbor of neighbors) {
+                    const neighborKey = neighbor.toString();
+                    const visitKey = `${neighborKey}-${steps + 1}`;
+
+                    // Cannot revisit a hex during the same move
+                    const alreadyInPath = currentPath.some(hex => hex.equals(neighbor));
+
+                    if (!visited.has(visitKey) && !alreadyInPath) {
+                        visited.set(visitKey, true);
+                        queue.push({
+                            hex: neighbor,
+                            path: [...currentPath, neighbor]
+                        });
+                    }
+                }
+            }
+        }
+
+        return { path: bestPath };
+    }
+
+    // ==========================================
+    // PLACEHOLDER METHODS FOR OTHER INSECTS
+    // ==========================================
+
+    // ==========================================
+    // MOSQUITO PATHFINDING
+    // ==========================================
+
+    /**
+     * Find valid mosquito path to target
+     * Mosquito copies movement abilities from adjacent insects
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null, copiedFrom: string|null }
+     */
+    findMosquitoPath(fromHex, toHex, movingInsectId) {
+        // Get all unique insect types adjacent to the mosquito
+        const adjacentInsects = this.getMosquitoAdjacentInsects(fromHex, movingInsectId);
+
+        // Early exit: No adjacent insects means mosquito can't move
+        if (adjacentInsects.length === 0) {
+            return { success: false, path: [fromHex], blockedAt: fromHex, copiedFrom: null };
+        }
+
+        // Try each adjacent insect's movement style
+        for (const insectType of adjacentInsects) {
+            let result = null;
+
+            // Use the appropriate pathfinding based on the copied insect type
+            switch (insectType) {
+                case 'queen':
+                    result = this.findQueenPath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'ant':
+                    result = this.findAntPath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'beetle':
+                    result = this.findBeetlePath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'hopper':
+                    result = this.findHopperPath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'spider':
+                    result = this.findSpiderPath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'ladybug':
+                    result = this.findLadybugPath(fromHex, toHex, movingInsectId);
+                    break;
+                case 'pillbug':
+                    result = this.findPillbugPath(fromHex, toHex, movingInsectId);
+                    break;
+                // Note: Mosquito cannot copy another mosquito
+            }
+
+            // If this movement style works, use it!
+            if (result && result.success) {
+                result.copiedFrom = insectType;
+                return result;
+            }
+        }
+
+        // No valid movement found with any adjacent insect's abilities
+        return { success: false, path: [fromHex], blockedAt: fromHex, copiedFrom: null };
+    }
+
+    /**
+     * Get unique insect types adjacent to the mosquito
+     * Returns array of insect type strings
+     */
+    getMosquitoAdjacentInsects(fromHex, movingInsectId) {
+        const neighbors = fromHex.getNeighbors();
+        const adjacentTypes = new Set();
+
+        for (const neighbor of neighbors) {
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            if (stack && stack.length > 0) {
+                const topInsect = stack[stack.length - 1];
+
+                // Don't copy from the mosquito itself
+                if (topInsect.id === movingInsectId) {
+                    continue;
+                }
+
+                // Mosquito cannot copy another mosquito
+                if (topInsect.insect !== 'mosquito') {
+                    adjacentTypes.add(topInsect.insect);
+                }
+            }
+        }
+
+        return Array.from(adjacentTypes);
+    }
+
+    /**
+     * Check if mosquito can use pillbug throw ability
+     * Mosquito next to pillbug gains the throw ability!
+     */
+    canMosquitoUsePillbugThrow(mosquitoHex, mosquitoId) {
+        // Performance check: Only check if mosquito is adjacent to a pillbug
+        const adjacentInsects = this.getMosquitoAdjacentInsects(mosquitoHex, mosquitoId);
+
+        if (!adjacentInsects.includes('pillbug')) {
+            return null; // No pillbug adjacent, mosquito can't throw
+        }
+
+        // Mosquito can act as a pillbug!
+        // Check if there are throwable pieces adjacent to the mosquito
+        const mosquitoNeighbors = mosquitoHex.getNeighbors();
+
+        for (const neighbor of mosquitoNeighbors) {
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            if (stack && stack.length > 0) {
+                const piece = stack[stack.length - 1];
+
+                // Skip the mosquito itself
+                if (piece.id === mosquitoId) continue;
+
+                // Check if mosquito (acting as pillbug) can throw this piece
+                if (this.canPillbugThrowPiece(mosquitoHex, neighbor, piece.id)) {
+                    return {
+                        mosquito: true,
+                        mosquitoHex: mosquitoHex,
+                        canThrow: true
+                    };
+                }
+            }
+        }
+
+        return null; // No throwable pieces
+    }
+
+    /**
+     * Find which mosquito (if any) can throw a piece at the given hex
+     * Mosquito must be adjacent to a pillbug AND able to throw the piece
+     * Returns the mosquito insect object and its hex, or null
+     */
+    findMosquitoThatCanThrow(pieceHex, pieceId, currentPlayer) {
+        // Find all mosquitoes belonging to the current player
+        for (let hexKey of gameState.board.keys()) {
+            const stack = getInsectStack(hexKey);
+            if (!stack || stack.length === 0) continue;
+
+            const topInsect = stack[stack.length - 1];
+
+            // Check if this is the current player's mosquito
+            if (topInsect.player === currentPlayer && topInsect.insect === 'mosquito') {
+                const mosquitoHex = Hex.fromString(hexKey);
+
+                // Performance: Early exit if mosquito is not adjacent to a pillbug
+                const adjacentInsects = this.getMosquitoAdjacentInsects(mosquitoHex, topInsect.id);
+                if (!adjacentInsects.includes('pillbug')) {
+                    continue; // This mosquito can't throw (no pillbug adjacent)
+                }
+
+                // Check if this mosquito can throw the piece
+                if (this.canPillbugThrowPiece(mosquitoHex, pieceHex, pieceId)) {
+                    return { mosquito: topInsect, mosquitoHex: mosquitoHex };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // ==========================================
+    // LADYBUG PATHFINDING
+    // ==========================================
+
+    /**
+     * Find a valid ladybug path to target
+     * Ladybug has a specific 3-step movement pattern:
+     * Step 1: Move ONTO the hive (to an occupied hex)
+     * Step 2: Move ACROSS on top of the hive (to another occupied hex)
+     * Step 3: Move DOWN from the hive (to an empty hex)
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findLadybugPath(fromHex, toHex, movingInsectId) {
+        // BFS to find all valid 3-step ladybug paths
+        const queue = [{ hex: fromHex, path: [fromHex], step: 0 }];
+        const visited = new Map();
+        visited.set(`${fromHex.toString()}-0`, true);
+
+        let validPaths = [];
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const currentHex = current.hex;
+            const currentPath = current.path;
+            const step = current.step;
+
+            // If we've completed 3 steps, check if we're at the target
+            if (step === 3) {
+                if (currentHex.equals(toHex)) {
+                    validPaths.push(currentPath);
+                }
+                continue;
+            }
+
+            // Get valid neighbors based on current step
+            let validNeighbors = [];
+
+            if (step === 0) {
+                // Step 1: Must move ONTO the hive (to an occupied hex)
+                validNeighbors = this.getLadybugStepOneNeighbors(currentHex, movingInsectId);
+            } else if (step === 1) {
+                // Step 2: Must move ACROSS on the hive (to another occupied hex)
+                validNeighbors = this.getLadybugStepTwoNeighbors(currentHex, movingInsectId);
+            } else if (step === 2) {
+                // Step 3: Must move DOWN from the hive (to an empty hex)
+                validNeighbors = this.getLadybugStepThreeNeighbors(currentHex, movingInsectId, fromHex);
+            }
+
+            for (const neighbor of validNeighbors) {
+                const neighborKey = neighbor.toString();
+                const visitKey = `${neighborKey}-${step + 1}`;
+
+                if (!visited.has(visitKey)) {
+                    visited.set(visitKey, true);
+                    queue.push({
+                        hex: neighbor,
+                        path: [...currentPath, neighbor],
+                        step: step + 1
+                    });
+                }
+            }
+        }
+
+        // If we found valid paths, return the first one
+        if (validPaths.length > 0) {
+            return { success: true, path: validPaths[0], blockedAt: null };
+        }
+
+        // No valid path found - return partial path
+        return { success: false, path: [fromHex], blockedAt: fromHex };
+    }
+
+    /**
+     * Step 1: Get neighbors for climbing ONTO the hive
+     * Must be adjacent occupied hexes
+     */
+    getLadybugStepOneNeighbors(fromHex, movingInsectId) {
+        const allNeighbors = fromHex.getNeighbors();
+        const validNeighbors = [];
+
+        for (const neighbor of allNeighbors) {
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            // Must be occupied (not counting the ladybug itself)
+            if (stack && stack.length > 0) {
+                if (stack.length === 1 && stack[0].id === movingInsectId) {
+                    continue; // This is the ladybug's own position
+                }
+                validNeighbors.push(neighbor);
+            }
+        }
+
+        return validNeighbors;
+    }
+
+    /**
+     * Step 2: Get neighbors for moving ACROSS on top of the hive
+     * Must be adjacent occupied hexes (staying on top)
+     */
+    getLadybugStepTwoNeighbors(fromHex, movingInsectId) {
+        const allNeighbors = fromHex.getNeighbors();
+        const validNeighbors = [];
+
+        for (const neighbor of allNeighbors) {
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            // Must be occupied (staying on top of the hive)
+            if (stack && stack.length > 0) {
+                if (stack.length === 1 && stack[0].id === movingInsectId) {
+                    continue; // This is the ladybug's own starting position
+                }
+                validNeighbors.push(neighbor);
+            }
+        }
+
+        return validNeighbors;
+    }
+
+    /**
+     * Step 3: Get neighbors for climbing DOWN from the hive
+     * Must be adjacent empty hexes that touch the hive
+     */
+    getLadybugStepThreeNeighbors(fromHex, movingInsectId, originalFromHex) {
+        const allNeighbors = fromHex.getNeighbors();
+        const validNeighbors = [];
+
+        for (const neighbor of allNeighbors) {
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            // Must be empty
+            const isEmpty = !stack || stack.length === 0 ||
+                (stack.length === 1 && stack[0].id === movingInsectId);
+
+            if (isEmpty) {
+                // Must still touch the hive after landing
+                if (this.touchesHive(neighbor, movingInsectId, originalFromHex)) {
+                    validNeighbors.push(neighbor);
+                }
+            }
+        }
+
+        return validNeighbors;
+    }
+
+    // ==========================================
+    // PILLBUG PATHFINDING
+    // ==========================================
+
+    /**
+     * Find a valid pillbug path to target
+     * Pillbug walks exactly 1 space (like queen, no climbing)
+     * Note: Pillbug also has a special "throw" ability handled separately
+     * Returns { success: boolean, path: Hex[], blockedAt: Hex|null }
+     */
+    findPillbugPath(fromHex, toHex, movingInsectId) {
+        // Pillbug walks exactly 1 space (like queen)
+        if (fromHex.distance(toHex) !== 1) {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+
+        // Check if this is a valid walking move (no gates, maintains connectivity)
+        const walkingNeighbors = this.getWalkingNeighbors(fromHex, movingInsectId);
+        const canReach = walkingNeighbors.some(neighbor => neighbor.equals(toHex));
+
+        if (canReach) {
+            return { success: true, path: [fromHex, toHex], blockedAt: null };
+        } else {
+            return { success: false, path: [fromHex], blockedAt: fromHex };
+        }
+    }
+
+    /**
+     * Check if a pillbug can throw an adjacent piece
+     * The piece must:
+     * 1. Be adjacent to the pillbug
+     * 2. Not be in a stack (can't throw beetles on/under other pieces)
+     * 3. Removing it won't split the hive
+     */
+    canPillbugThrowPiece(pillbugHex, pieceHex, pieceId) {
+        // Must be adjacent
+        if (pillbugHex.distance(pieceHex) !== 1) {
+            return false;
+        }
+
+        const stack = getInsectStack(pieceHex.toString());
+
+        // Piece must exist
+        if (!stack || stack.length === 0) {
+            return false;
+        }
+
+        // Must not be in a stack (only single pieces can be thrown)
+        if (stack.length > 1) {
+            return false;
+        }
+
+        // Check if removing this piece would split the hive
+        if (this.wouldSplitHive(pieceHex, pieceId)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get valid throw destinations for a piece being thrown by pillbug
+     * Must be adjacent to the pillbug (but not the original position)
+     */
+    getPillbugThrowDestinations(pillbugHex, thrownPieceHex, thrownPieceId) {
+        const neighbors = pillbugHex.getNeighbors();
+        const validDestinations = [];
+
+        for (const neighbor of neighbors) {
+            // Can't throw back to original position
+            if (neighbor.equals(thrownPieceHex)) {
+                continue;
+            }
+
+            const neighborKey = neighbor.toString();
+            const stack = getInsectStack(neighborKey);
+
+            // Must be empty (or will become empty when the piece is removed)
+            const isEmpty = !stack || stack.length === 0 ||
+                (stack.length === 1 && stack[0].id === thrownPieceId);
+
+            if (isEmpty) {
+                // Must touch the hive after placement (excluding the thrown piece's current position)
+                if (this.touchesHive(neighbor, thrownPieceId, thrownPieceHex)) {
+                    validDestinations.push(neighbor);
+                }
+            }
+        }
+
+        return validDestinations;
+    }
+
+    /**
+     * Find which pillbug (if any) can throw a piece at the given hex
+     * Returns the pillbug insect object and its hex, or null
+     */
+    findPillbugThatCanThrow(pieceHex, pieceId, currentPlayer) {
+        // Find all pillbugs belonging to the current player
+        for (let hexKey of gameState.board.keys()) {
+            const stack = getInsectStack(hexKey);
+            if (!stack || stack.length === 0) continue;
+
+            const topInsect = stack[stack.length - 1];
+
+            // Check if this is the current player's pillbug
+            if (topInsect.player === currentPlayer && topInsect.insect === 'pillbug') {
+                const pillbugHex = Hex.fromString(hexKey);
+
+                // Check if this pillbug can throw the piece
+                if (this.canPillbugThrowPiece(pillbugHex, pieceHex, pieceId)) {
+                    return { pillbug: topInsect, pillbugHex: pillbugHex };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get valid throw destinations from a specific pillbug for a piece
+     * This creates the path for the throw movement
+     */
+    findPillbugThrowPath(pillbugHex, fromHex, toHex, pieceId) {
+        // Check if the destination is valid
+        const validDestinations = this.getPillbugThrowDestinations(pillbugHex, fromHex, pieceId);
+        const canReach = validDestinations.some(dest => dest.equals(toHex));
+
+        if (canReach) {
+            // Path shows: start -> pillbug -> destination (visual representation of throw)
+            return {
+                success: true,
+                path: [fromHex, pillbugHex, toHex],
+                blockedAt: null,
+                isPillbugThrow: true
+            };
+        } else {
+            return {
+                success: false,
+                path: [fromHex],
+                blockedAt: fromHex,
+                isPillbugThrow: false
+            };
+        }
+    }
+
+    /**
+     * Check if removing a piece from a hex would split the hive
+     * This is crucial for validating pillbug throws
+     */
+    wouldSplitHive(hexToRemove) {
+        const hexKey = hexToRemove.toString();
+
+        // Temporarily mark this hex as if the piece was removed
+        const originalStack = getInsectStack(hexKey);
+        if (!originalStack || originalStack.length === 0) {
+            return false; // No piece to remove
+        }
+
+        // Find all occupied hexes (excluding the one we're checking)
+        const occupiedHexes = [];
+        for (let key of gameState.board.keys()) {
+            if (key === hexKey) continue; // Skip the hex we're removing from
+
+            const stack = getInsectStack(key);
+            if (stack && stack.length > 0) {
+                occupiedHexes.push(Hex.fromString(key));
+            }
+        }
+
+        if (occupiedHexes.length === 0) {
+            return false; // Only one piece left, can't split
+        }
+
+        // Use flood fill to check if all remaining pieces are connected
+        const visited = new Set();
+        const queue = [occupiedHexes[0]];
+        visited.add(occupiedHexes[0].toString());
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const neighbors = current.getNeighbors();
+
+            for (const neighbor of neighbors) {
+                const neighborKey = neighbor.toString();
+
+                // Skip the hex we're removing from
+                if (neighborKey === hexKey) continue;
+
+                // If this neighbor is occupied and not visited, add to queue
+                if (!visited.has(neighborKey)) {
+                    const isOccupied = occupiedHexes.some(hex => hex.toString() === neighborKey);
+                    if (isOccupied) {
+                        visited.add(neighborKey);
+                        queue.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        // If we visited all occupied hexes, the hive stays connected
+        return visited.size !== occupiedHexes.length;
+    }
+}
+
+// Create a global instance of the movement system
+const movementSystem = new MovementSystem();
+
+// ============================================
 // GAME STATE & CONSTANTS
 // ============================================
 
@@ -705,6 +1887,8 @@ function updateDropZoneHighlight(x, y) {
             dragState.lastHighlightedHex.style.removeProperty('--player-color');
             dragState.lastHighlightedHex = null;
         }
+        // Clear path visualization
+        movementSystem.clearPath();
         return;
     }
 
@@ -758,10 +1942,30 @@ function updateDropZoneHighlight(x, y) {
             hexElement.style.setProperty('--player-color', playerColor);
             hexElement.classList.add('valid-move');
             dragState.lastHighlightedHex = hexElement;
+
+            // Draw path for insects with pathfinding
+            const insectsWithPaths = ['ant', 'hopper', 'spider', 'queen', 'beetle', 'ladybug', 'pillbug', 'mosquito'];
+            if (insectsWithPaths.includes(insect.insect) && movementSystem.currentPath) {
+                movementSystem.drawPath(
+                    movementSystem.currentPath.path,
+                    playerColor,
+                    movementSystem.currentPath.success
+                );
+            }
         } else {
             // Invalid move
             hexElement.classList.add('invalid-move');
             dragState.lastHighlightedHex = hexElement;
+
+            // Draw truncated path even if move is invalid
+            const insectsWithPaths = ['ant', 'hopper', 'spider', 'queen', 'beetle', 'ladybug', 'pillbug', 'mosquito'];
+            if (insectsWithPaths.includes(insect.insect) && movementSystem.currentPath && movementSystem.currentPath.path) {
+                movementSystem.drawPath(
+                    movementSystem.currentPath.path,
+                    playerColor,
+                    false // Invalid path
+                );
+            }
         }
     }
 }
@@ -793,6 +1997,9 @@ function handleDragEnd(e) {
         hex.style.removeProperty('--player-color');
     });
     dragState.lastHighlightedHex = null;
+
+    // Clear path visualization
+    movementSystem.clearPath();
 
     if (wasDragging) {
         // For touch events, touchend doesn't have clientX/Y, use last tracked position
@@ -971,40 +2178,119 @@ function canPlaceInsect(hex) {
 // ============================================
 
 // Check if a move is valid for an insect
+// This function checks MULTIPLE movement styles and returns true if ANY are valid
 function isValidMove(insect, fromHex, toHex) {
-    // Basic rule: Target must be unoccupied (unless beetle/mosquito climbing)
-    const targetOccupied = isHexOccupied(toHex.toString());
+    let validMovementFound = false;
+    let validPath = null;
 
-    if (targetOccupied) {
-        // Only beetle and mosquito (when copying beetle) can climb
-        const canClimb = insect.insect === 'beetle' ||
-                        (insect.insect === 'mosquito' && canMosquitoClimbAsBeelle());
-        if (!canClimb) {
-            return false;
+    // OPTION 1: Try normal movement first (if this is the current player's piece)
+    if (insect.player === gameState.currentPlayer) {
+        // Basic rule: Target must be unoccupied (unless beetle/mosquito climbing)
+        const targetOccupied = isHexOccupied(toHex.toString());
+        let normalMovementBlocked = false;
+
+        if (targetOccupied) {
+            // Only beetle and mosquito (when copying beetle) can climb
+            const canClimb = insect.insect === 'beetle' ||
+                            (insect.insect === 'mosquito' && canMosquitoClimbAsBeelle(fromHex, insect.id));
+            if (!canClimb) {
+                normalMovementBlocked = true;
+            }
+        }
+
+        if (!normalMovementBlocked) {
+            // Basic rule: Target must touch at least one other insect (connectivity)
+            const neighbors = toHex.getNeighbors();
+            const touchesOtherInsect = neighbors.some(n => {
+                const neighborKey = n.toString();
+                // Don't count the hex we're moving from
+                if (neighborKey === fromHex.toString()) return false;
+                return isHexOccupied(neighborKey);
+            });
+
+            if (touchesOtherInsect || gameState.board.size === 1) {
+                // Try insect-specific movement validation
+                const normalMovementValid = canInsectReach(insect, fromHex, toHex);
+
+                if (normalMovementValid) {
+                    validMovementFound = true;
+                    validPath = movementSystem.currentPath; // Path set by canInsectReach
+                }
+            }
         }
     }
 
-    // Basic rule: Target must touch at least one other insect (connectivity)
-    const neighbors = toHex.getNeighbors();
-    const touchesOtherInsect = neighbors.some(n => {
-        const neighborKey = n.toString();
-        // Don't count the hex we're moving from
-        if (neighborKey === fromHex.toString()) return false;
-        return isHexOccupied(neighborKey);
-    });
+    // OPTION 2: Try pillbug throw (works for ANY piece, friend or foe)
+    // Only check this if normal movement didn't succeed
+    if (!validMovementFound) {
+        const pillbugInfo = movementSystem.findPillbugThatCanThrow(fromHex, insect.id, gameState.currentPlayer);
 
-    if (!touchesOtherInsect && gameState.board.size > 1) {
-        return false;
+        if (pillbugInfo) {
+            // This piece can be thrown by a pillbug!
+            const throwResult = movementSystem.findPillbugThrowPath(
+                pillbugInfo.pillbugHex,
+                fromHex,
+                toHex,
+                insect.id
+            );
+
+            if (throwResult.success) {
+                validMovementFound = true;
+                validPath = throwResult;
+            }
+        }
     }
 
-    // Insect-specific movement validation (placeholder for pathfinding)
-    return canInsectReach(insect, fromHex, toHex);
+    // OPTION 3: Try mosquito throw ability (mosquito acting as pillbug)
+    // Performance optimization: Only check if:
+    // 1. This is the current player's mosquito
+    // 2. Movement hasn't been found yet
+    // 3. Mosquito is adjacent to a pillbug
+    if (!validMovementFound &&
+        insect.player === gameState.currentPlayer &&
+        insect.insect === 'mosquito') {
+
+        const mosquitoThrowInfo = movementSystem.canMosquitoUsePillbugThrow(fromHex, insect.id);
+
+        if (mosquitoThrowInfo) {
+            // Check if this is actually a throw attempt (piece being thrown is not the mosquito)
+            const targetPieceStack = getInsectStack(fromHex.toString());
+            const isMosquitoMovingSelf = targetPieceStack &&
+                                        targetPieceStack.length > 0 &&
+                                        targetPieceStack[targetPieceStack.length - 1].id === insect.id;
+
+            // If mosquito is trying to move itself, this has already been handled by normal movement
+            // But if we're checking another piece's movement, see if mosquito can throw it
+            if (!isMosquitoMovingSelf) {
+                // This is a piece the mosquito is trying to throw
+                const throwResult = movementSystem.findPillbugThrowPath(
+                    fromHex, // Mosquito acts as the pillbug here
+                    fromHex,
+                    toHex,
+                    insect.id
+                );
+
+                if (throwResult.success) {
+                    validMovementFound = true;
+                    validPath = throwResult;
+                }
+            }
+        }
+    }
+
+    // Store the successful path for visualization
+    if (validPath) {
+        movementSystem.currentPath = validPath;
+    }
+
+    return validMovementFound;
 }
 
-// Placeholder: Check if mosquito is adjacent to a beetle
-function canMosquitoClimbAsBeelle() {
-    // TODO: Implement mosquito adjacent beetle check
-    return false;
+// Check if mosquito is adjacent to a beetle (for climbing ability)
+function canMosquitoClimbAsBeelle(mosquitoHex, mosquitoId) {
+    // Check if mosquito has beetle adjacent
+    const adjacentInsects = movementSystem.getMosquitoAdjacentInsects(mosquitoHex, mosquitoId);
+    return adjacentInsects.includes('beetle');
 }
 
 // Insect-specific pathfinding (placeholders)
@@ -1013,65 +2299,105 @@ function canInsectReach(insect, fromHex, toHex) {
 
     switch (insectType) {
         case 'queen':
-            return canQueenReach(fromHex, toHex);
+            return canQueenReach(insect, fromHex, toHex);
         case 'ant':
-            return canAntReach(fromHex, toHex);
+            return canAntReach(insect, fromHex, toHex);
         case 'beetle':
-            return canBeetleReach(fromHex, toHex);
+            return canBeetleReach(insect, fromHex, toHex);
         case 'hopper':
-            return canHopperReach(fromHex, toHex);
+            return canHopperReach(insect, fromHex, toHex);
         case 'spider':
-            return canSpiderReach(fromHex, toHex);
+            return canSpiderReach(insect, fromHex, toHex);
         case 'mosquito':
-            return canMosquitoReach(fromHex, toHex);
+            return canMosquitoReach(insect, fromHex, toHex);
         case 'ladybug':
-            return canLadybugReach(fromHex, toHex);
+            return canLadybugReach(insect, fromHex, toHex);
         case 'pillbug':
-            return canPillbugReach(fromHex, toHex);
+            return canPillbugReach(insect, fromHex, toHex);
         default:
             return false;
     }
 }
 
-// Placeholder pathfinding functions - TODO: Implement actual movement rules
-function canQueenReach(fromHex, toHex) {
-    // Queen moves 1 space
-    return fromHex.distance(toHex) === 1;
+// Insect pathfinding functions
+function canQueenReach(insect, fromHex, toHex) {
+    // Queen walks exactly 1 space using pathfinding
+    const result = movementSystem.findQueenPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canAntReach(fromHex, toHex) {
-    // Ant can move any distance around the hive
-    return true; // Placeholder - needs pathfinding
+function canAntReach(insect, fromHex, toHex) {
+    // Ant can move any distance around the hive using pathfinding
+    const result = movementSystem.findAntPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canBeetleReach(fromHex, toHex) {
-    // Beetle moves 1 space, can climb
-    return fromHex.distance(toHex) === 1;
+function canBeetleReach(insect, fromHex, toHex) {
+    // Beetle moves 1 space, can climb using pathfinding
+    const result = movementSystem.findBeetlePath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canHopperReach(fromHex, toHex) {
-    // Grasshopper jumps in straight line over insects
-    return true; // Placeholder - needs line-of-sight check
+function canHopperReach(insect, fromHex, toHex) {
+    // Grasshopper jumps in straight line over insects using pathfinding
+    const result = movementSystem.findHopperPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canSpiderReach(fromHex, toHex) {
-    // Spider moves exactly 3 spaces
-    return fromHex.distance(toHex) === 3; // Placeholder - needs pathfinding
+function canSpiderReach(insect, fromHex, toHex) {
+    // Spider must walk exactly 3 spaces using pathfinding
+    const result = movementSystem.findSpiderPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canMosquitoReach(fromHex, toHex) {
-    // Mosquito copies adjacent insects
-    return true; // Placeholder - needs adjacent insect check
+function canMosquitoReach(insect, fromHex, toHex) {
+    // Mosquito copies movement from adjacent insects
+    const result = movementSystem.findMosquitoPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canLadybugReach(fromHex, toHex) {
-    // Ladybug moves 2 up, 1 down
-    return fromHex.distance(toHex) <= 3; // Placeholder - needs specific pathfinding
+function canLadybugReach(insect, fromHex, toHex) {
+    // Ladybug has specific 3-step pattern: up, across, down
+    const result = movementSystem.findLadybugPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
-function canPillbugReach(fromHex, toHex) {
-    // Pillbug moves 1 space
-    return fromHex.distance(toHex) === 1;
+function canPillbugReach(insect, fromHex, toHex) {
+    // Pillbug walks exactly 1 space (like queen)
+    const result = movementSystem.findPillbugPath(fromHex, toHex, insect.id);
+
+    // Store the path for visualization
+    movementSystem.currentPath = result;
+
+    return result.success;
 }
 
 function moveInsect(insect, targetHex) {
@@ -2319,11 +3645,33 @@ function renderBoard() {
                 polygon.setAttribute('stroke-width', '2');
             }
 
-            // Mark hexagon as movable if it belongs to current player and queen is placed
-            if (topInsect.player === gameState.currentPlayer && gameState.queenPlaced[gameState.currentPlayer]) {
+            // Mark hexagon as movable if:
+            // 1. It belongs to current player and queen is placed, OR
+            // 2. It can be thrown by current player's pillbug, OR
+            // 3. It can be thrown by current player's mosquito (acting as pillbug)
+            const isOwnPiece = topInsect.player === gameState.currentPlayer && gameState.queenPlaced[gameState.currentPlayer];
+            let canBeThrown = movementSystem.findPillbugThatCanThrow(hex, topInsect.id, gameState.currentPlayer);
+
+            // Performance optimization: Only check mosquito throw if:
+            // - Regular pillbug throw didn't work
+            // - The piece doesn't belong to current player (otherwise it's already movable)
+            if (!canBeThrown && !isOwnPiece) {
+                // Check if a mosquito can throw this piece
+                canBeThrown = movementSystem.findMosquitoThatCanThrow(hex, topInsect.id, gameState.currentPlayer);
+            }
+
+            if (isOwnPiece || canBeThrown) {
                 hexElement.classList.add('movable');
+
+                // Add special visual indicator for throwable opponent pieces
+                if (canBeThrown && topInsect.player !== gameState.currentPlayer) {
+                    hexElement.classList.add('throwable');
+                } else {
+                    hexElement.classList.remove('throwable');
+                }
             } else {
                 hexElement.classList.remove('movable');
+                hexElement.classList.remove('throwable');
             }
         } else {
             // No insects on this hex - remove if exists and reset appearance
