@@ -734,7 +734,7 @@ class MovementSystem {
         const adjacentInsects = this.getMosquitoAdjacentInsects(fromHex, movingInsectId);
 
         // Early exit: No adjacent insects means mosquito can't move
-        if (adjacentInsects.length === 0) {
+        if (adjacentInsects.size === 0) {
             return { success: false, path: [fromHex], blockedAt: fromHex, copiedFrom: null };
         }
 
@@ -806,7 +806,7 @@ class MovementSystem {
             }
         }
 
-        return Array.from(adjacentTypes);
+        return adjacentTypes; // Return Set directly, not array
     }
 
     /**
@@ -817,7 +817,7 @@ class MovementSystem {
         // Performance check: Only check if mosquito is adjacent to a pillbug
         const adjacentInsects = this.getMosquitoAdjacentInsects(mosquitoHex, mosquitoId);
 
-        if (!adjacentInsects.includes('pillbug')) {
+        if (!adjacentInsects.has('pillbug')) {
             return null; // No pillbug adjacent, mosquito can't throw
         }
 
@@ -868,7 +868,7 @@ class MovementSystem {
 
                 // Performance: Early exit if mosquito is not adjacent to a pillbug
                 const adjacentInsects = this.getMosquitoAdjacentInsects(mosquitoHex, topInsect.id);
-                if (!adjacentInsects.includes('pillbug')) {
+                if (!adjacentInsects.has('pillbug')) {
                     continue; // This mosquito can't throw (no pillbug adjacent)
                 }
 
@@ -1663,9 +1663,13 @@ function handleHexagonMouseDown(e) {
     const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
     const insect = getTopInsect(hex.toString());
 
-    if (insect && insect.player === gameState.currentPlayer) {
-        selectAndDrag(e, 'board', insect);
-    } else if (!insect) {
+    if (insect) {
+        // Simple check: Can this piece move at all?
+        const movementTypes = getAvailableMovementTypes(insect, hex);
+        if (movementTypes.length > 0) {
+            selectAndDrag(e, 'board', insect);
+        }
+    } else {
         startPan(e);
     }
 }
@@ -1678,13 +1682,17 @@ function handleHexagonTouchStart(e) {
     const hex = new Hex(...hexElement.dataset.hex.split(',').map(Number));
     const insect = getTopInsect(hex.toString());
 
-    if (insect && insect.player === gameState.currentPlayer) {
-        const insectElement = hexElement.querySelector('.insect, .stacked-insect');
-        if (insectElement) {
-            const touch = e.touches[0];
-            selectAndDragTouch(touch, insectElement, 'board', insect);
+    if (insect) {
+        // Simple check: Can this piece move at all?
+        const movementTypes = getAvailableMovementTypes(insect, hex);
+        if (movementTypes.length > 0) {
+            const insectElement = hexElement.querySelector('.insect, .stacked-insect');
+            if (insectElement) {
+                const touch = e.touches[0];
+                selectAndDragTouch(touch, insectElement, 'board', insect);
+            }
         }
-    } else if (!insect) {
+    } else {
         const touch = e.touches[0];
         const mouseEvent = new MouseEvent('mousedown', {
             clientX: touch.clientX,
@@ -2179,118 +2187,154 @@ function canPlaceInsect(hex) {
 
 // Check if a move is valid for an insect
 // This function checks MULTIPLE movement styles and returns true if ANY are valid
-function isValidMove(insect, fromHex, toHex) {
-    let validMovementFound = false;
-    let validPath = null;
+// ============================================
+// LAYERED MOVEMENT SYSTEM
+// ============================================
 
-    // OPTION 1: Try normal movement first (if this is the current player's piece)
+/**
+ * LAYER 1: Get all available movement types for a piece
+ * This is the simple layer - just checks what's theoretically possible
+ */
+function getAvailableMovementTypes(insect, fromHex) {
+    const types = [];
+
+    // Type 1: Normal movement (if it's the current player's piece)
     if (insect.player === gameState.currentPlayer) {
-        // Basic rule: Target must be unoccupied (unless beetle/mosquito climbing)
-        const targetOccupied = isHexOccupied(toHex.toString());
-        let normalMovementBlocked = false;
+        types.push({
+            type: 'normal',
+            insectType: insect.insect
+        });
+    }
 
-        if (targetOccupied) {
-            // Only beetle and mosquito (when copying beetle) can climb
-            const canClimb = insect.insect === 'beetle' ||
-                            (insect.insect === 'mosquito' && canMosquitoClimbAsBeelle(fromHex, insect.id));
-            if (!canClimb) {
-                normalMovementBlocked = true;
-            }
-        }
+    // Type 2: Pillbug throw (only check if there might be pillbugs nearby)
+    // This is still cheap - just checks if current player has pillbugs on the board
+    const currentPlayerHasPillbugs = Array.from(gameState.board.values()).some(stack => {
+        const top = stack[stack.length - 1];
+        return top && top.player === gameState.currentPlayer && top.insect === 'pillbug';
+    });
 
-        if (!normalMovementBlocked) {
-            // Basic rule: Target must touch at least one other insect (connectivity)
-            const neighbors = toHex.getNeighbors();
-            const touchesOtherInsect = neighbors.some(n => {
-                const neighborKey = n.toString();
-                // Don't count the hex we're moving from
-                if (neighborKey === fromHex.toString()) return false;
-                return isHexOccupied(neighborKey);
+    if (currentPlayerHasPillbugs) {
+        const pillbugInfo = movementSystem.findPillbugThatCanThrow(fromHex, insect.id, gameState.currentPlayer);
+        if (pillbugInfo) {
+            types.push({
+                type: 'pillbug_throw',
+                throwerHex: pillbugInfo.pillbugHex,
+                throwerId: pillbugInfo.pillbug.id
             });
-
-            if (touchesOtherInsect || gameState.board.size === 1) {
-                // Try insect-specific movement validation
-                const normalMovementValid = canInsectReach(insect, fromHex, toHex);
-
-                if (normalMovementValid) {
-                    validMovementFound = true;
-                    validPath = movementSystem.currentPath; // Path set by canInsectReach
-                }
-            }
         }
     }
 
-    // OPTION 2: Try pillbug throw (works for ANY piece, friend or foe)
-    // Only check this if normal movement didn't succeed
-    if (!validMovementFound) {
-        const pillbugInfo = movementSystem.findPillbugThatCanThrow(fromHex, insect.id, gameState.currentPlayer);
+    // Type 3: Mosquito throw (only check if current player has mosquitoes)
+    const currentPlayerHasMosquitoes = Array.from(gameState.board.values()).some(stack => {
+        const top = stack[stack.length - 1];
+        return top && top.player === gameState.currentPlayer && top.insect === 'mosquito';
+    });
 
-        if (pillbugInfo) {
-            // This piece can be thrown by a pillbug!
+    if (currentPlayerHasMosquitoes) {
+        const mosquitoInfo = movementSystem.findMosquitoThatCanThrow(fromHex, insect.id, gameState.currentPlayer);
+        if (mosquitoInfo) {
+            types.push({
+                type: 'mosquito_throw',
+                throwerHex: mosquitoInfo.mosquitoHex,
+                throwerId: mosquitoInfo.mosquito.id
+            });
+        }
+    }
+
+    return types;
+}
+
+/**
+ * LAYER 2: Check if a specific movement type allows a move
+ * This is where the complex pathfinding happens
+ */
+function canMoveUsingType(movementType, insect, fromHex, toHex) {
+    switch (movementType.type) {
+        case 'normal':
+            return canMoveNormally(insect, fromHex, toHex);
+
+        case 'pillbug_throw':
             const throwResult = movementSystem.findPillbugThrowPath(
-                pillbugInfo.pillbugHex,
+                movementType.throwerHex,
                 fromHex,
                 toHex,
                 insect.id
             );
-
             if (throwResult.success) {
-                validMovementFound = true;
-                validPath = throwResult;
+                movementSystem.currentPath = throwResult;
+                return true;
             }
+            return false;
+
+        case 'mosquito_throw':
+            const mosquitoThrowResult = movementSystem.findPillbugThrowPath(
+                movementType.throwerHex,
+                fromHex,
+                toHex,
+                insect.id
+            );
+            if (mosquitoThrowResult.success) {
+                movementSystem.currentPath = mosquitoThrowResult;
+                return true;
+            }
+            return false;
+
+        default:
+            return false;
+    }
+}
+
+/**
+ * Check if piece can move normally (own movement pattern)
+ */
+function canMoveNormally(insect, fromHex, toHex) {
+    // Rule: Target must be unoccupied (unless beetle/mosquito climbing)
+    const targetOccupied = isHexOccupied(toHex.toString());
+    if (targetOccupied) {
+        const canClimb = insect.insect === 'beetle' ||
+                        (insect.insect === 'mosquito' && canMosquitoClimbAsBeelle(fromHex, insect.id));
+        if (!canClimb) {
+            return false;
         }
     }
 
-    // OPTION 3: Try mosquito throw ability (mosquito acting as pillbug)
-    // Performance optimization: Only check if:
-    // 1. This is the current player's mosquito
-    // 2. Movement hasn't been found yet
-    // 3. Mosquito is adjacent to a pillbug
-    if (!validMovementFound &&
-        insect.player === gameState.currentPlayer &&
-        insect.insect === 'mosquito') {
+    // Rule: Target must touch at least one other insect (connectivity)
+    const neighbors = toHex.getNeighbors();
+    const touchesOtherInsect = neighbors.some(n => {
+        const neighborKey = n.toString();
+        if (neighborKey === fromHex.toString()) return false;
+        return isHexOccupied(neighborKey);
+    });
 
-        const mosquitoThrowInfo = movementSystem.canMosquitoUsePillbugThrow(fromHex, insect.id);
+    if (!touchesOtherInsect && gameState.board.size > 1) {
+        return false;
+    }
 
-        if (mosquitoThrowInfo) {
-            // Check if this is actually a throw attempt (piece being thrown is not the mosquito)
-            const targetPieceStack = getInsectStack(fromHex.toString());
-            const isMosquitoMovingSelf = targetPieceStack &&
-                                        targetPieceStack.length > 0 &&
-                                        targetPieceStack[targetPieceStack.length - 1].id === insect.id;
+    // Try insect-specific movement validation
+    return canInsectReach(insect, fromHex, toHex);
+}
 
-            // If mosquito is trying to move itself, this has already been handled by normal movement
-            // But if we're checking another piece's movement, see if mosquito can throw it
-            if (!isMosquitoMovingSelf) {
-                // This is a piece the mosquito is trying to throw
-                const throwResult = movementSystem.findPillbugThrowPath(
-                    fromHex, // Mosquito acts as the pillbug here
-                    fromHex,
-                    toHex,
-                    insect.id
-                );
+/**
+ * LAYER 3: Main validation function - checks all movement types
+ */
+function isValidMove(insect, fromHex, toHex) {
+    const movementTypes = getAvailableMovementTypes(insect, fromHex);
 
-                if (throwResult.success) {
-                    validMovementFound = true;
-                    validPath = throwResult;
-                }
-            }
+    // Try each movement type until we find one that works
+    for (const movementType of movementTypes) {
+        if (canMoveUsingType(movementType, insect, fromHex, toHex)) {
+            return true;
         }
     }
 
-    // Store the successful path for visualization
-    if (validPath) {
-        movementSystem.currentPath = validPath;
-    }
-
-    return validMovementFound;
+    return false;
 }
 
 // Check if mosquito is adjacent to a beetle (for climbing ability)
 function canMosquitoClimbAsBeelle(mosquitoHex, mosquitoId) {
     // Check if mosquito has beetle adjacent
     const adjacentInsects = movementSystem.getMosquitoAdjacentInsects(mosquitoHex, mosquitoId);
-    return adjacentInsects.includes('beetle');
+    return adjacentInsects.has('beetle');
 }
 
 // Insect-specific pathfinding (placeholders)
@@ -3645,33 +3689,14 @@ function renderBoard() {
                 polygon.setAttribute('stroke-width', '2');
             }
 
-            // Mark hexagon as movable if:
-            // 1. It belongs to current player and queen is placed, OR
-            // 2. It can be thrown by current player's pillbug, OR
-            // 3. It can be thrown by current player's mosquito (acting as pillbug)
+            // Mark hexagon as movable if it belongs to current player and queen is placed
+            // Note: Pieces affected by pillbug powers are handled in drag handlers
             const isOwnPiece = topInsect.player === gameState.currentPlayer && gameState.queenPlaced[gameState.currentPlayer];
-            let canBeThrown = movementSystem.findPillbugThatCanThrow(hex, topInsect.id, gameState.currentPlayer);
 
-            // Performance optimization: Only check mosquito throw if:
-            // - Regular pillbug throw didn't work
-            // - The piece doesn't belong to current player (otherwise it's already movable)
-            if (!canBeThrown && !isOwnPiece) {
-                // Check if a mosquito can throw this piece
-                canBeThrown = movementSystem.findMosquitoThatCanThrow(hex, topInsect.id, gameState.currentPlayer);
-            }
-
-            if (isOwnPiece || canBeThrown) {
+            if (isOwnPiece) {
                 hexElement.classList.add('movable');
-
-                // Add special visual indicator for throwable opponent pieces
-                if (canBeThrown && topInsect.player !== gameState.currentPlayer) {
-                    hexElement.classList.add('throwable');
-                } else {
-                    hexElement.classList.remove('throwable');
-                }
             } else {
                 hexElement.classList.remove('movable');
-                hexElement.classList.remove('throwable');
             }
         } else {
             // No insects on this hex - remove if exists and reset appearance
