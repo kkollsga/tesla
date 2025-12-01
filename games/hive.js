@@ -2706,8 +2706,8 @@ async function loadInsectSVGs() {
     await Promise.all(loadPromises);
 }
 
-// Process loaded SVG by replacing green with player color
-function processSVG(svgTemplate, playerColor) {
+// Process loaded SVG by replacing green with player color and applying scale
+function processSVG(svgTemplate, playerColor, scale = 1.0) {
     // Clone the template
     const svgClone = svgTemplate.cloneNode(true);
 
@@ -2737,12 +2737,23 @@ function processSVG(svgTemplate, playerColor) {
 
     replaceColor(svgClone);
 
+    // Apply scaling if scale is not 1.0
+    if (scale !== 1.0) {
+        // Find the first <g> element and add transform
+        const gElement = svgClone.querySelector('g');
+        if (gElement) {
+            const currentTransform = gElement.getAttribute('transform') || '';
+            const scaleTransform = `translate(50, 50) scale(${scale}) translate(-50, -50)`;
+            gElement.setAttribute('transform', currentTransform ? `${scaleTransform} ${currentTransform}` : scaleTransform);
+        }
+    }
+
     return svgClone;
 }
 
-function createInsectSVG(type, player) {
+function createInsectSVG(type, player, applyScale = false) {
     // Check cache first
-    const cacheKey = `${type}-${player}`;
+    const cacheKey = `${type}-${player}-${applyScale}`;
     if (svgTemplateCache.has(cacheKey)) {
         return svgTemplateCache.get(cacheKey).cloneNode(true);
     }
@@ -2761,8 +2772,11 @@ function createInsectSVG(type, player) {
     // Get player color
     const color = player === 1 ? '#5599ff' : '#ffaa44';
 
-    // Process the SVG template with player color
-    const svg = processSVG(template, color);
+    // Determine scale: queen is 1.0 (100%), all others are 0.8 (80%) when applyScale is true
+    const scale = (applyScale && type !== 'queen') ? 0.8 : 1.0;
+
+    // Process the SVG template with player color and scale
+    const svg = processSVG(template, color, scale);
 
     // Cache the template for future reuse
     svgTemplateCache.set(cacheKey, svg.cloneNode(true));
@@ -2953,7 +2967,7 @@ function createInsectElement(insect) {
     div.className = 'insect';
     div.dataset.insectId = insect.id;
 
-    const svg = createInsectSVG(insect.insect, insect.player);
+    const svg = createInsectSVG(insect.insect, insect.player, true);
     div.appendChild(svg);
 
     // mousedown handled by hexagon delegation

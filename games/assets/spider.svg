@@ -1,6 +1,5 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Apply scaling transform (all insects except queen are 20% smaller) -->
-  <g transform="translate(50, 50) scale(0.8) translate(-50, -50)">
+  <g>
     <!-- 8 long black jointed legs surrounding the body -->
     <!-- Left forward leg -->
     <line x1="38" y1="48" x2="20.7" y2="36.3" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>

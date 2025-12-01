@@ -1,6 +1,5 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Apply scaling transform (all insects except queen are 20% smaller) -->
-  <g transform="translate(50, 50) scale(0.8) translate(-50, -50)">
+  <g>
     <!-- Abdomen (bright green) - long and segmented looking -->
     <ellipse cx="50" cy="68" rx="16" ry="20" fill="#00FF00" stroke="#000" stroke-width="2"/>
 
