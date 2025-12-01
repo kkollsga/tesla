@@ -2676,8 +2676,69 @@ function initializeHand() {
 // INSECT SVG CREATION
 // ============================================
 
+// Storage for loaded SVG templates from files
+const insectSVGTemplates = new Map();
+
 // SVG template cache for performance optimization
 const svgTemplateCache = new Map();
+
+// Load all insect SVG files
+async function loadInsectSVGs() {
+    const insects = ['queen', 'ant', 'beetle', 'hopper', 'spider', 'mosquito', 'ladybug', 'pillbug'];
+
+    const loadPromises = insects.map(async (insectType) => {
+        try {
+            const response = await fetch(`assets/${insectType}.svg`);
+            const svgText = await response.text();
+
+            // Parse the SVG text to create a DOM element
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+            const svgElement = svgDoc.documentElement;
+
+            // Store the template
+            insectSVGTemplates.set(insectType, svgElement);
+        } catch (error) {
+            console.error(`Failed to load SVG for ${insectType}:`, error);
+        }
+    });
+
+    await Promise.all(loadPromises);
+}
+
+// Process loaded SVG by replacing green with player color
+function processSVG(svgTemplate, playerColor) {
+    // Clone the template
+    const svgClone = svgTemplate.cloneNode(true);
+
+    // Replace all #00FF00 (bright green) with player color
+    const replaceColor = (element) => {
+        // Check fill attribute
+        if (element.getAttribute && element.getAttribute('fill') === '#00FF00') {
+            element.setAttribute('fill', playerColor);
+        }
+
+        // Check stroke attribute
+        if (element.getAttribute && element.getAttribute('stroke') === '#00FF00') {
+            element.setAttribute('stroke', playerColor);
+        }
+
+        // Check style attribute
+        const style = element.getAttribute && element.getAttribute('style');
+        if (style && style.includes('#00FF00')) {
+            element.setAttribute('style', style.replace(/#00FF00/g, playerColor));
+        }
+
+        // Recursively process children
+        for (let child of element.children || []) {
+            replaceColor(child);
+        }
+    };
+
+    replaceColor(svgClone);
+
+    return svgClone;
+}
 
 function createInsectSVG(type, player) {
     // Check cache first
@@ -2686,46 +2747,22 @@ function createInsectSVG(type, player) {
         return svgTemplateCache.get(cacheKey).cloneNode(true);
     }
 
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 100 100');
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    // Get the loaded SVG template
+    const template = insectSVGTemplates.get(type);
+    if (!template) {
+        console.error(`SVG template not found for ${type}`);
+        // Fallback: create empty SVG
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        return svg;
+    }
 
+    // Get player color
     const color = player === 1 ? '#5599ff' : '#ffaa44';
 
-    // Create a group for scaling (all insects except queen are 20% smaller)
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    if (type !== 'queen') {
-        // Scale down by 20% (0.8 scale) and center
-        group.setAttribute('transform', 'translate(50, 50) scale(0.8) translate(-50, -50)');
-    }
-    svg.appendChild(group);
-
-    switch (type) {
-        case 'queen':
-            createQueenSVG(group, color);
-            break;
-        case 'ant':
-            createAntSVG(group, color);
-            break;
-        case 'beetle':
-            createBeetleSVG(group, color);
-            break;
-        case 'hopper':
-            createHopperSVG(group, color);
-            break;
-        case 'spider':
-            createSpiderSVG(group, color);
-            break;
-        case 'mosquito':
-            createMosquitoSVG(group, color);
-            break;
-        case 'ladybug':
-            createLadybugSVG(group, color);
-            break;
-        case 'pillbug':
-            createPillbugSVG(group, color);
-            break;
-    }
+    // Process the SVG template with player color
+    const svg = processSVG(template, color);
 
     // Cache the template for future reuse
     svgTemplateCache.set(cacheKey, svg.cloneNode(true));
@@ -2733,818 +2770,7 @@ function createInsectSVG(type, player) {
     return svg;
 }
 
-function createQueenSVG(svg, color) {
-    // Black legs - 6 legs, draw first
-    for (let side of [-1, 1]) {
-        for (let y of [38, 48, 58]) {
-            const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            leg.setAttribute('x1', '50');
-            leg.setAttribute('y1', y);
-            leg.setAttribute('x2', 50 + side * 22);
-            leg.setAttribute('y2', y + 12);
-            leg.setAttribute('stroke', '#000');
-            leg.setAttribute('stroke-width', '2');
-            leg.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(leg);
-        }
-    }
-
-    // Large body/abdomen (player color with black stripes)
-    const body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    body.setAttribute('cx', '50');
-    body.setAttribute('cy', '55');
-    body.setAttribute('rx', '20');
-    body.setAttribute('ry', '32');
-    body.setAttribute('fill', color);
-    body.setAttribute('stroke', '#000');
-    body.setAttribute('stroke-width', '2');
-    svg.appendChild(body);
-
-    // Black stripes on body
-    for (let i = 0; i < 4; i++) {
-        const stripe = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        stripe.setAttribute('cx', '50');
-        stripe.setAttribute('cy', 32 + i * 12);
-        stripe.setAttribute('rx', '20');
-        stripe.setAttribute('ry', '3');
-        stripe.setAttribute('fill', '#000');
-        stripe.setAttribute('opacity', '0.7');
-        svg.appendChild(stripe);
-    }
-
-    // 4 Wings overlaying the body - anchored at spine edges, further out
-    // Upper wings (100 degree spread = 50 degrees each side)
-    const upperLeftWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    upperLeftWing.setAttribute('cx', '22');
-    upperLeftWing.setAttribute('cy', '42');
-    upperLeftWing.setAttribute('rx', '16');
-    upperLeftWing.setAttribute('ry', '26');
-    upperLeftWing.setAttribute('fill', 'white');
-    upperLeftWing.setAttribute('stroke', '#000');
-    upperLeftWing.setAttribute('stroke-width', '1.5');
-    upperLeftWing.setAttribute('opacity', '0.85');
-    upperLeftWing.setAttribute('transform', 'rotate(-50 22 42)');
-    svg.appendChild(upperLeftWing);
-
-    const upperRightWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    upperRightWing.setAttribute('cx', '78');
-    upperRightWing.setAttribute('cy', '42');
-    upperRightWing.setAttribute('rx', '16');
-    upperRightWing.setAttribute('ry', '26');
-    upperRightWing.setAttribute('fill', 'white');
-    upperRightWing.setAttribute('stroke', '#000');
-    upperRightWing.setAttribute('stroke-width', '1.5');
-    upperRightWing.setAttribute('opacity', '0.85');
-    upperRightWing.setAttribute('transform', 'rotate(50 78 42)');
-    svg.appendChild(upperRightWing);
-
-    // Lower wings (70 degree spread = 35 degrees each side) - oriented downward
-    const lowerLeftWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    lowerLeftWing.setAttribute('cx', '26');
-    lowerLeftWing.setAttribute('cy', '58');
-    lowerLeftWing.setAttribute('rx', '13');
-    lowerLeftWing.setAttribute('ry', '20');
-    lowerLeftWing.setAttribute('fill', 'white');
-    lowerLeftWing.setAttribute('stroke', '#000');
-    lowerLeftWing.setAttribute('stroke-width', '1.5');
-    lowerLeftWing.setAttribute('opacity', '0.8');
-    lowerLeftWing.setAttribute('transform', 'rotate(-70 26 58)');
-    svg.appendChild(lowerLeftWing);
-
-    const lowerRightWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    lowerRightWing.setAttribute('cx', '74');
-    lowerRightWing.setAttribute('cy', '58');
-    lowerRightWing.setAttribute('rx', '13');
-    lowerRightWing.setAttribute('ry', '20');
-    lowerRightWing.setAttribute('fill', 'white');
-    lowerRightWing.setAttribute('stroke', '#000');
-    lowerRightWing.setAttribute('stroke-width', '1.5');
-    lowerRightWing.setAttribute('opacity', '0.8');
-    lowerRightWing.setAttribute('transform', 'rotate(70 74 58)');
-    svg.appendChild(lowerRightWing);
-
-    // Wing veins
-    for (let wingPos of [{x: 22, y: 42, r: -50}, {x: 78, y: 42, r: 50}, {x: 26, y: 58, r: -70}, {x: 74, y: 58, r: 70}]) {
-        const vein = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        vein.setAttribute('x1', wingPos.x);
-        vein.setAttribute('y1', wingPos.y - 10);
-        vein.setAttribute('x2', wingPos.x);
-        vein.setAttribute('y2', wingPos.y + 10);
-        vein.setAttribute('stroke', '#000');
-        vein.setAttribute('stroke-width', '0.5');
-        vein.setAttribute('opacity', '0.4');
-        svg.appendChild(vein);
-    }
-
-    // Head (player color)
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '18');
-    head.setAttribute('r', '12');
-    head.setAttribute('fill', color);
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '2');
-    svg.appendChild(head);
-
-    // Antennae (black)
-    for (let side of [-1, 1]) {
-        const antenna = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        antenna.setAttribute('d', `M ${50 + side * 6} 10 Q ${50 + side * 15} 0 ${50 + side * 14} -5`);
-        antenna.setAttribute('fill', 'none');
-        antenna.setAttribute('stroke', '#000');
-        antenna.setAttribute('stroke-width', '2');
-        antenna.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(antenna);
-    }
-
-    // Eyes (black)
-    for (let side of [-5, 5]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '16');
-        eye.setAttribute('r', '2');
-        eye.setAttribute('fill', '#000');
-        svg.appendChild(eye);
-    }
-}
-
-function createAntSVG(svg, color) {
-    // Black legs - draw first
-    for (let side of [-1, 1]) {
-        for (let y of [35, 50, 65]) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', '50');
-            line.setAttribute('y1', y);
-            line.setAttribute('x2', 50 + side * 30);
-            line.setAttribute('y2', y + 10);
-            line.setAttribute('stroke', '#000');
-            line.setAttribute('stroke-width', '2');
-            line.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(line);
-        }
-    }
-
-    // Abdomen (player color)
-    const body2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    body2.setAttribute('cx', '50');
-    body2.setAttribute('cy', '75');
-    body2.setAttribute('r', '14');
-    body2.setAttribute('fill', color);
-    body2.setAttribute('stroke', '#000');
-    body2.setAttribute('stroke-width', '2');
-    svg.appendChild(body2);
-
-    // Thorax (player color)
-    const body1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    body1.setAttribute('cx', '50');
-    body1.setAttribute('cy', '50');
-    body1.setAttribute('r', '18');
-    body1.setAttribute('fill', color);
-    body1.setAttribute('stroke', '#000');
-    body1.setAttribute('stroke-width', '2');
-    svg.appendChild(body1);
-
-    // Head (player color)
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '25');
-    head.setAttribute('r', '15');
-    head.setAttribute('fill', color);
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '2');
-    svg.appendChild(head);
-
-    // Antennae (black)
-    for (let side of [-1, 1]) {
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', 50 + side * 8);
-        line.setAttribute('y1', '15');
-        line.setAttribute('x2', 50 + side * 20);
-        line.setAttribute('y2', '5');
-        line.setAttribute('stroke', '#000');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(line);
-    }
-}
-
-function createBeetleSVG(svg, color) {
-    // Black legs - draw first
-    for (let side of [-1, 1]) {
-        for (let y of [40, 50, 60]) {
-            const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            leg.setAttribute('x1', '50');
-            leg.setAttribute('y1', y);
-            leg.setAttribute('x2', 50 + side * 28);
-            leg.setAttribute('y2', y + 20);
-            leg.setAttribute('stroke', '#000');
-            leg.setAttribute('stroke-width', '2.5');
-            leg.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(leg);
-        }
-    }
-
-    // Shell/body (player color)
-    const shell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    shell.setAttribute('cx', '50');
-    shell.setAttribute('cy', '55');
-    shell.setAttribute('rx', '32');
-    shell.setAttribute('ry', '35');
-    shell.setAttribute('fill', color);
-    shell.setAttribute('stroke', '#000');
-    shell.setAttribute('stroke-width', '2');
-    svg.appendChild(shell);
-
-    // Wing covers with subtle pattern
-    const leftWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    leftWing.setAttribute('cx', '35');
-    leftWing.setAttribute('cy', '55');
-    leftWing.setAttribute('rx', '14');
-    leftWing.setAttribute('ry', '32');
-    leftWing.setAttribute('fill', 'rgba(0,0,0,0.1)');
-    leftWing.setAttribute('stroke', 'none');
-    svg.appendChild(leftWing);
-
-    const rightWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    rightWing.setAttribute('cx', '65');
-    rightWing.setAttribute('cy', '55');
-    rightWing.setAttribute('rx', '14');
-    rightWing.setAttribute('ry', '32');
-    rightWing.setAttribute('fill', 'rgba(0,0,0,0.1)');
-    rightWing.setAttribute('stroke', 'none');
-    svg.appendChild(rightWing);
-
-    // Center line on shell
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', '50');
-    line.setAttribute('y1', '25');
-    line.setAttribute('x2', '50');
-    line.setAttribute('y2', '88');
-    line.setAttribute('stroke', '#000');
-    line.setAttribute('stroke-width', '1.5');
-    svg.appendChild(line);
-
-    // Head (black - special for beetle)
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '18');
-    head.setAttribute('r', '12');
-    head.setAttribute('fill', '#000');
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '1.5');
-    svg.appendChild(head);
-
-    // Horns (black - special for beetle)
-    for (let side of [-1, 1]) {
-        const horn = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        horn.setAttribute('d', `M ${50 + side * 6} 12 Q ${50 + side * 10} 5 ${50 + side * 8} 0`);
-        horn.setAttribute('fill', 'none');
-        horn.setAttribute('stroke', '#000');
-        horn.setAttribute('stroke-width', '2.5');
-        horn.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(horn);
-    }
-
-    // Eyes
-    for (let side of [-4, 4]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '16');
-        eye.setAttribute('r', '1.5');
-        eye.setAttribute('fill', '#fff');
-        svg.appendChild(eye);
-    }
-}
-
-function createHopperSVG(svg, color) {
-    // Long body drawn first (under legs)
-    // Abdomen (player color) - long and segmented looking
-    const abdomen = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    abdomen.setAttribute('cx', '50');
-    abdomen.setAttribute('cy', '68');
-    abdomen.setAttribute('rx', '16');
-    abdomen.setAttribute('ry', '20');
-    abdomen.setAttribute('fill', color);
-    abdomen.setAttribute('stroke', '#000');
-    abdomen.setAttribute('stroke-width', '2');
-    svg.appendChild(abdomen);
-
-    // Thorax (player color) - where legs attach
-    const body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    body.setAttribute('cx', '50');
-    body.setAttribute('cy', '45');
-    body.setAttribute('rx', '16');
-    body.setAttribute('ry', '18');
-    body.setAttribute('fill', color);
-    body.setAttribute('stroke', '#000');
-    body.setAttribute('stroke-width', '2');
-    svg.appendChild(body);
-
-    // 6 legs anchored to front of the body (thorax area)
-    // All legs attach near y=40-50 (front of body)
-
-    // 2 Powerful hind legs (player colored - special for grasshopper!)
-    // Left hind leg - thick femur, thin tibia
-    const leftHindLegFemur = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    leftHindLegFemur.setAttribute('d', 'M 38 50 Q 20 56 15 70');
-    leftHindLegFemur.setAttribute('fill', 'none');
-    leftHindLegFemur.setAttribute('stroke', color);
-    leftHindLegFemur.setAttribute('stroke-width', '6');
-    leftHindLegFemur.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(leftHindLegFemur);
-
-    const leftHindLegTibia = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    leftHindLegTibia.setAttribute('d', 'M 15 70 Q 8 80 5 92');
-    leftHindLegTibia.setAttribute('fill', 'none');
-    leftHindLegTibia.setAttribute('stroke', color);
-    leftHindLegTibia.setAttribute('stroke-width', '2.5');
-    leftHindLegTibia.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(leftHindLegTibia);
-
-    // Right hind leg - thick femur, thin tibia
-    const rightHindLegFemur = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    rightHindLegFemur.setAttribute('d', 'M 62 50 Q 80 56 85 70');
-    rightHindLegFemur.setAttribute('fill', 'none');
-    rightHindLegFemur.setAttribute('stroke', color);
-    rightHindLegFemur.setAttribute('stroke-width', '6');
-    rightHindLegFemur.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(rightHindLegFemur);
-
-    const rightHindLegTibia = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    rightHindLegTibia.setAttribute('d', 'M 85 70 Q 92 80 95 92');
-    rightHindLegTibia.setAttribute('fill', 'none');
-    rightHindLegTibia.setAttribute('stroke', color);
-    rightHindLegTibia.setAttribute('stroke-width', '2.5');
-    rightHindLegTibia.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(rightHindLegTibia);
-
-    // Middle 2 legs (player colored, anchored at front)
-    for (let side of [-1, 1]) {
-        const midLeg1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        midLeg1.setAttribute('x1', 50 + side * 12);
-        midLeg1.setAttribute('y1', '45');
-        midLeg1.setAttribute('x2', 50 + side * 24);
-        midLeg1.setAttribute('y2', '55');
-        midLeg1.setAttribute('stroke', color);
-        midLeg1.setAttribute('stroke-width', '2.5');
-        midLeg1.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(midLeg1);
-
-        const midLeg2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        midLeg2.setAttribute('x1', 50 + side * 24);
-        midLeg2.setAttribute('y1', '55');
-        midLeg2.setAttribute('x2', 50 + side * 30);
-        midLeg2.setAttribute('y2', '68');
-        midLeg2.setAttribute('stroke', color);
-        midLeg2.setAttribute('stroke-width', '2');
-        midLeg2.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(midLeg2);
-    }
-
-    // Front 2 legs (player colored, anchored at front)
-    for (let side of [-1, 1]) {
-        const frontLeg1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        frontLeg1.setAttribute('x1', 50 + side * 10);
-        frontLeg1.setAttribute('y1', '38');
-        frontLeg1.setAttribute('x2', 50 + side * 18);
-        frontLeg1.setAttribute('y2', '45');
-        frontLeg1.setAttribute('stroke', color);
-        frontLeg1.setAttribute('stroke-width', '2');
-        frontLeg1.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(frontLeg1);
-
-        const frontLeg2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        frontLeg2.setAttribute('x1', 50 + side * 18);
-        frontLeg2.setAttribute('y1', '45');
-        frontLeg2.setAttribute('x2', 50 + side * 24);
-        frontLeg2.setAttribute('y2', '54');
-        frontLeg2.setAttribute('stroke', color);
-        frontLeg2.setAttribute('stroke-width', '1.5');
-        frontLeg2.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(frontLeg2);
-    }
-
-    // Head (player color) - elongated
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '22');
-    head.setAttribute('rx', '11');
-    head.setAttribute('ry', '13');
-    head.setAttribute('fill', color);
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '2');
-    svg.appendChild(head);
-
-    // Antennae (thin, player colored)
-    for (let side of [-1, 1]) {
-        const antenna = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        antenna.setAttribute('d', `M ${50 + side * 6} 15 Q ${50 + side * 12} 8 ${50 + side * 15} 2`);
-        antenna.setAttribute('fill', 'none');
-        antenna.setAttribute('stroke', color);
-        antenna.setAttribute('stroke-width', '1.5');
-        antenna.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(antenna);
-    }
-
-    // Large compound eyes (black)
-    for (let side of [-6, 6]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '20');
-        eye.setAttribute('r', '4');
-        eye.setAttribute('fill', '#000');
-        svg.appendChild(eye);
-
-        const shine = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        shine.setAttribute('cx', 50 + side + 1);
-        shine.setAttribute('cy', '19');
-        shine.setAttribute('r', '1.5');
-        shine.setAttribute('fill', 'rgba(255,255,255,0.7)');
-        svg.appendChild(shine);
-    }
-}
-
-function createLadybugSVG(svg, color) {
-    // Black legs - draw first
-    for (let side of [-1, 1]) {
-        for (let y of [45, 55, 65]) {
-            const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            leg.setAttribute('x1', '50');
-            leg.setAttribute('y1', y);
-            leg.setAttribute('x2', 50 + side * 25);
-            leg.setAttribute('y2', y + 12);
-            leg.setAttribute('stroke', '#000');
-            leg.setAttribute('stroke-width', '2');
-            leg.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(leg);
-        }
-    }
-
-    // Shell/wings (player color)
-    const shell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    shell.setAttribute('cx', '50');
-    shell.setAttribute('cy', '60');
-    shell.setAttribute('rx', '28');
-    shell.setAttribute('ry', '32');
-    shell.setAttribute('fill', color);
-    shell.setAttribute('stroke', '#000');
-    shell.setAttribute('stroke-width', '2');
-    svg.appendChild(shell);
-
-    // Center line (black)
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', '50');
-    line.setAttribute('y1', '30');
-    line.setAttribute('x2', '50');
-    line.setAttribute('y2', '90');
-    line.setAttribute('stroke', '#000');
-    line.setAttribute('stroke-width', '1.5');
-    svg.appendChild(line);
-
-    // Spots (black)
-    const positions = [
-        { x: 35, y: 45 }, { x: 35, y: 60 }, { x: 35, y: 75 },
-        { x: 65, y: 45 }, { x: 65, y: 60 }, { x: 65, y: 75 }
-    ];
-
-    positions.forEach(pos => {
-        const spot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        spot.setAttribute('cx', pos.x);
-        spot.setAttribute('cy', pos.y);
-        spot.setAttribute('r', '4');
-        spot.setAttribute('fill', '#000');
-        svg.appendChild(spot);
-    });
-
-    // Head (black)
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '25');
-    head.setAttribute('r', '12');
-    head.setAttribute('fill', '#000');
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '2');
-    svg.appendChild(head);
-
-    // Eyes (white)
-    for (let side of [-4, 4]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '23');
-        eye.setAttribute('r', '2');
-        eye.setAttribute('fill', '#fff');
-        svg.appendChild(eye);
-    }
-}
-
-function createSpiderSVG(svg, color) {
-    // 8 long black jointed legs surrounding the body
-    // Pattern: 2 forward, 4 middle (2 forward-facing, 2 back-facing), 2 backward
-    const legConfigs = [
-        // 2 forward legs (left and right) - pointing upward
-        { side: -1, baseAngle: -135, endAngle: -160 },  // Left forward
-        { side: 1, baseAngle: -135, endAngle: -160 },   // Right forward
-
-        // 4 middle legs - 2 forward-facing
-        { side: -1, baseAngle: -90, endAngle: -115 },  // Left middle-forward
-        { side: 1, baseAngle: -90, endAngle: -115 },   // Right middle-forward
-
-        // 4 middle legs - 2 back-facing
-        { side: -1, baseAngle: 0, endAngle: 25 },     // Left middle-back
-        { side: 1, baseAngle: 0, endAngle: 25 },      // Right middle-back
-
-        // 2 backward legs (left and right) - pointing downward
-        { side: -1, baseAngle: 45, endAngle: 70 },     // Left backward
-        { side: 1, baseAngle: 45, endAngle: 70 }       // Right backward
-    ];
-
-    let legIndex = 0;
-    legConfigs.forEach(leg => {
-        // Calculate positions for two-segment jointed leg
-        const baseRad = (leg.baseAngle + 90) * Math.PI / 180;
-        const endRad = (leg.endAngle + 90) * Math.PI / 180;
-
-        const baseX = 50 + leg.side * 12;
-        const baseY = 48;
-
-        // Middle-back legs (indices 4-5) are longer
-        const firstSegmentLength = (legIndex >= 4 && legIndex <= 5) ? 22 : 18;
-        const secondSegmentLength = (legIndex >= 4 && legIndex <= 5) ? 26 : 20;
-
-        const jointX = baseX + leg.side * firstSegmentLength * Math.cos(baseRad);
-        const jointY = baseY + firstSegmentLength * Math.sin(baseRad);
-
-        const endX = jointX + leg.side * secondSegmentLength * Math.cos(endRad);
-        const endY = jointY + secondSegmentLength * Math.sin(endRad);
-
-        // First segment (femur) - thicker
-        const segment1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        segment1.setAttribute('x1', baseX);
-        segment1.setAttribute('y1', baseY);
-        segment1.setAttribute('x2', jointX);
-        segment1.setAttribute('y2', jointY);
-        segment1.setAttribute('stroke', '#000');
-        segment1.setAttribute('stroke-width', '2.5');
-        segment1.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(segment1);
-
-        // Second segment (tibia) - thinner
-        const segment2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        segment2.setAttribute('x1', jointX);
-        segment2.setAttribute('y1', jointY);
-        segment2.setAttribute('x2', endX);
-        segment2.setAttribute('y2', endY);
-        segment2.setAttribute('stroke', '#000');
-        segment2.setAttribute('stroke-width', '2');
-        segment2.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(segment2);
-
-        // Joint marker (small circle at joint)
-        const joint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        joint.setAttribute('cx', jointX);
-        joint.setAttribute('cy', jointY);
-        joint.setAttribute('r', '1.5');
-        joint.setAttribute('fill', '#000');
-        svg.appendChild(joint);
-
-        // Add larger feet (tarsi) to the front 2 legs (first 2 in the array)
-        if (legIndex < 2) {
-            const foot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            foot.setAttribute('cx', endX);
-            foot.setAttribute('cy', endY);
-            foot.setAttribute('r', '2.5');
-            foot.setAttribute('fill', '#000');
-            svg.appendChild(foot);
-        }
-
-        legIndex++;
-    });
-
-    // Small abdomen (player color) - rear segment
-    const abdomen = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    abdomen.setAttribute('cx', '50');
-    abdomen.setAttribute('cy', '58');
-    abdomen.setAttribute('rx', '14');
-    abdomen.setAttribute('ry', '16');
-    abdomen.setAttribute('fill', color);
-    abdomen.setAttribute('stroke', '#000');
-    abdomen.setAttribute('stroke-width', '2');
-    svg.appendChild(abdomen);
-
-    // Small cephalothorax (player color) - head+thorax combined
-    const cephalothorax = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    cephalothorax.setAttribute('cx', '50');
-    cephalothorax.setAttribute('cy', '38');
-    cephalothorax.setAttribute('rx', '12');
-    cephalothorax.setAttribute('ry', '14');
-    cephalothorax.setAttribute('fill', color);
-    cephalothorax.setAttribute('stroke', '#000');
-    cephalothorax.setAttribute('stroke-width', '2');
-    svg.appendChild(cephalothorax);
-
-    // 8 eyes arranged in typical spider pattern
-    const eyePositions = [
-        // Front row (4 eyes)
-        { x: 44, y: 32 }, { x: 48, y: 31 }, { x: 52, y: 31 }, { x: 56, y: 32 },
-        // Back row (4 eyes)
-        { x: 42, y: 36 }, { x: 48, y: 37 }, { x: 52, y: 37 }, { x: 58, y: 36 }
-    ];
-
-    eyePositions.forEach(pos => {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', pos.x);
-        eye.setAttribute('cy', pos.y);
-        eye.setAttribute('r', '1.2');
-        eye.setAttribute('fill', '#000');
-        svg.appendChild(eye);
-    });
-}
-
-function createMosquitoSVG(svg, color) {
-    // Small body parts first (under wings and legs)
-    // Abdomen (player color) - long thin segment
-    const abdomen = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    abdomen.setAttribute('cx', '50');
-    abdomen.setAttribute('cy', '65');
-    abdomen.setAttribute('rx', '6');
-    abdomen.setAttribute('ry', '24');
-    abdomen.setAttribute('fill', color);
-    abdomen.setAttribute('stroke', '#000');
-    abdomen.setAttribute('stroke-width', '1.5');
-    svg.appendChild(abdomen);
-
-    // Thorax (player color) - small
-    const thorax = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    thorax.setAttribute('cx', '50');
-    thorax.setAttribute('cy', '38');
-    thorax.setAttribute('rx', '8');
-    thorax.setAttribute('ry', '10');
-    thorax.setAttribute('fill', color);
-    thorax.setAttribute('stroke', '#000');
-    thorax.setAttribute('stroke-width', '1.5');
-    svg.appendChild(thorax);
-
-    // Head (player color) - small
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '20');
-    head.setAttribute('r', '7');
-    head.setAttribute('fill', color);
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '1.5');
-    svg.appendChild(head);
-
-    // 2 large wings in V-shape extending back from head (white with black outline)
-    const leftWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    leftWing.setAttribute('cx', '25');
-    leftWing.setAttribute('cy', '50');
-    leftWing.setAttribute('rx', '12');
-    leftWing.setAttribute('ry', '35');
-    leftWing.setAttribute('fill', 'white');
-    leftWing.setAttribute('stroke', '#000');
-    leftWing.setAttribute('stroke-width', '1.5');
-    leftWing.setAttribute('opacity', '0.9');
-    leftWing.setAttribute('transform', 'rotate(-10 25 50)');
-    svg.appendChild(leftWing);
-
-    const rightWing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    rightWing.setAttribute('cx', '75');
-    rightWing.setAttribute('cy', '50');
-    rightWing.setAttribute('rx', '12');
-    rightWing.setAttribute('ry', '35');
-    rightWing.setAttribute('fill', 'white');
-    rightWing.setAttribute('stroke', '#000');
-    rightWing.setAttribute('stroke-width', '1.5');
-    rightWing.setAttribute('opacity', '0.9');
-    rightWing.setAttribute('transform', 'rotate(10 75 50)');
-    svg.appendChild(rightWing);
-
-    // Wing veins (black lines inside wings)
-    for (let wingX of [25, 75]) {
-        const vein1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        vein1.setAttribute('x1', wingX);
-        vein1.setAttribute('y1', '20');
-        vein1.setAttribute('x2', wingX);
-        vein1.setAttribute('y2', '75');
-        vein1.setAttribute('stroke', '#000');
-        vein1.setAttribute('stroke-width', '0.5');
-        vein1.setAttribute('opacity', '0.4');
-        svg.appendChild(vein1);
-    }
-
-    // 6 thin long legs (black)
-    const legPositions = [
-        { x: 50, y: 35 },   // Front pair
-        { x: 50, y: 40 },   // Middle pair
-        { x: 50, y: 45 }    // Back pair
-    ];
-
-    legPositions.forEach(pos => {
-        for (let side of [-1, 1]) {
-            const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            leg.setAttribute('x1', pos.x);
-            leg.setAttribute('y1', pos.y);
-            leg.setAttribute('x2', pos.x + side * 26);
-            leg.setAttribute('y2', pos.y + 20);
-            leg.setAttribute('stroke', '#000');
-            leg.setAttribute('stroke-width', '1');
-            leg.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(leg);
-        }
-    });
-
-    // Proboscis (long needle-like mouthpart)
-    const proboscis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    proboscis.setAttribute('x1', '50');
-    proboscis.setAttribute('y1', '13');
-    proboscis.setAttribute('x2', '50');
-    proboscis.setAttribute('y2', '0');
-    proboscis.setAttribute('stroke', '#000');
-    proboscis.setAttribute('stroke-width', '1.5');
-    proboscis.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(proboscis);
-
-    // Eyes (black)
-    for (let side of [-3, 3]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '19');
-        eye.setAttribute('r', '2');
-        eye.setAttribute('fill', '#000');
-        svg.appendChild(eye);
-    }
-}
-
-function createPillbugSVG(svg, color) {
-    // Black legs - draw first
-    for (let side of [-1, 1]) {
-        for (let y of [40, 50, 60, 70]) {
-            const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            leg.setAttribute('x1', '50');
-            leg.setAttribute('y1', y);
-            leg.setAttribute('x2', 50 + side * 22);
-            leg.setAttribute('y2', y + 8);
-            leg.setAttribute('stroke', '#000');
-            leg.setAttribute('stroke-width', '2');
-            leg.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(leg);
-        }
-    }
-
-    // Segmented body (player color) - pillbugs have armored segments
-    const segments = [
-        { cy: 70, rx: 28, ry: 12 },
-        { cy: 58, rx: 30, ry: 12 },
-        { cy: 46, rx: 28, ry: 11 },
-        { cy: 35, rx: 24, ry: 10 }
-    ];
-
-    segments.forEach(seg => {
-        const segment = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        segment.setAttribute('cx', '50');
-        segment.setAttribute('cy', seg.cy);
-        segment.setAttribute('rx', seg.rx);
-        segment.setAttribute('ry', seg.ry);
-        segment.setAttribute('fill', color);
-        segment.setAttribute('stroke', '#000');
-        segment.setAttribute('stroke-width', '1.5');
-        svg.appendChild(segment);
-    });
-
-    // Head (player color)
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    head.setAttribute('cx', '50');
-    head.setAttribute('cy', '22');
-    head.setAttribute('rx', '16');
-    head.setAttribute('ry', '10');
-    head.setAttribute('fill', color);
-    head.setAttribute('stroke', '#000');
-    head.setAttribute('stroke-width', '1.5');
-    svg.appendChild(head);
-
-    // Antennae (black)
-    for (let side of [-1, 1]) {
-        const antenna = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        antenna.setAttribute('x1', 50 + side * 8);
-        antenna.setAttribute('y1', '18');
-        antenna.setAttribute('x2', 50 + side * 18);
-        antenna.setAttribute('y2', '10');
-        antenna.setAttribute('stroke', '#000');
-        antenna.setAttribute('stroke-width', '1.5');
-        antenna.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(antenna);
-    }
-
-    // Eyes (black)
-    for (let side of [-6, 6]) {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', 50 + side);
-        eye.setAttribute('cy', '20');
-        eye.setAttribute('r', '1.5');
-        eye.setAttribute('fill', '#000');
-        svg.appendChild(eye);
-    }
-}
+// Hardcoded insect design functions removed - now using SVG files from assets folder
 
 // ============================================
 // RENDERING FUNCTIONS
@@ -3911,6 +3137,56 @@ function updatePlayerInfo() {
         }
     }
 }
+
+// ============================================
+// UI HELPER FUNCTIONS
+// ============================================
+
+function showPieceInfo(insect, event) {
+    const popup = document.getElementById('pieceInfoPopup');
+    const insectData = INSECT_TYPES[insect.insect];
+
+    if (currentPopupCloser) {
+        document.removeEventListener('click', currentPopupCloser);
+        document.removeEventListener('contextmenu', currentPopupCloser);
+    }
+
+    document.getElementById('pieceInfoTitle').textContent = insectData.name;
+    document.getElementById('pieceInfoDetails').textContent = insectData.movement;
+    document.getElementById('pieceInfoOwner').textContent = `${insect.player === 1 ? 'Left (Blue)' : 'Right (Orange)'}`;
+
+    popup.classList.add('active');
+
+    let x = event.clientX + 10;
+    let y = event.clientY + 10;
+
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+
+    const rect = popup.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        x = window.innerWidth - rect.width - 10;
+        popup.style.left = x + 'px';
+    }
+    if (rect.bottom > window.innerHeight) {
+        y = window.innerHeight - rect.height - 10;
+        popup.style.top = y + 'px';
+    }
+
+    currentPopupCloser = (e) => {
+        if (popup.contains(e.target)) return;
+        popup.classList.remove('active');
+        document.removeEventListener('click', currentPopupCloser);
+        document.removeEventListener('contextmenu', currentPopupCloser);
+        currentPopupCloser = null;
+    };
+
+    setTimeout(() => {
+        document.addEventListener('click', currentPopupCloser);
+        document.addEventListener('contextmenu', currentPopupCloser);
+    }, 10);
+}
+
 
 // ============================================
 // PIECE INFO POPUP
@@ -4663,7 +3939,10 @@ function initializeEventListeners() {
 }
 
 // Start game on load
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    // Load insect SVG assets first
+    await loadInsectSVGs();
+
     loadGameConfig();
     // Reset theme to green on page refresh
     saveThemeColor('green');

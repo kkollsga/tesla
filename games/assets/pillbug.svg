@@ -1,0 +1,31 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Apply scaling transform (all insects except queen are 20% smaller) -->
+  <g transform="translate(50, 50) scale(0.8) translate(-50, -50)">
+    <!-- Black legs - draw first -->
+    <line x1="50" y1="40" x2="28" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="50" x2="28" y2="58" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="60" x2="28" y2="68" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="70" x2="28" y2="78" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="40" x2="72" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="50" x2="72" y2="58" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="60" x2="72" y2="68" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="70" x2="72" y2="78" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Segmented body (bright green) - pillbugs have armored segments -->
+    <ellipse cx="50" cy="70" rx="28" ry="12" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <ellipse cx="50" cy="58" rx="30" ry="12" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <ellipse cx="50" cy="46" rx="28" ry="11" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <ellipse cx="50" cy="35" rx="24" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Head (bright green) -->
+    <ellipse cx="50" cy="22" rx="16" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Antennae (black) -->
+    <line x1="42" y1="18" x2="32" y2="10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="58" y1="18" x2="68" y2="10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Eyes (black) -->
+    <circle cx="44" cy="20" r="1.5" fill="#000"/>
+    <circle cx="56" cy="20" r="1.5" fill="#000"/>
+  </g>
+</svg>

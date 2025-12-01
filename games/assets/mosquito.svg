@@ -1,0 +1,39 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Apply scaling transform (all insects except queen are 20% smaller) -->
+  <g transform="translate(50, 50) scale(0.8) translate(-50, -50)">
+    <!-- Abdomen (bright green) - long thin segment -->
+    <ellipse cx="50" cy="65" rx="6" ry="24" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Thorax (bright green) - small -->
+    <ellipse cx="50" cy="38" rx="8" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Head (bright green) - small -->
+    <circle cx="50" cy="20" r="7" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- 2 large wings in V-shape extending back from head (white with black outline) -->
+    <ellipse cx="25" cy="50" rx="12" ry="35" fill="white" stroke="#000" stroke-width="1.5" opacity="0.9" transform="rotate(-10 25 50)"/>
+    <ellipse cx="75" cy="50" rx="12" ry="35" fill="white" stroke="#000" stroke-width="1.5" opacity="0.9" transform="rotate(10 75 50)"/>
+
+    <!-- Wing veins (black lines inside wings) -->
+    <line x1="25" y1="20" x2="25" y2="75" stroke="#000" stroke-width="0.5" opacity="0.4"/>
+    <line x1="75" y1="20" x2="75" y2="75" stroke="#000" stroke-width="0.5" opacity="0.4"/>
+
+    <!-- 6 thin long legs (black) -->
+    <!-- Front pair -->
+    <line x1="50" y1="35" x2="24" y2="55" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <line x1="50" y1="35" x2="76" y2="55" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <!-- Middle pair -->
+    <line x1="50" y1="40" x2="24" y2="60" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <line x1="50" y1="40" x2="76" y2="60" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <!-- Back pair -->
+    <line x1="50" y1="45" x2="24" y2="65" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <line x1="50" y1="45" x2="76" y2="65" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+
+    <!-- Proboscis (long needle-like mouthpart) -->
+    <line x1="50" y1="13" x2="50" y2="0" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Eyes (black) -->
+    <circle cx="47" cy="19" r="2" fill="#000"/>
+    <circle cx="53" cy="19" r="2" fill="#000"/>
+  </g>
+</svg>
