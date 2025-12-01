@@ -1,64 +1,100 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <!-- 8 long black jointed legs surrounding the body -->
-    <!-- Left forward leg -->
-    <line x1="38" y1="48" x2="20.7" y2="36.3" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="20.7" y1="36.3" x2="3.9" y2="22.9" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="20.7" cy="36.3" r="1.5" fill="#000"/>
-    <circle cx="3.9" cy="22.9" r="2.5" fill="#000"/>
-
-    <!-- Right forward leg -->
-    <line x1="62" y1="48" x2="79.3" y2="36.3" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="79.3" y1="36.3" x2="96.1" y2="22.9" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="79.3" cy="36.3" r="1.5" fill="#000"/>
-    <circle cx="96.1" cy="22.9" r="2.5" fill="#000"/>
-
-    <!-- Left middle-forward leg -->
-    <line x1="38" y1="48" x2="16" y2="48" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="16" y1="48" x2="-6" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="16" cy="48" r="1.5" fill="#000"/>
-
-    <!-- Right middle-forward leg -->
-    <line x1="62" y1="48" x2="84" y2="48" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="84" y1="48" x2="106" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="84" cy="48" r="1.5" fill="#000"/>
-
-    <!-- Left middle-back leg (longer) -->
-    <line x1="38" y1="48" x2="16" y2="70" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="16" y1="70" x2="-10" y2="91.1" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="16" cy="70" r="1.5" fill="#000"/>
-
-    <!-- Right middle-back leg (longer) -->
-    <line x1="62" y1="48" x2="84" y2="70" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="84" y1="70" x2="110" y2="91.1" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="84" cy="70" r="1.5" fill="#000"/>
-
-    <!-- Left backward leg -->
-    <line x1="38" y1="48" x2="25.3" y2="60.7" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="25.3" y1="60.7" x2="11.6" y2="73.9" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="25.3" cy="60.7" r="1.5" fill="#000"/>
-
-    <!-- Right backward leg -->
-    <line x1="62" y1="48" x2="74.7" y2="60.7" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="74.7" y1="60.7" x2="88.4" y2="73.9" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="74.7" cy="60.7" r="1.5" fill="#000"/>
-
-    <!-- Small abdomen (bright green) - rear segment -->
-    <ellipse cx="50" cy="58" rx="14" ry="16" fill="#00FF00" stroke="#000" stroke-width="2"/>
-
-    <!-- Small cephalothorax (bright green) - head+thorax combined -->
-    <ellipse cx="50" cy="38" rx="12" ry="14" fill="#00FF00" stroke="#000" stroke-width="2"/>
-
-    <!-- 8 eyes arranged in typical spider pattern -->
-    <!-- Front row (4 eyes) -->
-    <circle cx="44" cy="32" r="1.2" fill="#000"/>
-    <circle cx="48" cy="31" r="1.2" fill="#000"/>
-    <circle cx="52" cy="31" r="1.2" fill="#000"/>
-    <circle cx="56" cy="32" r="1.2" fill="#000"/>
-    <!-- Back row (4 eyes) -->
-    <circle cx="42" cy="36" r="1.2" fill="#000"/>
-    <circle cx="48" cy="37" r="1.2" fill="#000"/>
-    <circle cx="52" cy="37" r="1.2" fill="#000"/>
-    <circle cx="58" cy="36" r="1.2" fill="#000"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;">
+    <g>
+        <g transform="matrix(1,0,0,1,1.49414,-13.1769)">
+            <path d="M38,48L20.7,36.3" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,1.49414,-13.1769)">
+            <path d="M20.7,36.3L3.9,22.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,1.49414,-13.1769)">
+            <circle cx="20.7" cy="36.3" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-1.49178,-13.9108)">
+            <path d="M62,48L79.3,36.3" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-0.127496,-15.0579)">
+            <path d="M79.3,36.3L96.1,22.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-0.790945,-14.6313)">
+            <circle cx="79.3" cy="36.3" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,7.80832,-9.03488)">
+            <path d="M38,48L16,48" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,9.21471,-9.0274)">
+            <path d="M16,48L-6,48" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,7.17281,-9.15293)">
+            <circle cx="16" cy="48" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-7.72923,-9.64442)">
+            <path d="M62,48L84,48" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-9.22927,-9.54447)">
+            <path d="M84,48L106,48" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-7.37429,-9.63261)">
+            <circle cx="84" cy="48" r="1.5"/>
+        </g>
+        <g transform="matrix(0.951996,-0.141849,0.217016,0.937721,-17.4284,12.1539)">
+            <path d="M38,48L16,70" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(-0.272612,0.923092,-0.941829,-0.198432,142.254,50.2163)">
+            <path d="M38,48L16,70" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(0.691805,-0.214875,0.696871,0.448758,-46.8612,47.0195)">
+            <path d="M16,70L-10,91.1" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(0.516709,-0.507717,0.824994,0.0799855,20.6533,78.1921)">
+            <path d="M16,70L-10,91.1" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(0.945174,-0.326567,0.326567,0.945174,-8.27537,-10.1566)">
+            <circle cx="16" cy="70" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,2.63609,5.79161)">
+            <circle cx="84" cy="70" r="1.5"/>
+        </g>
+        <g transform="matrix(0.966059,0.258322,-0.258322,0.966059,21.1776,-14.4744)">
+            <path d="M38,48L25.3,60.7" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(0.198352,-0.961635,0.969419,0.163975,-31.3305,29.0075)">
+            <path d="M25.3,60.7L11.6,73.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(-0.968544,0.161273,-0.196147,-0.963424,90.7953,84.4931)">
+            <path d="M25.3,60.7L11.6,73.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-12.4049,14.8226)">
+            <circle cx="25.3" cy="60.7" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,7.36878,-45.9649)">
+            <circle cx="25.3" cy="60.7" r="1.5"/>
+        </g>
+        <g transform="matrix(1,0,0,1,40.0088,-45.584)">
+            <circle cx="25.3" cy="60.7" r="1.5"/>
+        </g>
+        <g transform="matrix(0.960764,-0.277366,0.277366,0.960764,-17.3445,13.0467)">
+            <path d="M62,48L74.7,60.7" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2.5px;"/>
+        </g>
+        <g transform="matrix(0.806189,0.0914616,-0.484323,0.669495,-2.727,-42.5118)">
+            <path d="M74.7,60.7L88.4,73.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:3.42px;"/>
+        </g>
+        <g transform="matrix(-0.472031,-0.659919,0.821533,-0.088747,50.7766,69.6418)">
+            <path d="M74.7,60.7L88.4,73.9" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:3.42px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-2.64908,-9.50512)">
+            <circle cx="74.7" cy="60.7" r="1.5"/>
+        </g>
+        <ellipse cx="50" cy="58" rx="14" ry="16" style="fill:rgb(0,255,0);stroke:black;stroke-width:2px;stroke-linecap:butt;"/>
+        <ellipse cx="50" cy="38" rx="12" ry="14" style="fill:rgb(0,255,0);stroke:black;stroke-width:2px;stroke-linecap:butt;"/>
+        <circle cx="44" cy="32" r="1.2"/>
+        <circle cx="48" cy="31" r="1.2"/>
+        <circle cx="52" cy="31" r="1.2"/>
+        <circle cx="56" cy="32" r="1.2"/>
+        <circle cx="42" cy="36" r="1.2"/>
+        <circle cx="48" cy="37" r="1.2"/>
+        <circle cx="52" cy="37" r="1.2"/>
+        <circle cx="58" cy="36" r="1.2"/>
+    </g>
 </svg>

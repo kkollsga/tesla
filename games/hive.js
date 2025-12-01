@@ -1884,6 +1884,38 @@ function handleDragMoveTouch(e) {
     }
 }
 
+// Helper function to update hexagon polygon styling directly
+function updateHexagonStyle(hexElement, isValid, playerColor = null) {
+    const polygon = hexElement.querySelector('svg polygon');
+    if (!polygon) return;
+
+    if (isValid) {
+        // Valid move styling
+        polygon.setAttribute('stroke', playerColor || '#4a9f68');
+        polygon.setAttribute('stroke-width', '3');
+        polygon.style.filter = `drop-shadow(0 0 3px ${playerColor || '#4a9f68'})`;
+    } else {
+        // Invalid move styling
+        polygon.setAttribute('stroke', 'rgba(255, 100, 100, 0.4)');
+        polygon.setAttribute('stroke-width', '2');
+        polygon.setAttribute('fill', 'rgba(255, 100, 100, 0.1)');
+    }
+}
+
+// Helper function to clear hexagon styling
+function clearHexagonStyle(hexElement) {
+    const polygon = hexElement.querySelector('svg polygon');
+    if (!polygon) return;
+
+    // Restore default styling
+    const defaultFill = getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)';
+    const defaultStroke = getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f';
+    polygon.setAttribute('fill', defaultFill);
+    polygon.setAttribute('stroke', defaultStroke);
+    polygon.setAttribute('stroke-width', '2');
+    polygon.style.filter = '';
+}
+
 function updateDropZoneHighlight(x, y) {
     const elementBelow = document.elementFromPoint(x, y);
     const hexElement = elementBelow?.closest('.hexagon');
@@ -1893,6 +1925,7 @@ function updateDropZoneHighlight(x, y) {
         if (dragState.lastHighlightedHex) {
             dragState.lastHighlightedHex.classList.remove('valid-move', 'invalid-move');
             dragState.lastHighlightedHex.style.removeProperty('--player-color');
+            clearHexagonStyle(dragState.lastHighlightedHex);
             dragState.lastHighlightedHex = null;
         }
         // Clear path visualization
@@ -1911,6 +1944,7 @@ function updateDropZoneHighlight(x, y) {
     if (dragState.lastHighlightedHex) {
         dragState.lastHighlightedHex.classList.remove('valid-move', 'invalid-move');
         dragState.lastHighlightedHex.style.removeProperty('--player-color');
+        clearHexagonStyle(dragState.lastHighlightedHex);
         dragState.lastHighlightedHex = null;
     }
 
@@ -1926,10 +1960,12 @@ function updateDropZoneHighlight(x, y) {
         if (canPlace) {
             hexElement.style.setProperty('--player-color', playerColor);
             hexElement.classList.add('valid-move');
+            updateHexagonStyle(hexElement, true, playerColor);
             dragState.lastHighlightedHex = hexElement;
         } else {
             // Invalid placement
             hexElement.classList.add('invalid-move');
+            updateHexagonStyle(hexElement, false);
             dragState.lastHighlightedHex = hexElement;
         }
     } else if (dragState.dragSource === 'board') {
@@ -1949,6 +1985,7 @@ function updateDropZoneHighlight(x, y) {
         if (fromHex && isValidMove(insect, fromHex, hex)) {
             hexElement.style.setProperty('--player-color', playerColor);
             hexElement.classList.add('valid-move');
+            updateHexagonStyle(hexElement, true, playerColor);
             dragState.lastHighlightedHex = hexElement;
 
             // Draw path for insects with pathfinding
@@ -1963,6 +2000,7 @@ function updateDropZoneHighlight(x, y) {
         } else {
             // Invalid move
             hexElement.classList.add('invalid-move');
+            updateHexagonStyle(hexElement, false);
             dragState.lastHighlightedHex = hexElement;
 
             // Draw truncated path even if move is invalid
@@ -2003,6 +2041,7 @@ function handleDragEnd(e) {
     document.querySelectorAll('.hexagon.valid-move, .hexagon.invalid-move').forEach(hex => {
         hex.classList.remove('valid-move', 'invalid-move');
         hex.style.removeProperty('--player-color');
+        clearHexagonStyle(hex);
     });
     dragState.lastHighlightedHex = null;
 
@@ -2725,8 +2764,13 @@ function processSVG(svgTemplate, playerColor, scale = 1.0) {
 
         // Check style attribute
         const style = element.getAttribute && element.getAttribute('style');
-        if (style && style.includes('#00FF00')) {
-            element.setAttribute('style', style.replace(/#00FF00/g, playerColor));
+        if (style) {
+            // Replace both #00FF00 hex format and rgb(0,255,0) format
+            let newStyle = style.replace(/#00FF00/gi, playerColor);
+            newStyle = newStyle.replace(/rgb\s*\(\s*0\s*,\s*255\s*,\s*0\s*\)/gi, playerColor);
+            if (newStyle !== style) {
+                element.setAttribute('style', newStyle);
+            }
         }
 
         // Recursively process children
