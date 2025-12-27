@@ -1,15 +1,18 @@
 /**
  * Puzzle Curator - Quality Ranking and Curation System
  * Pre-generates puzzles and ranks them by visual/difficulty interest
+ * Separated size (5x5, 10x10, 15x15) from difficulty (Easy, Medium, Hard)
  */
 
 class PuzzleCurator {
-    constructor(difficulty = 'medium') {
-        this.difficulty = difficulty;
-        this.benchPuzzles = [];         // Top 50 puzzles (minus current shown) ready for next evaluation
-        this.seenPatterns = [];         // Track hashes of recently shown puzzles
-        this.maxSeenPatterns = 50;      // Allow repeats after seeing 50 different patterns
-        this.totalGenerations = 0;      // Track total puzzles generated across all rounds
+    constructor(size = 10, difficulty = 'medium') {
+        // Size and difficulty are now independent
+        this.size = size;                   // Grid size: 5, 10, or 15
+        this.difficulty = difficulty;      // Scoring difficulty: 'easy', 'medium', 'hard'
+        this.benchPuzzles = [];             // Top 49 puzzles ready for next evaluation
+        this.seenPatterns = [];             // Track hashes of recently shown puzzles
+        this.maxSeenPatterns = 50;          // Allow repeats after seeing 50 different patterns
+        this.totalGenerations = 0;          // Track total puzzles generated across all rounds
     }
 
     /**
@@ -64,8 +67,6 @@ class PuzzleCurator {
      * Round 2+: Take 49 from bench + Generate 151 new = 200 → Pick top 1 → Save next 49
      */
     getNextPuzzle() {
-        const gridSizes = { easy: 5, medium: 10, hard: 15 };
-        const size = gridSizes[this.difficulty];
         const candidates = [];
 
         // Determine how many new puzzles to generate
@@ -87,7 +88,7 @@ class PuzzleCurator {
         // Generate new puzzles
         for (let i = 0; i < newCount; i++) {
             try {
-                const generator = new PuzzleGenerator(size, this.difficulty);
+                const generator = new PuzzleGenerator(this.size, this.difficulty);
                 const puzzle = generator.generate();
 
                 if (puzzle && puzzle.solution) {
@@ -165,14 +166,34 @@ class PuzzleCurator {
     }
 
     /**
-     * Score iteration count (3-5 iterations is ideal)
+     * Score iteration count - difficulty-aware
+     * Easy: Reward fewer iterations (simpler)
+     * Medium: Balance
+     * Hard: Reward more iterations (complex)
      */
     scoreIterations(iterations) {
-        if (iterations < 2) return 0.3;      // Too trivial
-        if (iterations <= 3) return 1.0;     // Optimal
-        if (iterations <= 5) return 0.9;     // Still good
-        if (iterations <= 10) return 0.6;    // Getting harder
-        return 0.3;                           // Very hard
+        if (this.difficulty === 'easy') {
+            // Easy: Prefer simple puzzles (1-3 iterations)
+            if (iterations < 2) return 1.0;      // Perfect - very simple
+            if (iterations <= 3) return 0.9;     // Good - simple
+            if (iterations <= 5) return 0.7;     // Moderate
+            if (iterations <= 8) return 0.4;     // Getting hard
+            return 0.2;                           // Too hard for easy
+        } else if (this.difficulty === 'hard') {
+            // Hard: Prefer complex puzzles (4+ iterations)
+            if (iterations < 2) return 0.2;      // Too trivial
+            if (iterations <= 3) return 0.5;     // Simple
+            if (iterations <= 5) return 0.8;     // Good
+            if (iterations <= 8) return 1.0;     // Ideal - complex
+            return 0.9;                           // Still good - very complex
+        } else {
+            // Medium: Balance - 3-5 iterations ideal
+            if (iterations < 2) return 0.3;      // Too trivial
+            if (iterations <= 3) return 1.0;     // Optimal
+            if (iterations <= 5) return 0.9;     // Still good
+            if (iterations <= 10) return 0.6;    // Getting harder
+            return 0.3;                           // Very hard
+        }
     }
 
     /**
@@ -210,19 +231,35 @@ class PuzzleCurator {
 
     /**
      * Score split clue density (lines with 2+ runs are harder)
-     * This captures constraint complexity that uniqueness of run lengths misses
+     * Difficulty-aware: Easy prefers few splits, Hard prefers many
      */
     scoreSplitClues(clues) {
         const allClues = [...clues.rows, ...clues.cols];
         const multiClueLines = allClues.filter(c => c.length > 1).length;
         const ratio = multiClueLines / allClues.length;
 
-        // More split clues = more constraint interdependency
-        if (ratio < 0.05) return 0.2;   // Almost no splits (too simple)
-        if (ratio < 0.15) return 0.5;   // Very few splits
-        if (ratio < 0.30) return 0.7;   // Some splits
-        if (ratio < 0.50) return 1.0;   // Good split density (ideal)
-        return 0.9;                      // Very high (complex but not overdone)
+        if (this.difficulty === 'easy') {
+            // Easy: Prefer few split clues (simpler)
+            if (ratio < 0.05) return 1.0;   // Perfect - almost no splits
+            if (ratio < 0.15) return 0.9;   // Good - very few splits
+            if (ratio < 0.30) return 0.7;   // Acceptable - some splits
+            if (ratio < 0.50) return 0.4;   // Not ideal - many splits
+            return 0.2;                      // Too complex for easy
+        } else if (this.difficulty === 'hard') {
+            // Hard: Prefer many split clues (complex)
+            if (ratio < 0.05) return 0.1;   // Too simple - almost no splits
+            if (ratio < 0.15) return 0.3;   // Not enough splits
+            if (ratio < 0.30) return 0.6;   // Some splits
+            if (ratio < 0.50) return 1.0;   // Good - good split density (ideal)
+            return 0.95;                     // Excellent - very complex
+        } else {
+            // Medium: Balance - moderate split density ideal
+            if (ratio < 0.05) return 0.2;   // Almost no splits (too simple)
+            if (ratio < 0.15) return 0.5;   // Very few splits
+            if (ratio < 0.30) return 0.7;   // Some splits
+            if (ratio < 0.50) return 1.0;   // Good split density (ideal)
+            return 0.9;                      // Very high (complex but ok)
+        }
     }
 
     /**
@@ -292,6 +329,7 @@ class PuzzleCurator {
      */
     getStats() {
         return {
+            size: this.size,
             difficulty: this.difficulty,
             benchSize: this.benchPuzzles.length,
             totalGenerated: this.totalGenerations,

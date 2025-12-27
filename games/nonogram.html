@@ -133,13 +133,33 @@
             min-height: 24px;
         }
 
+        .selector-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .selector-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .size-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
         .difficulty-selector {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .difficulty-btn {
+        .size-btn, .difficulty-btn {
             padding: 8px 12px;
             border: 2px solid #444;
             background: rgba(0, 0, 0, 0.3);
@@ -152,14 +172,29 @@
             white-space: nowrap;
         }
 
-        .difficulty-btn:hover {
+        .size-btn:hover, .difficulty-btn:hover {
             border-color: #2563eb;
             color: #fff;
             background: rgba(37, 99, 235, 0.1);
         }
 
-        .difficulty-btn.active {
+        .size-btn.active, .difficulty-btn.active {
             color: #fff;
+        }
+
+        .size-btn[data-size="5"].active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.3);
+        }
+
+        .size-btn[data-size="10"].active {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.3);
+        }
+
+        .size-btn[data-size="15"].active {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.3);
         }
 
         .difficulty-btn[data-difficulty="easy"].active {
@@ -560,6 +595,15 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-content">
             <div class="sidebar-section">
+                <div class="sidebar-label">Grid Size</div>
+                <div class="size-selector" id="sizeSelector">
+                    <button class="size-btn" data-size="5">Small (5x5)</button>
+                    <button class="size-btn" data-size="10">Medium (10x10)</button>
+                    <button class="size-btn" data-size="15">Large (15x15)</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
                 <div class="sidebar-label">Difficulty</div>
                 <div class="difficulty-selector" id="difficultySelector">
                     <button class="difficulty-btn" data-difficulty="easy">Easy</button>
@@ -655,11 +699,18 @@
                 <h3>Win Condition</h3>
                 <p>Fill all cells correctly according to the clues to complete the puzzle and win!</p>
 
-                <h3>Difficulty Levels</h3>
+                <h3>Grid Sizes</h3>
                 <ul>
-                    <li><strong>Easy:</strong> 5x5 grid - Perfect for beginners</li>
-                    <li><strong>Medium:</strong> 10x10 grid - For intermediate players</li>
-                    <li><strong>Hard:</strong> 15x15 grid - Challenge yourself!</li>
+                    <li><strong>Small:</strong> 5x5 grid - Quick games</li>
+                    <li><strong>Medium:</strong> 10x10 grid - Balanced experience</li>
+                    <li><strong>Large:</strong> 15x15 grid - Epic challenge</li>
+                </ul>
+
+                <h3>Difficulty Settings</h3>
+                <ul>
+                    <li><strong>Easy:</strong> Simple patterns with few constraints</li>
+                    <li><strong>Medium:</strong> Balanced complexity and challenge</li>
+                    <li><strong>Hard:</strong> Complex patterns with many interdependencies</li>
                 </ul>
             </div>
             <div style="margin-top: 20px;">
@@ -673,18 +724,26 @@
         // 1. PUZZLE GENERATION & CONFIGURATION
         // ============================================
 
+        // Grid sizes
         const gridSizes = {
-            easy: 5,
-            medium: 10,
-            hard: 15
+            5: 'small',
+            10: 'medium',
+            15: 'large'
         };
 
-        // Initialize puzzle curators for each difficulty
-        const puzzleCurators = {
-            easy: new PuzzleCurator('easy'),
-            medium: new PuzzleCurator('medium'),
-            hard: new PuzzleCurator('hard')
-        };
+        // Track current selections
+        let selectedSize = 10;      // Default to medium
+        let selectedDifficulty = 'medium';  // Default to medium
+
+        // Initialize puzzle curators for each size/difficulty combination
+        // Format: curators[size][difficulty]
+        const puzzleCurators = {};
+        for (const size of [5, 10, 15]) {
+            puzzleCurators[size] = {};
+            for (const diff of ['easy', 'medium', 'hard']) {
+                puzzleCurators[size][diff] = new PuzzleCurator(size, diff);
+            }
+        }
 
 
         function validateSolution(board, solution) {
@@ -709,14 +768,15 @@
         // ============================================
 
         class GameLogic {
-            constructor(difficulty = 'easy') {
+            constructor(size = 10, difficulty = 'medium') {
+                this.size = size;
                 this.difficulty = difficulty;
 
                 // Get puzzle from curator (intelligently generates 200 or reuses 49+151)
                 let puzzle;
                 try {
-                    const curator = puzzleCurators[difficulty];
-                    console.log(`[GameLogic] Getting puzzle from curator for ${difficulty}...`);
+                    const curator = puzzleCurators[size][difficulty];
+                    console.log(`[GameLogic] Getting puzzle from curator for ${size}x${size} grid, ${difficulty} difficulty...`);
                     puzzle = curator.getNextPuzzle();
 
                     if (!puzzle || !puzzle.solution) {
@@ -726,10 +786,10 @@
                 } catch (error) {
                     console.error('[GameLogic] Puzzle selection failed:', error);
                     // Fallback: create a simple valid puzzle
-                    console.log(`[GameLogic] Using fallback puzzle for ${difficulty}`);
+                    console.log(`[GameLogic] Using fallback puzzle for ${size}x${size}`);
                     puzzle = {
-                        size: gridSizes[difficulty],
-                        solution: this.createFallbackPuzzle(gridSizes[difficulty]),
+                        size: size,
+                        solution: this.createFallbackPuzzle(size),
                         clues: null
                     };
                 }
@@ -1036,6 +1096,7 @@
         const victoryModal = document.getElementById('victoryModal');
         const newGameBtn = document.getElementById('newGameBtn');
         const checkBtn = document.getElementById('checkBtn');
+        const sizeSelector = document.getElementById('sizeSelector');
         const difficultySelector = document.getElementById('difficultySelector');
 
         infoBtn.addEventListener('click', () => {
@@ -1055,14 +1116,21 @@
             }
         });
 
-        function initializeGame(difficulty) {
+        function initializeGame(size = null, difficulty = null) {
             if (timeInterval) clearInterval(timeInterval);
 
-            // Always update active button
-            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+            // Update selected size and difficulty
+            if (size !== null) selectedSize = parseInt(size);
+            if (difficulty !== null) selectedDifficulty = difficulty;
 
-            game = new GameLogic(difficulty);
+            // Update active buttons
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-size="${selectedSize}"]`).classList.add('active');
+
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-difficulty="${selectedDifficulty}"]`).classList.add('active');
+
+            game = new GameLogic(selectedSize, selectedDifficulty);
             const domElements = {
                 gameBoard: document.getElementById('gameBoard'),
                 gameContainer: document.getElementById('gameContainer'),
@@ -1114,15 +1182,22 @@
             }, 1000);
         }
 
+        sizeSelector.addEventListener('click', (e) => {
+            if (e.target.classList.contains('size-btn')) {
+                const size = e.target.dataset.size;
+                initializeGame(size, null);
+            }
+        });
+
         difficultySelector.addEventListener('click', (e) => {
             if (e.target.classList.contains('difficulty-btn')) {
                 const difficulty = e.target.dataset.difficulty;
-                initializeGame(difficulty);
+                initializeGame(null, difficulty);
             }
         });
 
         newGameBtn.addEventListener('click', () => {
-            initializeGame(game.difficulty);
+            initializeGame(selectedSize, selectedDifficulty);
         });
 
         checkBtn.addEventListener('click', () => {
@@ -1138,13 +1213,15 @@
             }
         });
 
-        // Initialize curator benches on game load
-        for (const difficulty of ['easy', 'medium', 'hard']) {
-            puzzleCurators[difficulty].initializePool();
+        // Initialize curator benches on game load (for all size/difficulty combinations)
+        for (const size of [5, 10, 15]) {
+            for (const difficulty of ['easy', 'medium', 'hard']) {
+                puzzleCurators[size][difficulty].initializePool();
+            }
         }
 
-        // Start with easy difficulty
-        initializeGame('easy');
+        // Start with medium size, medium difficulty
+        initializeGame(10, 'medium');
     </script>
 </body>
 </html>
