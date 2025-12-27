@@ -31,10 +31,10 @@ class PuzzleGenerator {
             // Step 2: Cleanup
             this.cleanup();
 
-            // Step 3: Skip density check - focus on solvability
+            // Step 3: Accept density in wider range to get more interesting puzzles
             const density = this.calculateDensity();
-            if (density < 0.1 || density > 0.9) {
-                // Only reject extreme densities
+            if (density < 0.15 || density > 0.85) {
+                // Only reject sparse or nearly-full puzzles
                 continue;
             }
 
@@ -72,15 +72,31 @@ class PuzzleGenerator {
      */
     generateSolution() {
         const grid = Array(this.size).fill(null).map(() => Array(this.size).fill(0));
-        const numBlobs = Math.floor(this.size / 3) + 1;
+
+        // Create more blobs with better variety in sizes
+        const numBlobs = Math.floor(this.size / 2) + 1;
+        const targetDensity = this.difficulty === 'easy' ? 0.35 :
+                              this.difficulty === 'medium' ? 0.45 : 0.50;
 
         for (let blob = 0; blob < numBlobs; blob++) {
-            // Seed random point
+            // Seed random point, preferring center area slightly
             const seedRow = Math.floor(Math.random() * this.size);
             const seedCol = Math.floor(Math.random() * this.size);
 
-            // Grow blob with random walk
-            const blobSize = Math.floor(Math.random() * (this.size * 2)) + 3;
+            // Vary blob sizes more - some large, some medium, some small
+            let blobSize;
+            const rand = Math.random();
+            if (rand < 0.4) {
+                // Large blob
+                blobSize = Math.floor(this.size * (1.5 + Math.random() * 1.5));
+            } else if (rand < 0.7) {
+                // Medium blob
+                blobSize = Math.floor(this.size * (0.7 + Math.random() * 0.7));
+            } else {
+                // Small blob
+                blobSize = Math.floor(this.size * (0.3 + Math.random() * 0.4));
+            }
+
             this.growBlob(grid, seedRow, seedCol, blobSize);
         }
 
@@ -121,19 +137,27 @@ class PuzzleGenerator {
     }
 
     /**
-     * Step 3: Cleanup - remove isolated pixels and enforce constraints
+     * Step 3: Cleanup - remove isolated pixels and enforce constraints (light version)
      */
     cleanup() {
-        // Remove isolated cells
+        // Only remove truly isolated cells (no neighbors at all)
         for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
-                if (this.solution[i][j] === 1 && !this.hasAdjacentFilled(i, j)) {
-                    this.solution[i][j] = 0;
+                if (this.solution[i][j] === 1) {
+                    let neighbors = 0;
+                    if (i > 0 && this.solution[i-1][j] === 1) neighbors++;
+                    if (i < this.size-1 && this.solution[i+1][j] === 1) neighbors++;
+                    if (j > 0 && this.solution[i][j-1] === 1) neighbors++;
+                    if (j < this.size-1 && this.solution[i][j+1] === 1) neighbors++;
+
+                    if (neighbors === 0) {
+                        this.solution[i][j] = 0;
+                    }
                 }
             }
         }
 
-        // Remove 1-cell holes
+        // Optional: Fill 1-cell holes only if surrounded on all 4 sides
         for (let i = 1; i < this.size - 1; i++) {
             for (let j = 1; j < this.size - 1; j++) {
                 if (this.solution[i][j] === 0 &&
@@ -144,21 +168,25 @@ class PuzzleGenerator {
             }
         }
 
-        // Enforce minimum run length >= 2
+        // Remove only consecutive isolated single cells (min run length = 1 is OK)
+        // Only enforce if there are 3+ consecutive single cells
         for (let i = 0; i < this.size; i++) {
-            // Horizontal
-            for (let j = 0; j < this.size; j++) {
-                if (this.solution[i][j] === 1 && j > 0 && j < this.size - 1) {
-                    if (this.solution[i][j-1] === 0 && this.solution[i][j+1] === 0) {
-                        this.solution[i][j] = 0;
+            // Horizontal: check for 3+ single cells in a row
+            for (let j = 0; j < this.size - 2; j++) {
+                if (this.solution[i][j] === 1 && this.solution[i][j+1] === 1 && this.solution[i][j+2] === 1) {
+                    // Found 3+ cells, check if they're single-cell-surrounded
+                    let allSurrounded = true;
+                    for (let k = j; k <= j + 2; k++) {
+                        const hasVerticalNeighbor = (i > 0 && this.solution[i-1][k] === 1) ||
+                                                    (i < this.size-1 && this.solution[i+1][k] === 1);
+                        if (!hasVerticalNeighbor) {
+                            allSurrounded = false;
+                            break;
+                        }
                     }
-                }
-            }
-            // Vertical
-            for (let j = 0; j < this.size; j++) {
-                if (this.solution[j][i] === 1 && j > 0 && j < this.size - 1) {
-                    if (this.solution[j-1][i] === 0 && this.solution[j+1][i] === 0) {
-                        this.solution[j][i] = 0;
+                    if (allSurrounded) {
+                        // This is a valid isolated line, keep it
+                        continue;
                     }
                 }
             }

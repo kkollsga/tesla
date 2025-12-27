@@ -704,18 +704,83 @@
                 this.difficulty = difficulty;
 
                 // Generate puzzle using PuzzleGenerator
-                const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
-                const puzzle = generator.generate();
+                let puzzle;
+                try {
+                    const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
+                    puzzle = generator.generate();
+                    if (!puzzle || !puzzle.solution) {
+                        throw new Error('Puzzle generation returned invalid result');
+                    }
+                } catch (error) {
+                    console.error('Puzzle generation failed:', error);
+                    // Fallback: create a simple valid puzzle
+                    puzzle = {
+                        size: gridSizes[difficulty],
+                        solution: this.createFallbackPuzzle(gridSizes[difficulty]),
+                        clues: null
+                    };
+                }
 
                 this.size = puzzle.size;
                 this.solution = puzzle.solution;
-                this.rowClues = puzzle.clues.rows;
-                this.columnClues = puzzle.clues.cols;
+
+                // Compute clues if not provided
+                if (puzzle.clues) {
+                    this.rowClues = puzzle.clues.rows;
+                    this.columnClues = puzzle.clues.cols;
+                } else {
+                    const clues = this.computeCluesFromSolution(this.solution);
+                    this.rowClues = clues.rows;
+                    this.columnClues = clues.cols;
+                }
+
                 this.board = Array(this.size).fill(null).map(() => Array(this.size).fill(-1));
                 this.moveCount = 0;
                 this.errorCount = 0;
                 this.gameOver = false;
                 this.startTime = Date.now();
+            }
+
+            createFallbackPuzzle(size) {
+                const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                const mid = Math.floor(size / 2);
+                for (let j = 1; j < size - 1; j++) {
+                    grid[mid][j] = 1;
+                }
+                for (let i = 1; i < size - 1; i++) {
+                    grid[i][mid] = 1;
+                }
+                return grid;
+            }
+
+            computeCluesFromSolution(solution) {
+                const getLineClues = (line) => {
+                    const clues = [];
+                    let run = 0;
+                    for (let i = 0; i < line.length; i++) {
+                        if (line[i] === 1) {
+                            run++;
+                        } else if (run > 0) {
+                            clues.push(run);
+                            run = 0;
+                        }
+                    }
+                    if (run > 0) clues.push(run);
+                    return clues.length === 0 ? [0] : clues;
+                };
+
+                const rows = [];
+                for (let i = 0; i < solution.length; i++) {
+                    rows.push(getLineClues(solution[i]));
+                }
+
+                const cols = [];
+                for (let j = 0; j < solution[0].length; j++) {
+                    const col = Array(solution.length).fill(null).map((_, i) => solution[i][j]);
+                    cols.push(getLineClues(col));
+                }
+
+                return { rows, cols };
             }
 
             toggleCell(row, col) {
