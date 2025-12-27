@@ -716,14 +716,17 @@
                 let puzzle;
                 try {
                     const curator = puzzleCurators[difficulty];
+                    console.log(`[GameLogic] Getting puzzle from curator for ${difficulty}...`);
                     puzzle = curator.getNextPuzzle();
 
                     if (!puzzle || !puzzle.solution) {
                         throw new Error('Curator returned invalid puzzle');
                     }
+                    console.log(`[GameLogic] Curator returned puzzle: ${puzzle.size}x${puzzle.size}, solution rows: ${puzzle.solution.length}`);
                 } catch (error) {
-                    console.error('Puzzle selection failed:', error);
+                    console.error('[GameLogic] Puzzle selection failed:', error);
                     // Fallback: create a simple valid puzzle
+                    console.log(`[GameLogic] Using fallback puzzle for ${difficulty}`);
                     puzzle = {
                         size: gridSizes[difficulty],
                         solution: this.createFallbackPuzzle(gridSizes[difficulty]),
@@ -749,6 +752,10 @@
                 this.errorCount = 0;
                 this.gameOver = false;
                 this.startTime = Date.now();
+
+                // Debug logging
+                console.log(`[GameLogic] Initialized: ${this.size}x${this.size} board, ${this.rowClues.length} clues`);
+                console.log(`[GameLogic] Board structure: ${this.board.length} rows, ${this.board[0] ? this.board[0].length : 'undefined'} cols`);
             }
 
             createFallbackPuzzle(size) {
@@ -795,6 +802,17 @@
 
             toggleCell(row, col) {
                 if (this.gameOver) return false;
+
+                // Validate board access
+                if (!this.board || !Array.isArray(this.board)) {
+                    console.error(`[toggleCell] Invalid board state: ${typeof this.board}`);
+                    return false;
+                }
+                if (row >= this.board.length || col >= this.board[0].length) {
+                    console.error(`[toggleCell] Index out of bounds: [${row}][${col}] in ${this.board.length}x${this.board[0]?.length} board`);
+                    return false;
+                }
+
                 const current = this.board[row][col];
                 // Cycle: -1 (unknown) → 1 (filled) → 2 (marked) → -1 (unknown)
                 if (current === -1) {
