@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Nonogram">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="puzzle-generator.js"></script>
+    <script src="puzzle-curator.js"></script>
     <style>
         * {
             margin: 0;
@@ -678,6 +679,28 @@
             hard: 15
         };
 
+        // Initialize puzzle curators for each difficulty
+        const puzzleCurators = {
+            easy: new PuzzleCurator('easy'),
+            medium: new PuzzleCurator('medium'),
+            hard: new PuzzleCurator('hard')
+        };
+
+        // Generate initial puzzle pools (50 best puzzles per difficulty)
+        let poolsReady = false;
+        function initializePuzzlePools() {
+            if (poolsReady) return;
+            try {
+                for (const difficulty of ['easy', 'medium', 'hard']) {
+                    puzzleCurators[difficulty].generatePool(50, 200);
+                }
+                poolsReady = true;
+                console.log('Puzzle pools initialized successfully');
+            } catch (e) {
+                console.error('Failed to initialize pools:', e);
+            }
+        }
+
         function validateSolution(board, solution) {
             for (let i = 0; i < board.length; i++) {
                 for (let j = 0; j < board[i].length; j++) {
@@ -703,16 +726,31 @@
             constructor(difficulty = 'easy') {
                 this.difficulty = difficulty;
 
-                // Generate puzzle using PuzzleGenerator
+                // Get puzzle from curator (uses quality-ranked pool, avoids repeats)
                 let puzzle;
                 try {
-                    const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
-                    puzzle = generator.generate();
-                    if (!puzzle || !puzzle.solution) {
-                        throw new Error('Puzzle generation returned invalid result');
+                    // Ensure pools are initialized
+                    if (!poolsReady) {
+                        initializePuzzlePools();
+                    }
+
+                    // Get puzzle from curated pool
+                    const curator = puzzleCurators[difficulty];
+                    if (curator && curator.puzzlePool.length > 0) {
+                        puzzle = curator.getRandomPuzzle();
+                        if (!puzzle || !puzzle.solution) {
+                            throw new Error('Curator returned invalid puzzle');
+                        }
+                    } else {
+                        // Fallback: generate on-the-fly if pool is empty
+                        const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
+                        puzzle = generator.generate();
+                        if (!puzzle || !puzzle.solution) {
+                            throw new Error('Direct generation failed');
+                        }
                     }
                 } catch (error) {
-                    console.error('Puzzle generation failed:', error);
+                    console.error('Puzzle selection failed:', error);
                     // Fallback: create a simple valid puzzle
                     puzzle = {
                         size: gridSizes[difficulty],
@@ -1109,6 +1147,9 @@
                 }
             }
         });
+
+        // Initialize puzzle pools on game load
+        initializePuzzlePools();
 
         // Start with easy difficulty
         initializeGame('easy');
