@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nonogram</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nonogram">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="puzzle-generator.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            user-drag: none;
+            cursor: default;
+        }
+
+        img, svg {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #1a472a 0%, #0a1f13 100%);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+        }
+
+        body.dragging,
+        body.dragging * {
+            cursor: grabbing !important;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 500;
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .navbar-btn {
+            border: none;
+            background: none;
+            color: #888;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: all;
+            transition: all 0.2s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .navbar-btn:hover {
+            color: #fff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 10px;
+            top: 60px;
+            width: 160px;
+            height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            z-index: 400;
+        }
+
+        .sidebar-content {
+            background: rgba(13, 42, 24, 0.6);
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sidebar-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .sidebar-value {
+            font-size: 24px;
+            color: #2563eb;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .sidebar-status {
+            font-size: 12px;
+            color: #aaa;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            word-wrap: break-word;
+            min-height: 24px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .difficulty-btn {
+            padding: 8px 12px;
+            border: 2px solid #444;
+            background: rgba(0, 0, 0, 0.3);
+            color: #aaa;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            white-space: nowrap;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #2563eb;
+            color: #fff;
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .difficulty-btn.active {
+            color: #fff;
+        }
+
+        .difficulty-btn[data-difficulty="easy"].active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .difficulty-btn[data-difficulty="medium"].active {
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.3);
+        }
+
+        .difficulty-btn[data-difficulty="hard"].active {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .check-btn {
+            padding: 10px 20px;
+            border: 2px solid #2563eb;
+            background: rgba(37, 99, 235, 0.2);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .check-btn:hover {
+            border-color: #2563eb;
+            background: rgba(37, 99, 235, 0.3);
+            transform: scale(1.05);
+        }
+
+        .check-btn:active {
+            transform: scale(0.98);
+        }
+
+        .game-cell.error {
+            background: #f97316 !important;
+            border-color: #ea580c !important;
+            animation: pulse-error 0.3s ease-out;
+        }
+
+        @keyframes pulse-error {
+            0% {
+                box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+            }
+        }
+
+        .game-container {
+            margin-left: 160px;
+            padding: 0;
+            height: 100vh;
+            width: calc(100% - 160px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-board-wrapper {
+            display: flex;
+            gap: 2px;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 0;
+            margin: 10px;
+        }
+
+        .clues-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .clue-row {
+            height: var(--cell-size);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 6px;
+            font-size: clamp(7px, 1.2vmin, 11px);
+            color: #aaa;
+            font-weight: 500;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+            min-width: 45px;
+        }
+
+        .clues-row {
+            display: flex;
+            gap: 1px;
+            justify-content: flex-start;
+        }
+
+        .clue-cell {
+            width: var(--cell-size);
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(7px, 1.2vmin, 10px);
+            color: #aaa;
+            font-weight: 500;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .game-board {
+            display: grid;
+            gap: 1px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+            border: 2px solid #333;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .game-cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background: #2a2a2a;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .game-cell:hover {
+            background: #3a3a3a;
+            border-color: #555;
+        }
+
+        .game-cell.filled {
+            background: #2563eb;
+            border-color: #1e40af;
+        }
+
+        .game-cell.marked {
+            background: #2a2a2a;
+            position: relative;
+        }
+
+        .game-cell.marked::after {
+            content: '✕';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: clamp(8px, 1.5vmin, 12px);
+            font-weight: bold;
+        }
+
+        .victory-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            padding: 20px;
+            animation: fadeInVictory 0.3s ease;
+        }
+
+        @keyframes fadeInVictory {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .victory-modal.active {
+            display: flex;
+        }
+
+        .victory-panel {
+            background: linear-gradient(135deg, #1a472a 0%, #0a3a1f 100%);
+            border: 3px solid #FFD700;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            color: white;
+            animation: victoryPulse 0.5s ease;
+        }
+
+        @keyframes victoryPulse {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .victory-title {
+            font-size: 72px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            color: #FFD700;
+            text-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                4px 4px 8px rgba(0, 0, 0, 0.8);
+            animation: victoryGlow 2s ease-in-out infinite alternate;
+            letter-spacing: 2px;
+        }
+
+        @keyframes victoryGlow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+            to {
+                text-shadow:
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 60px rgba(255, 215, 0, 0.8),
+                    0 0 90px rgba(255, 215, 0, 0.6),
+                    4px 4px 8px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .victory-text {
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .victory-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .victory-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .victory-btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            background: rgba(255, 215, 0, 0.1);
+            color: #FFD700;
+        }
+
+        .victory-btn-primary {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            border-color: #FFD700;
+            text-shadow: none;
+        }
+
+        .victory-btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+        }
+
+        .victory-btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .info-modal.active {
+            display: flex;
+        }
+
+        .info-panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-text h3 {
+            color: #fff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .modal-text ul {
+            list-style-position: inside;
+            margin-left: 20px;
+        }
+
+        .modal-text li {
+            margin-bottom: 8px;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <button class="navbar-btn" id="infoBtn" title="Game Info">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+        <div class="navbar-right">
+            <a href="https://kkollsga.github.io/tesla" class="navbar-btn" title="Exit">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Difficulty</div>
+                <div class="difficulty-selector" id="difficultySelector">
+                    <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+                    <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                    <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Checks</div>
+                <div class="sidebar-value" id="checksDisplay">0</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Time</div>
+                <div class="sidebar-value" id="timeDisplay">0s</div>
+            </div>
+
+            <div class="sidebar-section">
+                <button class="check-btn" id="checkBtn">Check</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Status</div>
+                <div class="sidebar-status" id="statusDisplay">New Game</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container" id="gameContainer">
+        <div class="game-board-wrapper" id="gameWrapper" style="display: none;">
+            <div>
+                <div style="height: 20px;"></div>
+                <div class="clues-column" id="leftClues"></div>
+            </div>
+            <div>
+                <div class="clues-row" id="topClues"></div>
+                <div class="game-board" id="gameBoard"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="victory-modal" id="victoryModal">
+        <div class="victory-panel">
+            <div class="victory-title">VICTORY!</div>
+            <div class="victory-text">You've solved the puzzle! 🎉</div>
+            <div class="victory-stats">
+                <div class="stat">
+                    <div class="stat-value" id="finalTime">0s</div>
+                    <div class="stat-label">Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="finalMoves">0</div>
+                    <div class="stat-label">Moves</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="finalChecks">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="finalDifficulty">Easy</div>
+                    <div class="stat-label">Level</div>
+                </div>
+            </div>
+            <div class="victory-buttons">
+                <button class="victory-btn victory-btn-primary" id="newGameBtn">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-modal" id="infoModal">
+        <div class="info-panel">
+            <div class="modal-title">How to Play Nonogram</div>
+            <div class="modal-text">
+                <h3>Objective</h3>
+                <p>Solve the logic puzzle by filling in the correct cells to reveal the hidden picture.</p>
+
+                <h3>Rules</h3>
+                <ul>
+                    <li><strong>Read the Clues:</strong> Numbers indicate consecutive filled cells in each row and column</li>
+                    <li><strong>Solve Logically:</strong> Use the clues to deduce which cells must be filled or empty</li>
+                    <li><strong>Complete the Grid:</strong> Fill all required cells to complete the puzzle</li>
+                </ul>
+
+                <h3>Controls</h3>
+                <ul>
+                    <li><strong>Click:</strong> Toggle between empty, filled, and marked states</li>
+                    <li><strong>Filled (Blue):</strong> Cells you think are part of the picture</li>
+                    <li><strong>Marked (✕):</strong> Cells you think are empty</li>
+                    <li><strong>Empty (Gray):</strong> Unknown cells</li>
+                </ul>
+
+                <h3>Win Condition</h3>
+                <p>Fill all cells correctly according to the clues to complete the puzzle and win!</p>
+
+                <h3>Difficulty Levels</h3>
+                <ul>
+                    <li><strong>Easy:</strong> 5x5 grid - Perfect for beginners</li>
+                    <li><strong>Medium:</strong> 10x10 grid - For intermediate players</li>
+                    <li><strong>Hard:</strong> 15x15 grid - Challenge yourself!</li>
+                </ul>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="modal-btn" id="closeInfoBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 1. PUZZLE GENERATION & CONFIGURATION
+        // ============================================
+
+        const gridSizes = {
+            easy: 5,
+            medium: 10,
+            hard: 15
+        };
+
+        function validateSolution(board, solution) {
+            for (let i = 0; i < board.length; i++) {
+                for (let j = 0; j < board[i].length; j++) {
+                    const cell = board[i][j];
+                    const solutionCell = solution[i][j];
+
+                    // If solution is 1 (filled), board must be 1 (filled)
+                    if (solutionCell === 1 && cell !== 1) return false;
+
+                    // If solution is 0 (empty), board must NOT be 1 (filled)
+                    // Cell can be: -1 (unmarked), 0 (empty), or 2 (marked with X)
+                    if (solutionCell === 0 && cell === 1) return false;
+                }
+            }
+            return true;
+        }
+
+        // ============================================
+        // 3. GAME LOGIC CLASS
+        // ============================================
+
+        class GameLogic {
+            constructor(difficulty = 'easy') {
+                this.difficulty = difficulty;
+
+                // Generate puzzle using PuzzleGenerator
+                const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
+                const puzzle = generator.generate();
+
+                this.size = puzzle.size;
+                this.solution = puzzle.solution;
+                this.rowClues = puzzle.clues.rows;
+                this.columnClues = puzzle.clues.cols;
+                this.board = Array(this.size).fill(null).map(() => Array(this.size).fill(-1));
+                this.moveCount = 0;
+                this.errorCount = 0;
+                this.gameOver = false;
+                this.startTime = Date.now();
+            }
+
+            toggleCell(row, col) {
+                if (this.gameOver) return false;
+                const current = this.board[row][col];
+                // Cycle: -1 (unknown) → 1 (filled) → 2 (marked) → -1 (unknown)
+                if (current === -1) {
+                    this.board[row][col] = 1;
+                } else if (current === 1) {
+                    this.board[row][col] = 2;
+                } else {
+                    this.board[row][col] = -1;
+                }
+                this.moveCount++;
+                if (this.checkVictory()) {
+                    this.gameOver = true;
+                }
+                return true;
+            }
+
+            checkVictory() {
+                return validateSolution(this.board, this.solution);
+            }
+
+            checkErrors() {
+                const errors = [];
+                for (let i = 0; i < this.board.length; i++) {
+                    for (let j = 0; j < this.board[i].length; j++) {
+                        const cell = this.board[i][j];
+                        const solutionCell = this.solution[i][j];
+
+                        // Error 1: Cell is filled (1) but should be empty (0)
+                        if (cell === 1 && solutionCell === 0) {
+                            errors.push({ row: i, col: j });
+                        }
+                        // Error 2: Cell is marked (2) but should be filled (1)
+                        else if (cell === 2 && solutionCell === 1) {
+                            errors.push({ row: i, col: j });
+                        }
+                    }
+                }
+                // Increment error count (cumulative)
+                this.errorCount += errors.length;
+                return errors;
+            }
+
+            getElapsedTime() {
+                return Math.floor((Date.now() - this.startTime) / 1000);
+            }
+
+            reset() {
+                this.board = Array(this.size).fill(null).map(() => Array(this.size).fill(-1));
+                this.moveCount = 0;
+                this.errorCount = 0;
+                this.gameOver = false;
+                this.startTime = Date.now();
+            }
+        }
+
+        // ============================================
+        // 4. RENDERING CLASS
+        // ============================================
+
+        class GameRenderer {
+            constructor(gameLogic, domElements) {
+                this.logic = gameLogic;
+                this.dom = domElements;
+                this.cellElements = [];
+            }
+
+            createBoard() {
+                const gameBoard = this.dom.gameBoard;
+                gameBoard.innerHTML = '';
+                gameBoard.style.gridTemplateColumns = `repeat(${this.logic.size}, var(--cell-size))`;
+                gameBoard.style.gridTemplateRows = `repeat(${this.logic.size}, var(--cell-size))`;
+                this.cellElements = [];
+
+                for (let i = 0; i < this.logic.size; i++) {
+                    const row = [];
+                    for (let j = 0; j < this.logic.size; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'game-cell';
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        gameBoard.appendChild(cell);
+                        row.push(cell);
+                    }
+                    this.cellElements.push(row);
+                }
+            }
+
+            createClues() {
+                const topClues = this.dom.topClues;
+                const leftClues = this.dom.leftClues;
+                topClues.innerHTML = '';
+                leftClues.innerHTML = '';
+
+                for (let col = 0; col < this.logic.size; col++) {
+                    const clueCell = document.createElement('div');
+                    clueCell.className = 'clue-cell';
+                    clueCell.textContent = this.logic.columnClues[col].join(' ');
+                    topClues.appendChild(clueCell);
+                }
+
+                for (let row = 0; row < this.logic.size; row++) {
+                    const clueRow = document.createElement('div');
+                    clueRow.className = 'clue-row';
+                    clueRow.textContent = this.logic.rowClues[row].join(' ');
+                    leftClues.appendChild(clueRow);
+                }
+            }
+
+            updateCell(row, col) {
+                const cell = this.cellElements[row][col];
+                const state = this.logic.board[row][col];
+                cell.classList.remove('filled', 'marked');
+                if (state === 1) {
+                    cell.classList.add('filled');
+                } else if (state === 2) {
+                    cell.classList.add('marked');
+                }
+            }
+
+            render() {
+                for (let i = 0; i < this.logic.size; i++) {
+                    for (let j = 0; j < this.logic.size; j++) {
+                        this.updateCell(i, j);
+                    }
+                }
+            }
+
+            updateStatus(text) {
+                this.dom.statusDisplay.textContent = text;
+            }
+
+            updateTime() {
+                this.dom.timeDisplay.textContent = `${this.logic.getElapsedTime()}s`;
+            }
+
+            showErrors(errors) {
+                // Add error class to all error cells
+                errors.forEach(({ row, col }) => {
+                    this.cellElements[row][col].classList.add('error');
+                });
+
+                // Remove error class after 3 seconds
+                setTimeout(() => {
+                    errors.forEach(({ row, col }) => {
+                        this.cellElements[row][col].classList.remove('error');
+                    });
+                }, 3000);
+            }
+
+            updateChecksDisplay(checks) {
+                this.dom.checksDisplay.textContent = checks;
+            }
+        }
+
+        // ============================================
+        // 5. INPUT HANDLER CLASS
+        // ============================================
+
+        class InputHandler {
+            constructor(gameLogic, renderer, domElements) {
+                this.logic = gameLogic;
+                this.renderer = renderer;
+                this.dom = domElements;
+                this.attachListeners();
+            }
+
+            attachListeners() {
+                this.dom.gameBoard.addEventListener('click', (e) => {
+                    const cell = e.target.closest('.game-cell');
+                    if (cell) {
+                        const row = parseInt(cell.dataset.row);
+                        const col = parseInt(cell.dataset.col);
+                        this.handleCellClick(row, col);
+                    }
+                });
+
+                document.addEventListener('touchstart', (e) => {
+                    const cell = e.target.closest('.game-cell');
+                    if (cell) {
+                        const row = parseInt(cell.dataset.row);
+                        const col = parseInt(cell.dataset.col);
+                        this.handleCellClick(row, col);
+                    }
+                }, { passive: true });
+            }
+
+            handleCellClick(row, col) {
+                if (this.logic.toggleCell(row, col)) {
+                    this.renderer.updateCell(row, col);
+                    this.renderer.updateStatus(`Moves: ${this.logic.moveCount}`);
+                    if (this.logic.gameOver) {
+                        this.showVictory();
+                    }
+                }
+            }
+
+            showVictory() {
+                const victoryModal = this.dom.victoryModal;
+                document.getElementById('finalTime').textContent = `${this.logic.getElapsedTime()}s`;
+                document.getElementById('finalMoves').textContent = this.logic.moveCount;
+                document.getElementById('finalChecks').textContent = this.logic.errorCount;
+                const diffNames = { easy: 'Easy (5x5)', medium: 'Medium (10x10)', hard: 'Hard (15x15)' };
+                document.getElementById('finalDifficulty').textContent = diffNames[this.logic.difficulty];
+                victoryModal.classList.add('active');
+            }
+        }
+
+        // ============================================
+        // 6. INITIALIZATION
+        // ============================================
+
+        let game = null;
+        let renderer = null;
+        let input = null;
+        let timeInterval = null;
+
+        const infoBtn = document.getElementById('infoBtn');
+        const infoModal = document.getElementById('infoModal');
+        const closeInfoBtn = document.getElementById('closeInfoBtn');
+        const gameWrapper = document.getElementById('gameWrapper');
+        const victoryModal = document.getElementById('victoryModal');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const difficultySelector = document.getElementById('difficultySelector');
+
+        infoBtn.addEventListener('click', () => {
+            infoModal.classList.add('active');
+        });
+
+        closeInfoBtn.addEventListener('click', () => {
+            infoModal.classList.remove('active');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && infoModal.classList.contains('active')) {
+                infoModal.classList.remove('active');
+            }
+            if (e.key === 'Escape' && victoryModal.classList.contains('active')) {
+                victoryModal.classList.remove('active');
+            }
+        });
+
+        function initializeGame(difficulty) {
+            if (timeInterval) clearInterval(timeInterval);
+
+            // Always update active button
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+
+            game = new GameLogic(difficulty);
+            const domElements = {
+                gameBoard: document.getElementById('gameBoard'),
+                gameContainer: document.getElementById('gameContainer'),
+                topClues: document.getElementById('topClues'),
+                leftClues: document.getElementById('leftClues'),
+                timeDisplay: document.getElementById('timeDisplay'),
+                statusDisplay: document.getElementById('statusDisplay'),
+                checksDisplay: document.getElementById('checksDisplay'),
+                victoryModal: document.getElementById('victoryModal')
+            };
+
+            // Calculate cell size with zoom levels for different board sizes
+            // Smaller boards get higher zoom (easy: 2x, medium: 1.5x, hard: 1x)
+            // Max zoom is 2x the hard board's cell size
+            const hardSize = 15; // Hard board is 15x15
+            const zoom = Math.min(2, hardSize / game.size);
+
+            const availableHeight = window.innerHeight - 100; // Navbar + padding
+            const availableWidth = window.innerWidth - 160 - 60 - 20; // Sidebar + clues + padding
+
+            // Calculate cell size for the hard board (baseline at 1x zoom)
+            const hardCellSize = Math.min(
+                Math.floor(availableHeight / hardSize),
+                Math.floor(availableWidth / hardSize)
+            );
+
+            // Apply zoom with max limit of 2x the hard board's cell size
+            const maxCellSize = 2 * hardCellSize;
+            const cellSize = Math.max(15, Math.min(
+                Math.floor(hardCellSize * zoom),
+                maxCellSize
+            ));
+            document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+
+            renderer = new GameRenderer(game, domElements);
+            renderer.createBoard();
+            renderer.createClues();
+            renderer.render();
+            renderer.updateStatus('Ready!');
+            renderer.updateChecksDisplay(0);
+
+            input = new InputHandler(game, renderer, domElements);
+
+            gameWrapper.style.display = 'flex';
+            victoryModal.classList.remove('active');
+
+            timeInterval = setInterval(() => {
+                renderer.updateTime();
+            }, 1000);
+        }
+
+        difficultySelector.addEventListener('click', (e) => {
+            if (e.target.classList.contains('difficulty-btn')) {
+                const difficulty = e.target.dataset.difficulty;
+                initializeGame(difficulty);
+            }
+        });
+
+        newGameBtn.addEventListener('click', () => {
+            initializeGame(game.difficulty);
+        });
+
+        checkBtn.addEventListener('click', () => {
+            if (game && renderer) {
+                const errors = game.checkErrors();
+                if (errors.length > 0) {
+                    renderer.showErrors(errors);
+                    renderer.updateChecksDisplay(game.errorCount);
+                    renderer.updateStatus(`${errors.length} error${errors.length !== 1 ? 's' : ''} found!`);
+                } else {
+                    renderer.updateStatus('No errors! Keep filling cells.');
+                }
+            }
+        });
+
+        // Start with easy difficulty
+        initializeGame('easy');
+    </script>
+</body>
+</html>
