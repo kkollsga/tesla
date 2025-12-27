@@ -6,9 +6,10 @@
 class PuzzleCurator {
     constructor(difficulty = 'medium') {
         this.difficulty = difficulty;
-        this.puzzlePool = [];
-        this.seenPatterns = [];  // Track hashes of recently shown puzzles
-        this.maxSeenPatterns = 50; // Allow repeats after seeing 50 different patterns
+        this.benchPuzzles = [];         // Top 50 puzzles (minus current shown) ready for next evaluation
+        this.seenPatterns = [];         // Track hashes of recently shown puzzles
+        this.maxSeenPatterns = 50;      // Allow repeats after seeing 50 different patterns
+        this.totalGenerations = 0;      // Track total puzzles generated across all rounds
     }
 
     /**
@@ -58,28 +59,40 @@ class PuzzleCurator {
     }
 
     /**
-     * Generate and curate a pool of puzzles (synchronous)
+     * Get the next best puzzle, intelligently reusing previous bench
+     * Round 1: Generate 200 → Pick top 1 → Save next 49 in bench
+     * Round 2+: Take 49 from bench + Generate 151 new = 200 → Pick top 1 → Save next 49
      */
-    generatePool(targetCount = 50, batchSize = 200) {
-        console.log(`Generating puzzle pool for ${this.difficulty}... (${batchSize} candidates, keeping ${targetCount})`);
-
+    getNextPuzzle() {
         const gridSizes = { easy: 5, medium: 10, hard: 15 };
         const size = gridSizes[this.difficulty];
         const candidates = [];
 
-        // Generate batch of puzzles
-        for (let i = 0; i < batchSize; i++) {
+        // Determine how many new puzzles to generate
+        let newCount;
+        if (this.benchPuzzles.length === 0) {
+            // First round: generate 200
+            newCount = 200;
+            console.log(`[${this.difficulty}] Round 1: Generating 200 new puzzles...`);
+        } else {
+            // Subsequent rounds: take 49 from bench + generate 151 new = 200
+            for (const puzzle of this.benchPuzzles) {
+                const score = this.scorePuzzle(puzzle);
+                candidates.push({ puzzle, score });
+            }
+            newCount = 151;
+            console.log(`[${this.difficulty}] Round ${Math.ceil(this.totalGenerations / 200) + 1}: Reconsidering 49 bench puzzles + generating 151 new...`);
+        }
+
+        // Generate new puzzles
+        for (let i = 0; i < newCount; i++) {
             try {
                 const generator = new PuzzleGenerator(size, this.difficulty);
                 const puzzle = generator.generate();
 
                 if (puzzle && puzzle.solution) {
-                    // Score the puzzle
                     const score = this.scorePuzzle(puzzle);
-                    candidates.push({
-                        puzzle,
-                        score
-                    });
+                    candidates.push({ puzzle, score });
                 }
             } catch (e) {
                 // Skip failed generations
@@ -89,11 +102,35 @@ class PuzzleCurator {
         // Sort by score (highest first)
         candidates.sort((a, b) => b.score - a.score);
 
-        // Keep top puzzles
-        this.puzzlePool = candidates.slice(0, targetCount).map(c => c.puzzle);
-        console.log(`Pool created: ${this.puzzlePool.length} quality puzzles`);
+        if (candidates.length === 0) {
+            throw new Error(`Failed to generate any valid puzzles for ${this.difficulty}`);
+        }
 
-        return this.puzzlePool;
+        // Get the best puzzle to show to user
+        const topPuzzle = candidates[0].puzzle;
+        this.markPatternSeen(topPuzzle);
+
+        // Save the next 49 best puzzles for next round's evaluation
+        this.benchPuzzles = candidates.slice(1, 50).map(c => c.puzzle);
+
+        // Track total generations
+        this.totalGenerations += newCount;
+
+        console.log(`  Selected best puzzle (score: ${candidates[0].score.toFixed(2)}), bench refilled with 49 puzzles`);
+
+        return topPuzzle;
+    }
+
+    /**
+     * Pre-generate initial puzzle pool (call once at startup)
+     */
+    initializePool() {
+        try {
+            this.getNextPuzzle(); // This populates benchPuzzles with 49 puzzles
+            console.log(`[${this.difficulty}] Pool initialized, bench ready for next round`);
+        } catch (e) {
+            console.error(`Failed to initialize pool: ${e.message}`);
+        }
     }
 
     /**
@@ -230,56 +267,15 @@ class PuzzleCurator {
     }
 
     /**
-     * Get random puzzle from pool
+     * Get curator statistics
      */
-    getRandomPuzzle() {
-        if (this.puzzlePool.length === 0) {
-            throw new Error('Puzzle pool is empty. Run generatePool() first.');
-        }
-
-        // Try to find an unseen puzzle (up to 10 attempts)
-        for (let attempts = 0; attempts < 10; attempts++) {
-            const index = Math.floor(Math.random() * this.puzzlePool.length);
-            const puzzle = this.puzzlePool[index];
-
-            if (!this.hasSeenPattern(puzzle)) {
-                this.markPatternSeen(puzzle);
-                return puzzle;
-            }
-        }
-
-        // If all attempts found seen patterns, just return a random one anyway
-        // (but only after we've cycled through our history limit)
-        const index = Math.floor(Math.random() * this.puzzlePool.length);
-        const puzzle = this.puzzlePool[index];
-        this.markPatternSeen(puzzle);
-        return puzzle;
-    }
-
-    /**
-     * Get puzzle statistics
-     */
-    getPoolStats() {
-        if (this.puzzlePool.length === 0) {
-            return { count: 0 };
-        }
-
-        const iterations = [];
-        const densities = [];
-
-        for (const puzzle of this.puzzlePool) {
-            if (puzzle.metrics) {
-                iterations.push(puzzle.metrics.iterations);
-            }
-            densities.push(this.calculateDensity(puzzle.solution));
-        }
-
+    getStats() {
         return {
-            count: this.puzzlePool.length,
-            avgIterations: (iterations.reduce((a, b) => a + b, 0) / iterations.length).toFixed(1),
-            avgDensity: (densities.reduce((a, b) => a + b, 0) / densities.length).toFixed(2),
-            minDensity: Math.min(...densities).toFixed(2),
-            maxDensity: Math.max(...densities).toFixed(2)
+            difficulty: this.difficulty,
+            benchSize: this.benchPuzzles.length,
+            totalGenerated: this.totalGenerations,
+            seenPatterns: this.seenPatterns.length,
+            maxSeenPatterns: this.maxSeenPatterns
         };
     }
 }

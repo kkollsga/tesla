@@ -686,20 +686,6 @@
             hard: new PuzzleCurator('hard')
         };
 
-        // Generate initial puzzle pools (50 best puzzles per difficulty)
-        let poolsReady = false;
-        function initializePuzzlePools() {
-            if (poolsReady) return;
-            try {
-                for (const difficulty of ['easy', 'medium', 'hard']) {
-                    puzzleCurators[difficulty].generatePool(50, 200);
-                }
-                poolsReady = true;
-                console.log('Puzzle pools initialized successfully');
-            } catch (e) {
-                console.error('Failed to initialize pools:', e);
-            }
-        }
 
         function validateSolution(board, solution) {
             for (let i = 0; i < board.length; i++) {
@@ -726,28 +712,14 @@
             constructor(difficulty = 'easy') {
                 this.difficulty = difficulty;
 
-                // Get puzzle from curator (uses quality-ranked pool, avoids repeats)
+                // Get puzzle from curator (intelligently generates 200 or reuses 49+151)
                 let puzzle;
                 try {
-                    // Ensure pools are initialized
-                    if (!poolsReady) {
-                        initializePuzzlePools();
-                    }
-
-                    // Get puzzle from curated pool
                     const curator = puzzleCurators[difficulty];
-                    if (curator && curator.puzzlePool.length > 0) {
-                        puzzle = curator.getRandomPuzzle();
-                        if (!puzzle || !puzzle.solution) {
-                            throw new Error('Curator returned invalid puzzle');
-                        }
-                    } else {
-                        // Fallback: generate on-the-fly if pool is empty
-                        const generator = new PuzzleGenerator(gridSizes[difficulty], difficulty);
-                        puzzle = generator.generate();
-                        if (!puzzle || !puzzle.solution) {
-                            throw new Error('Direct generation failed');
-                        }
+                    puzzle = curator.getNextPuzzle();
+
+                    if (!puzzle || !puzzle.solution) {
+                        throw new Error('Curator returned invalid puzzle');
                     }
                 } catch (error) {
                     console.error('Puzzle selection failed:', error);
@@ -1148,8 +1120,10 @@
             }
         });
 
-        // Initialize puzzle pools on game load
-        initializePuzzlePools();
+        // Initialize curator benches on game load
+        for (const difficulty of ['easy', 'medium', 'hard']) {
+            puzzleCurators[difficulty].initializePool();
+        }
 
         // Start with easy difficulty
         initializeGame('easy');
