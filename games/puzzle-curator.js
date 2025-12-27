@@ -134,7 +134,7 @@ class PuzzleCurator {
     }
 
     /**
-     * Score a puzzle based on multiple quality metrics
+     * Score a puzzle based on multiple quality metrics (5 factors)
      */
     scorePuzzle(puzzle) {
         let score = 0;
@@ -144,18 +144,22 @@ class PuzzleCurator {
         const iterationScore = this.scoreIterations(iterations);
         score += iterationScore * 0.25;
 
-        // Factor 2: Pattern complexity (clue diversity)
+        // Factor 2: Pattern complexity (clue diversity - unique run lengths)
         const complexityScore = this.scoreComplexity(puzzle.clues);
-        score += complexityScore * 0.25;
+        score += complexityScore * 0.20;
 
         // Factor 3: Visual entropy (how "non-uniform" the pattern is)
         const entropyScore = this.scoreEntropy(puzzle.solution);
-        score += entropyScore * 0.25;
+        score += entropyScore * 0.20;
 
         // Factor 4: Fill density preference (0.35-0.55 is ideal)
         const density = this.calculateDensity(puzzle.solution);
         const densityScore = this.scoreDensity(density);
-        score += densityScore * 0.25;
+        score += densityScore * 0.20;
+
+        // Factor 5: Split clue density (lines with multiple runs are harder)
+        const splitScore = this.scoreSplitClues(puzzle.clues);
+        score += splitScore * 0.15;
 
         return score;
     }
@@ -202,6 +206,23 @@ class PuzzleCurator {
         if (multiRunRatio > 0.2) complexity += 0.3;  // Few complex lines
 
         return Math.min(complexity, 1.0);
+    }
+
+    /**
+     * Score split clue density (lines with 2+ runs are harder)
+     * This captures constraint complexity that uniqueness of run lengths misses
+     */
+    scoreSplitClues(clues) {
+        const allClues = [...clues.rows, ...clues.cols];
+        const multiClueLines = allClues.filter(c => c.length > 1).length;
+        const ratio = multiClueLines / allClues.length;
+
+        // More split clues = more constraint interdependency
+        if (ratio < 0.05) return 0.2;   // Almost no splits (too simple)
+        if (ratio < 0.15) return 0.5;   // Very few splits
+        if (ratio < 0.30) return 0.7;   // Some splits
+        if (ratio < 0.50) return 1.0;   // Good split density (ideal)
+        return 0.9;                      // Very high (complex but not overdone)
     }
 
     /**
