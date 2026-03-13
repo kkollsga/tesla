@@ -1,38 +1,76 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <!-- Abdomen (bright green) - long thin segment -->
-    <ellipse cx="50" cy="65" rx="6" ry="24" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <!-- 2 FRONT legs pointing FORWARD — sharp V-bend at knee -->
+    <!-- Front left: out to knee, then sharp angle forward-down -->
+    <path d="M42 32 L18 24" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M18 24 L6 4" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Front right -->
+    <path d="M58 32 L82 24" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M82 24 L94 4" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
 
-    <!-- Thorax (bright green) - small -->
-    <ellipse cx="50" cy="38" rx="8" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <!-- 4 REAR legs pointing BACKWARD — sharp V-bend at knee -->
+    <!-- Mid-rear left: out sideways to high knee, then drops back-down -->
+    <path d="M42 40 L14 38" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M14 38 L2 68" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Mid-rear right -->
+    <path d="M58 40 L86 38" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M86 38 L98 68" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Rear left: out-back to knee, then drops sharply down -->
+    <path d="M44 46 L16 54" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M16 54 L4 90" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Rear right -->
+    <path d="M56 46 L84 54" fill="none" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M84 54 L96 90" fill="none" stroke="#000" stroke-width="0.8" stroke-linecap="round"/>
 
-    <!-- Head (bright green) - small -->
-    <circle cx="50" cy="20" r="7" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <!-- Wings: long narrow, extending backward -->
+    <!-- Left wing -->
+    <path d="M44 34 Q30 36 16 50 Q8 62 10 76 Q14 78 20 70 Q30 52 42 42 Z" fill="white" stroke="#000" stroke-width="1.1" opacity="0.82"/>
+    <path d="M42 38 Q28 46 14 64" fill="none" stroke="#000" stroke-width="0.5" opacity="0.3"/>
+    <path d="M42 40 Q32 48 22 62" fill="none" stroke="#000" stroke-width="0.4" opacity="0.22"/>
+    <path d="M40 42 Q34 50 28 60" fill="none" stroke="#000" stroke-width="0.3" opacity="0.18"/>
+    <!-- Right wing -->
+    <path d="M56 34 Q70 36 84 50 Q92 62 90 76 Q86 78 80 70 Q70 52 58 42 Z" fill="white" stroke="#000" stroke-width="1.1" opacity="0.82"/>
+    <path d="M58 38 Q72 46 86 64" fill="none" stroke="#000" stroke-width="0.5" opacity="0.3"/>
+    <path d="M58 40 Q68 48 78 62" fill="none" stroke="#000" stroke-width="0.4" opacity="0.22"/>
+    <path d="M60 42 Q66 50 72 60" fill="none" stroke="#000" stroke-width="0.3" opacity="0.18"/>
 
-    <!-- 2 large wings in V-shape extending back from head (white with black outline) -->
-    <ellipse cx="25" cy="50" rx="12" ry="35" fill="white" stroke="#000" stroke-width="1.5" opacity="0.9" transform="rotate(-10 25 50)"/>
-    <ellipse cx="75" cy="50" rx="12" ry="35" fill="white" stroke="#000" stroke-width="1.5" opacity="0.9" transform="rotate(10 75 50)"/>
+    <!-- Tapered abdomen -->
+    <path d="M44 48 Q43 72 50 90 Q57 72 56 48 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <path d="M44 56 Q50 54 56 56" fill="none" stroke="#000" stroke-width="0.5" opacity="0.3"/>
+    <path d="M44 64 Q50 62 56 64" fill="none" stroke="#000" stroke-width="0.5" opacity="0.3"/>
+    <path d="M45 72 Q50 70 55 72" fill="none" stroke="#000" stroke-width="0.5" opacity="0.3"/>
+    <path d="M46 80 Q50 78 54 80" fill="none" stroke="#000" stroke-width="0.4" opacity="0.25"/>
+    <ellipse cx="48" cy="58" rx="3" ry="10" fill="white" opacity="0.1"/>
 
-    <!-- Wing veins (black lines inside wings) -->
-    <line x1="25" y1="20" x2="25" y2="75" stroke="#000" stroke-width="0.5" opacity="0.4"/>
-    <line x1="75" y1="20" x2="75" y2="75" stroke="#000" stroke-width="0.5" opacity="0.4"/>
+    <!-- Thorax -->
+    <ellipse cx="50" cy="38" rx="9" ry="11" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <ellipse cx="48" cy="35" rx="4" ry="5" fill="white" opacity="0.1"/>
 
-    <!-- 6 thin long legs (black) -->
-    <!-- Front pair -->
-    <line x1="50" y1="35" x2="24" y2="55" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <line x1="50" y1="35" x2="76" y2="55" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <!-- Middle pair -->
-    <line x1="50" y1="40" x2="24" y2="60" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <line x1="50" y1="40" x2="76" y2="60" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <!-- Back pair -->
-    <line x1="50" y1="45" x2="24" y2="65" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <line x1="50" y1="45" x2="76" y2="65" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <!-- Head -->
+    <circle cx="50" cy="22" r="8" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
 
-    <!-- Proboscis (long needle-like mouthpart) -->
-    <line x1="50" y1="13" x2="50" y2="0" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- PROBOSCIS — single long blood-sucking beak pointing forward -->
+    <path d="M50 14 L50 0" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
 
-    <!-- Eyes (black) -->
-    <circle cx="47" cy="19" r="2" fill="#000"/>
-    <circle cx="53" cy="19" r="2" fill="#000"/>
+    <!-- 2 Antennae pointing forward from head -->
+    <path d="M44 18 L32 6 L26 2" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M56 18 L68 6 L74 2" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Antenna fuzz -->
+    <line x1="34" y1="8" x2="30" y2="6" stroke="#000" stroke-width="0.5" opacity="0.5"/>
+    <line x1="36" y1="10" x2="32" y2="8" stroke="#000" stroke-width="0.5" opacity="0.5"/>
+    <line x1="66" y1="8" x2="70" y2="6" stroke="#000" stroke-width="0.5" opacity="0.5"/>
+    <line x1="64" y1="10" x2="68" y2="8" stroke="#000" stroke-width="0.5" opacity="0.5"/>
+
+    <!-- Eyes -->
+    <circle cx="45" cy="21" r="3" fill="#000"/>
+    <circle cx="55" cy="21" r="3" fill="#000"/>
+    <circle cx="45.5" cy="20.5" r="1" fill="white" opacity="0.7"/>
+    <circle cx="55.5" cy="20.5" r="1" fill="white" opacity="0.7"/>
+
+    <!-- Halteres -->
+    <line x1="44" y1="44" x2="40" y2="46" stroke="#000" stroke-width="0.6"/>
+    <circle cx="40" cy="46" r="1.2" fill="#000"/>
+    <line x1="56" y1="44" x2="60" y2="46" stroke="#000" stroke-width="0.6"/>
+    <circle cx="60" cy="46" r="1.2" fill="#000"/>
   </g>
 </svg>

@@ -1,43 +1,67 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <!-- Abdomen (bright green) - long and segmented looking -->
-    <ellipse cx="50" cy="68" rx="16" ry="20" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Front legs (thin, BLACK - drawn first, behind) -->
+    <path d="M40 38 L30 40 L24 48" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 38 L70 40 L76 48" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Thorax (bright green) - where legs attach -->
-    <ellipse cx="50" cy="45" rx="16" ry="18" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Middle legs (thin, BLACK - behind) -->
+    <path d="M38 48 L26 52 L20 62" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M62 48 L74 52 L80 62" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- 2 Powerful hind legs (bright green - special for grasshopper!) -->
-    <!-- Left hind leg - thick femur, thin tibia -->
-    <path d="M 38 50 Q 20 56 15 70" fill="none" stroke="#00FF00" stroke-width="6" stroke-linecap="round"/>
-    <path d="M 15 70 Q 8 80 5 92" fill="none" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 2 Powerful hind legs (colored - thick femur UP to knee, thin tibia DOWN, on top) -->
+    <!-- Left hind leg femur -->
+    <path d="M36 52 Q18 40 12 30" fill="none" stroke="#00FF00" stroke-width="5.5" stroke-linecap="round"/>
+    <circle cx="12" cy="30" r="2.5" fill="#00FF00" stroke="#000" stroke-width="0.8"/>
+    <!-- Left tibia (colored) -->
+    <path d="M12 30 Q4 50 2 68" fill="none" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Tibia spines -->
+    <line x1="8" y1="42" x2="5" y2="40" stroke="#00FF00" stroke-width="1"/>
+    <line x1="6" y1="52" x2="3" y2="50" stroke="#00FF00" stroke-width="1"/>
+    <line x1="4" y1="62" x2="1" y2="60" stroke="#00FF00" stroke-width="1"/>
+    <path d="M2 68 L0 72" fill="none" stroke="#00FF00" stroke-width="1.2" stroke-linecap="round"/>
 
-    <!-- Right hind leg - thick femur, thin tibia -->
-    <path d="M 62 50 Q 80 56 85 70" fill="none" stroke="#00FF00" stroke-width="6" stroke-linecap="round"/>
-    <path d="M 85 70 Q 92 80 95 92" fill="none" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Right hind leg femur -->
+    <path d="M64 52 Q82 40 88 30" fill="none" stroke="#00FF00" stroke-width="5.5" stroke-linecap="round"/>
+    <circle cx="88" cy="30" r="2.5" fill="#00FF00" stroke="#000" stroke-width="0.8"/>
+    <!-- Right tibia (colored) -->
+    <path d="M88 30 Q96 50 98 68" fill="none" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="92" y1="42" x2="95" y2="40" stroke="#00FF00" stroke-width="1"/>
+    <line x1="94" y1="52" x2="97" y2="50" stroke="#00FF00" stroke-width="1"/>
+    <line x1="96" y1="62" x2="99" y2="60" stroke="#00FF00" stroke-width="1"/>
+    <path d="M98 68 L100 72" fill="none" stroke="#00FF00" stroke-width="1.2" stroke-linecap="round"/>
 
-    <!-- Middle 2 legs (bright green, anchored at front) -->
-    <line x1="38" y1="45" x2="26" y2="55" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="26" y1="55" x2="20" y2="68" stroke="#00FF00" stroke-width="2" stroke-linecap="round"/>
-    <line x1="62" y1="45" x2="74" y2="55" stroke="#00FF00" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="74" y1="55" x2="80" y2="68" stroke="#00FF00" stroke-width="2" stroke-linecap="round"/>
+    <!-- Abdomen - tapered -->
+    <path d="M36 56 Q34 72 38 84 Q50 92 62 84 Q66 72 64 56 Z" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
+    <path d="M37 62 Q50 59 63 62" fill="none" stroke="#000" stroke-width="0.6" opacity="0.25"/>
+    <path d="M38 70 Q50 67 62 70" fill="none" stroke="#000" stroke-width="0.6" opacity="0.25"/>
+    <path d="M40 78 Q50 75 60 78" fill="none" stroke="#000" stroke-width="0.6" opacity="0.25"/>
+    <ellipse cx="46" cy="66" rx="5" ry="10" fill="white" opacity="0.1"/>
 
-    <!-- Front 2 legs (bright green, anchored at front) -->
-    <line x1="40" y1="38" x2="32" y2="45" stroke="#00FF00" stroke-width="2" stroke-linecap="round"/>
-    <line x1="32" y1="45" x2="26" y2="54" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="60" y1="38" x2="68" y2="45" stroke="#00FF00" stroke-width="2" stroke-linecap="round"/>
-    <line x1="68" y1="45" x2="74" y2="54" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Folded tegmina along back -->
+    <path d="M48 40 Q46 56 47 76 Q48 78 50 78 Q52 78 53 76 Q54 56 52 40 Z" fill="rgba(255,255,255,0.2)" stroke="#000" stroke-width="0.5" opacity="0.4"/>
+    <line x1="50" y1="42" x2="50" y2="76" stroke="#000" stroke-width="0.3" opacity="0.2"/>
 
-    <!-- Head (bright green) - elongated -->
-    <ellipse cx="50" cy="22" rx="11" ry="13" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Thorax / pronotum (saddle-shaped) -->
+    <path d="M34 34 Q34 42 36 52 Q50 56 64 52 Q66 42 66 34 Q50 30 34 34 Z" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
+    <path d="M38 36 Q50 33 62 36" fill="none" stroke="#000" stroke-width="0.8" opacity="0.3"/>
+    <line x1="50" y1="32" x2="50" y2="54" stroke="#000" stroke-width="0.5" opacity="0.2"/>
+    <ellipse cx="46" cy="40" rx="5" ry="6" fill="white" opacity="0.1"/>
 
-    <!-- Antennae (thin, bright green) -->
-    <path d="M 44 15 Q 38 8 35 2" fill="none" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M 56 15 Q 62 8 65 2" fill="none" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Head (wedge-shaped) -->
+    <path d="M38 22 Q38 32 42 34 Q50 36 58 34 Q62 32 62 22 Q50 14 38 22 Z" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
+    <ellipse cx="47" cy="24" rx="4" ry="4" fill="white" opacity="0.1"/>
 
-    <!-- Large compound eyes (black) -->
-    <circle cx="44" cy="20" r="4" fill="#000"/>
-    <circle cx="45" cy="19" r="1.5" fill="rgba(255,255,255,0.7)"/>
-    <circle cx="56" cy="20" r="4" fill="#000"/>
-    <circle cx="57" cy="19" r="1.5" fill="rgba(255,255,255,0.7)"/>
+    <!-- Large compound eyes (bulging) -->
+    <ellipse cx="38" cy="24" rx="5" ry="4" fill="#000"/>
+    <ellipse cx="39" cy="23" rx="2" ry="1.5" fill="rgba(255,255,255,0.6)"/>
+    <ellipse cx="62" cy="24" rx="5" ry="4" fill="#000"/>
+    <ellipse cx="63" cy="23" rx="2" ry="1.5" fill="rgba(255,255,255,0.6)"/>
+
+    <!-- Antennae (colored) -->
+    <path d="M44 18 Q36 10 30 4" fill="none" stroke="#00FF00" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M56 18 Q64 10 70 4" fill="none" stroke="#00FF00" stroke-width="1.8" stroke-linecap="round"/>
+
+    <!-- Mouthparts -->
+    <path d="M46 34 Q48 37 50 36 Q52 37 54 34" fill="none" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
   </g>
 </svg>

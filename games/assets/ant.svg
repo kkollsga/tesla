@@ -1,24 +1,53 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <!-- Black legs - draw first -->
-    <line x1="50" y1="35" x2="20" y2="45" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="50" x2="20" y2="60" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="65" x2="20" y2="75" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="35" x2="80" y2="45" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="50" x2="80" y2="60" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="65" x2="80" y2="75" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <!-- Jointed legs - 3 pairs from thorax -->
+    <!-- Front left leg -->
+    <path d="M40 38 L30 32 L20 38" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Front right leg -->
+    <path d="M60 38 L70 32 L80 38" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Middle left leg -->
+    <path d="M38 44 L24 46 L16 56" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Middle right leg -->
+    <path d="M62 44 L76 46 L84 56" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Rear left leg -->
+    <path d="M40 50 L28 56 L20 68" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Rear right leg -->
+    <path d="M60 50 L72 56 L80 68" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Abdomen (bright green) -->
-    <circle cx="50" cy="75" r="14" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Gaster/abdomen (large, round) -->
+    <ellipse cx="50" cy="74" rx="16" ry="16" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Gaster 3D highlight -->
+    <ellipse cx="46" cy="69" rx="8" ry="8" fill="white" opacity="0.12"/>
+    <!-- Gaster segment lines -->
+    <path d="M36 70 Q50 67 64 70" fill="none" stroke="#000" stroke-width="0.6" opacity="0.3"/>
+    <path d="M38 76 Q50 73 62 76" fill="none" stroke="#000" stroke-width="0.6" opacity="0.3"/>
 
-    <!-- Thorax (bright green) -->
-    <circle cx="50" cy="50" r="18" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Petiole (narrow waist - defining ant feature!) -->
+    <ellipse cx="50" cy="56" rx="4" ry="3.5" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
 
-    <!-- Head (bright green) -->
-    <circle cx="50" cy="25" r="15" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Thorax -->
+    <ellipse cx="50" cy="42" rx="12" ry="14" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Thorax 3D highlight -->
+    <ellipse cx="47" cy="38" rx="5" ry="7" fill="white" opacity="0.1"/>
 
-    <!-- Antennae (black) -->
-    <line x1="42" y1="15" x2="30" y2="5" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="58" y1="15" x2="70" y2="5" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <!-- Head (wider than tall) -->
+    <ellipse cx="50" cy="22" rx="14" ry="11" fill="#00FF00" stroke="#000" stroke-width="2"/>
+    <!-- Head 3D highlight -->
+    <ellipse cx="47" cy="19" rx="6" ry="5" fill="white" opacity="0.1"/>
+
+    <!-- Mandibles (curved pincers below head) -->
+    <path d="M42 30 Q38 36 41 38" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <path d="M58 30 Q62 36 59 38" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Elbowed antennae (L-shaped, anatomically correct for ants) -->
+    <path d="M40 16 L34 8 Q28 4 24 6" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 16 L66 8 Q72 4 76 6" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Eyes -->
+    <circle cx="42" cy="20" r="3" fill="#000"/>
+    <circle cx="58" cy="20" r="3" fill="#000"/>
+    <!-- Eye highlights -->
+    <circle cx="43" cy="19" r="1" fill="white"/>
+    <circle cx="59" cy="19" r="1" fill="white"/>
   </g>
 </svg>

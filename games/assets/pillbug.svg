@@ -1,30 +1,64 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <!-- Black legs - draw first -->
-    <line x1="50" y1="40" x2="28" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="50" x2="28" y2="58" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="60" x2="28" y2="68" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="70" x2="28" y2="78" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="40" x2="72" y2="48" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="50" x2="72" y2="58" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="60" x2="72" y2="68" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-    <line x1="50" y1="70" x2="72" y2="78" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <!-- A few legs peeking out -->
+    <path d="M22 42 Q16 44 12 48" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M78 42 Q84 44 88 48" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M22 56 Q16 58 12 62" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M78 56 Q84 58 88 62" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
 
-    <!-- Segmented body (bright green) - pillbugs have armored segments -->
-    <ellipse cx="50" cy="70" rx="28" ry="12" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <ellipse cx="50" cy="58" rx="30" ry="12" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <ellipse cx="50" cy="46" rx="28" ry="11" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <ellipse cx="50" cy="35" rx="24" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <!-- Pill-shaped body: consistent width, rounded ends -->
+    <!-- All segments are ~same width (x=22 to x=78) -->
 
-    <!-- Head (bright green) -->
-    <ellipse cx="50" cy="22" rx="16" ry="10" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <!-- Pleon (rounded tail cap) -->
+    <path d="M22 74 L78 74 Q78 86 50 90 Q22 86 22 74 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <path d="M26 74 L74 74" fill="none" stroke="white" stroke-width="0.8" opacity="0.2"/>
 
-    <!-- Antennae (black) -->
-    <line x1="42" y1="18" x2="32" y2="10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="58" y1="18" x2="68" y2="10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Pereonite 7 -->
+    <path d="M22 68 L78 68 L78 74 L22 74 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
 
-    <!-- Eyes (black) -->
-    <circle cx="44" cy="20" r="1.5" fill="#000"/>
-    <circle cx="56" cy="20" r="1.5" fill="#000"/>
+    <!-- Pereonite 6 -->
+    <path d="M22 62 L78 62 L78 68 L22 68 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Pereonite 5 -->
+    <path d="M22 56 L78 56 L78 62 L22 62 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <line x1="26" y1="56" x2="74" y2="56" stroke="white" stroke-width="0.8" opacity="0.2"/>
+
+    <!-- Pereonite 4 -->
+    <path d="M22 50 L78 50 L78 56 L22 56 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <line x1="26" y1="50" x2="74" y2="50" stroke="white" stroke-width="0.8" opacity="0.22"/>
+
+    <!-- Pereonite 3 -->
+    <path d="M22 44 L78 44 L78 50 L22 50 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <line x1="26" y1="44" x2="74" y2="44" stroke="white" stroke-width="0.8" opacity="0.22"/>
+
+    <!-- Pereonite 2 -->
+    <path d="M22 38 L78 38 L78 44 L22 44 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Pereonite 1 -->
+    <path d="M22 32 L78 32 L78 38 L22 38 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
+    <line x1="26" y1="32" x2="74" y2="32" stroke="white" stroke-width="0.8" opacity="0.2"/>
+
+    <!-- Cephalon (rounded head cap, same width) -->
+    <path d="M22 32 Q22 16 50 10 Q78 16 78 32 Z" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
+    <ellipse cx="46" cy="22" rx="8" ry="4" fill="white" opacity="0.12"/>
+
+    <!-- 3D highlight along left side -->
+    <path d="M24 32 L24 74" stroke="white" stroke-width="1.5" opacity="0.08"/>
+
+    <!-- Antennae -->
+    <path d="M40 18 Q34 10 28 6" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="28" cy="6" r="1.3" fill="#000"/>
+    <path d="M60 18 Q66 10 72 6" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="72" cy="6" r="1.3" fill="#000"/>
+
+    <!-- Eyes (on sides of head) -->
+    <circle cx="28" cy="26" r="2" fill="#000"/>
+    <circle cx="72" cy="26" r="2" fill="#000"/>
+    <circle cx="29" cy="25" r="0.7" fill="white"/>
+    <circle cx="73" cy="25" r="0.7" fill="white"/>
+
+    <!-- Uropods -->
+    <path d="M44 90 Q42 94 40 98" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+    <path d="M56 90 Q58 94 60 98" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
   </g>
 </svg>
