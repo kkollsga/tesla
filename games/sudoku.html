@@ -38,7 +38,10 @@
             justify-content: center;
             padding: 20px;
             gap: 30px;
-            padding-top: 80px;
+            /* The navbar is position:fixed (an overlay) so it costs zero layout
+               height; this only reserves enough to clear its 60px band so the
+               board never slides under the info/exit buttons. */
+            padding-top: 60px;
         }
 
         .header {
@@ -55,7 +58,7 @@
             align-items: center;
             gap: 20px;
             padding: 20px;
-            height: calc(100vh - 80px);
+            height: 100%;
         }
 
         .sidebar > div:first-child {
@@ -294,8 +297,13 @@
             background: #333;
             border-radius: 8px;
             border: 4px solid #333;
-            width: min(80vw, 80vh);
-            height: min(80vw, 80vh);
+            /* Fill the height the wrapper actually leaves (after the stats row)
+               and derive width from the 1:1 ratio, rather than an 80vh cap. */
+            flex: 1;
+            min-height: 0;
+            width: auto;
+            height: auto;
+            max-height: 100cqw;
             aspect-ratio: 1;
         }
 
@@ -519,6 +527,15 @@
             align-items: center;
             gap: 20px;
             position: relative;
+            /* Own the height and the leftover width so .game-board can size
+               itself against both without overflowing onto the sidebar. */
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            min-height: 0;
+            /* Lets .game-board clamp its height against this wrapper's width
+               (100cqw) so the square shrinks instead of squashing. */
+            container-type: size;
         }
 
         .stats {
