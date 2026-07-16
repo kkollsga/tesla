@@ -69,4 +69,18 @@ coverage/
 *.swo
 *.bak
 *.backup
-game-design.md
+
+# Local dev working folder — see dev-docs/README.md for the canonical layout.
+# Durable: `plans/` (actionable plans/backlog), `designs/` (design reference +
+# the game authoring standard), `checks/scripts/` + `checks/results/`,
+# `todos.md`. Auto-purged by the dev-docs-cleanup skill: `temp/` (>1d, offload
+# large output here to dodge the token gate), `checks/out/` (>14d, generated
+# puzzle dumps), `bin/` (>7d, soft-deleted). Local working state, never
+# committed. (game-design.md lives at dev-docs/designs/game-design.md — it was
+# ignored by name here until 2026-07-16.)
+/dev-docs/
+
+# Inbox of feedback/coordination notes (`unread/` = needs action, `read/` =
+# archive). Local working state, never committed — see the "Inbox hygiene"
+# section in CLAUDE.md.
+/inbox/
