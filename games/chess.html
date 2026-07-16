@@ -92,6 +92,12 @@
             position: relative;
             z-index: 2;
             transform-origin: top left;
+            /* Flex item of <body>: min-width:auto would floor this at its
+               min-content width (panels + board + gaps) and overflow the
+               viewport. min-width:0 lifts that floor so max-width can bite,
+               which in turn forces .game-header to shrink the board to fit. */
+            min-width: 0;
+            max-width: 100vw;
         }
 
         .game-container {
@@ -230,10 +236,22 @@
             box-shadow:
                 inset 0 4px 12px rgba(0,0,0,0.5),
                 0 8px 24px rgba(0,0,0,0.3);
+            /* Board is square, so this 90deg rotation only re-orients the
+               cells (players sit left/right of the screen); it changes no
+               layout or painted box size. Pieces counter-rotate by -90deg. */
             transform: rotate(90deg);
+            /* Upper bound only. This is the flex base size; .game-header then
+               shrinks it down to whatever the panels leave over, so the board
+               derives its size from real leftover space rather than from a
+               hardcoded panel width. */
             width: min(90vw, 90vh);
-            height: min(90vw, 90vh);
+            /* height MUST stay auto: with both width and height set,
+               aspect-ratio is ignored and a shrunk board renders as a
+               non-square rectangle. auto lets aspect-ratio keep it square. */
+            height: auto;
             aspect-ratio: 1;
+            /* Allow shrinking below min-content. */
+            min-width: 0;
         }
 
         .grid-cell {
