@@ -217,6 +217,77 @@
             margin-bottom: 20px;
         }
 
+        /* Settings modal — reuses .modal-overlay/.modal-content/.modal-header
+           /.close-modal unchanged; only the rows below are new. */
+        .settings-hint {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin: -20px 0 24px;
+        }
+
+        .service-toggle {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #222;
+            background: #111;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .service-toggle:hover { border-color: #444; }
+
+        .service-toggle img,
+        .service-toggle svg {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .service-toggle-name {
+            color: #fff;
+            font-size: 16px;
+            flex: 1;
+            text-align: left;
+        }
+
+        .service-toggle .check {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #444;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .service-toggle.on .check {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .service-toggle.on .check::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid #0a0a0a;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .service-toggle.off { opacity: 0.45; }
+
+        .settings-list {
+            max-height: 55vh;
+            overflow-y: auto;
+        }
+
         .game-option {
             display: flex;
             flex-direction: column;
@@ -414,43 +485,43 @@
 
         <div class="grid">
             <!-- Row 1 -->
-            <a href="https://www.netflix.com" class="service-link netflix" data-url="https://www.netflix.com">
+            <a href="https://www.netflix.com" class="service-link netflix" data-service="netflix" data-url="https://www.netflix.com">
                 <img src="icons/netflix.svg" class="icon" alt="Netflix">
                 <div class="service-name">Netflix</div>
             </a>
-            <a href="https://app.plex.tv" class="service-link plex" data-url="https://app.plex.tv">
+            <a href="https://app.plex.tv" class="service-link plex" data-service="plex" data-url="https://app.plex.tv">
                 <img src="icons/plex.svg" class="icon" alt="Plex">
                 <div class="service-name">Plex</div>
             </a>
-            <a href="https://www.youtube.com" class="service-link youtube" data-url="https://www.youtube.com">
+            <a href="https://www.youtube.com" class="service-link youtube" data-service="youtube" data-url="https://www.youtube.com">
                 <img src="icons/youtube.svg" class="icon" alt="YouTube">
                 <div class="service-name">YouTube</div>
             </a>
 
             <!-- Row 2 -->
-            <a href="https://www.tv2.no" class="service-link tv2" data-url="https://www.tv2.no">
+            <a href="https://www.tv2.no" class="service-link tv2" data-service="tv2" data-url="https://www.tv2.no">
                 <img src="icons/tv2.svg" class="icon" alt="TV2">
                 <div class="service-name">TV2</div>
             </a>
-            <a href="https://tv.nrk.no" class="service-link nrk" data-url="https://tv.nrk.no">
+            <a href="https://tv.nrk.no" class="service-link nrk" data-service="nrk" data-url="https://tv.nrk.no">
                 <img src="icons/nrk.svg" class="icon" alt="NRK">
                 <div class="service-name">NRK</div>
             </a>
-            <a href="https://viaplay.no" class="service-link viaplay" data-url="https://viaplay.no">
+            <a href="https://viaplay.no" class="service-link viaplay" data-service="viaplay" data-url="https://viaplay.no">
                 <img src="icons/viaplay.svg" class="icon" alt="Viaplay">
                 <div class="service-name">Viaplay</div>
             </a>
 
             <!-- Row 3 -->
-            <a href="https://www.hbomax.com" class="service-link hbo" data-url="https://www.hbomax.com">
+            <a href="https://www.hbomax.com" class="service-link hbo" data-service="hbo" data-url="https://www.hbomax.com">
                 <img src="icons/hbomax.svg" class="icon" alt="HBO Max">
                 <div class="service-name">HBO Max</div>
             </a>
-            <a href="https://tv.apple.com" class="service-link apple" data-url="https://tv.apple.com">
+            <a href="https://tv.apple.com" class="service-link apple" data-service="apple" data-url="https://tv.apple.com">
                 <img src="icons/appletvplus.svg" class="icon" alt="Apple TV">
                 <div class="service-name">Apple TV</div>
             </a>
-            <a href="https://globoplay.globo.com" class="service-link globo" data-url="https://globoplay.globo.com">
+            <a href="https://globoplay.globo.com" class="service-link globo" data-service="globo" data-url="https://globoplay.globo.com">
                 <img src="icons/globo.svg" class="icon" alt="Globo">
                 <div class="service-name">Globo</div>
             </a>
@@ -723,6 +794,17 @@
                     <div class="game-name">Nonogram</div>
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Settings modal. Rows are generated from the grid tiles themselves, so
+         there is no second list of services to keep in sync. -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-settings">&times;</button>
+            <div class="modal-header">Settings</div>
+            <div class="settings-hint">Choose which services appear on the main screen</div>
+            <div class="settings-list" id="settings-list"></div>
         </div>
     </div>
 
@@ -1058,9 +1140,123 @@
             });
         });
 
-        // Initialize favorite game on load
+        // Service visibility
+        //
+        // Mirrors the favoriteGame triad above: read-with-default → write-through
+        // → one idempotent re-render, called on write and on load.
+        //
+        // Unlike favoriteGame this value is a list, so it needs JSON. A corrupt
+        // or hand-edited value must degrade to "show everything" rather than
+        // throw — an exception here would take the whole launcher down, and a
+        // launcher that won't render is a much worse failure than a forgotten
+        // preference.
+        const SERVICE_IDS = Array.from(
+            document.querySelectorAll('.service-link[data-service]')
+        ).map(el => el.getAttribute('data-service'));
+
+        // Store the HIDDEN list, not the visible one. Storing "visible" cannot
+        // distinguish a service the user switched off from one that did not
+        // exist when they saved — so defaulting new services to visible would
+        // also resurrect every deselected one. With the complement, both cases
+        // fall out for free: absent from the list == visible.
+        function getHiddenServices() {
+            let stored;
+            try {
+                stored = JSON.parse(localStorage.getItem('hiddenServices'));
+            } catch (e) {
+                stored = null;
+            }
+            if (!Array.isArray(stored)) {
+                return [];
+            }
+            // Drop ids that no longer exist, so old storage can't pin a ghost.
+            return stored.filter(id => SERVICE_IDS.includes(id));
+        }
+
+        function setHiddenServices(ids) {
+            localStorage.setItem('hiddenServices', JSON.stringify(ids));
+            updateServiceVisibility();
+        }
+
+        function toggleService(id) {
+            const hidden = getHiddenServices();
+            const next = hidden.includes(id)
+                ? hidden.filter(s => s !== id)
+                : hidden.concat([id]);
+            setHiddenServices(next);
+        }
+
+        function updateServiceVisibility() {
+            const hidden = getHiddenServices();
+
+            document.querySelectorAll('.service-link[data-service]').forEach(tile => {
+                const id = tile.getAttribute('data-service');
+                tile.style.display = hidden.includes(id) ? 'none' : '';
+            });
+
+            document.querySelectorAll('.service-toggle').forEach(row => {
+                const on = !hidden.includes(row.getAttribute('data-service'));
+                row.classList.toggle('on', on);
+                row.classList.toggle('off', !on);
+            });
+        }
+
+        // Build the settings rows from the tiles — one source of truth.
+        function buildSettingsList() {
+            const list = document.getElementById('settings-list');
+            document.querySelectorAll('.service-link[data-service]').forEach(tile => {
+                const id = tile.getAttribute('data-service');
+                const nameEl = tile.querySelector('.service-name');
+                const iconEl = tile.querySelector('.icon');
+
+                const row = document.createElement('div');
+                row.className = 'service-toggle';
+                row.setAttribute('data-service', id);
+                row.innerHTML =
+                    (iconEl ? iconEl.outerHTML : '') +
+                    '<div class="service-toggle-name">' +
+                    (nameEl ? nameEl.textContent : id) +
+                    '</div><div class="check"></div>';
+                row.addEventListener('click', () => toggleService(id));
+                list.appendChild(row);
+            });
+        }
+
+        // Settings modal
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsButton = document.getElementById('settings-button');
+        const closeSettings = document.getElementById('close-settings');
+
+        settingsButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            settingsModal.classList.add('active');
+        });
+
+        closeSettings.addEventListener('click', function() {
+            settingsModal.classList.remove('active');
+        });
+
+        settingsModal.addEventListener('click', function(e) {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('active');
+            }
+        });
+
+        // Escape closes whichever modal is open. The games modal never had this.
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        // Initialize favorite game + service visibility on load
         window.addEventListener('load', () => {
             updateFavoriteDisplay();
+            buildSettingsList();
+            updateServiceVisibility();
         });
     </script>
 </body>
