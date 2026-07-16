@@ -36,24 +36,11 @@ function initGame() {
 
     // Event listeners (only add once using named functions)
     const newGameBtn = document.getElementById('new-game');
-    const infoBtn = document.getElementById('infoBtn');
-    const infoModal = document.getElementById('infoModal');
 
     // Remove old listeners and add new ones to avoid duplicates
     if (newGameBtn) {
         newGameBtn.removeEventListener('click', initGame);
         newGameBtn.addEventListener('click', initGame);
-    }
-
-    if (infoBtn) {
-        infoBtn.removeEventListener('click', showInfo);
-        infoBtn.addEventListener('click', showInfo);
-    }
-
-    const closeInfoBtn = document.getElementById('closeInfoBtn');
-    if (closeInfoBtn) {
-        closeInfoBtn.removeEventListener('click', hideInfo);
-        closeInfoBtn.addEventListener('click', hideInfo);
     }
 
     // Victory overlay click to restart
@@ -62,21 +49,15 @@ function initGame() {
         victoryOverlay.addEventListener('click', initGame);
     }
 
-    // Prevent info panel clicks from closing the overlay
-    const infoPanel = document.querySelector('.info-panel');
-    if (infoPanel) {
-        infoPanel.removeEventListener('click', stopPropagation);
-        infoPanel.addEventListener('click', stopPropagation);
-    }
+    // The info modal (open / close / backdrop click / Escape) is wired once by
+    // game-shell.js against the static #infoBtn / #infoModal / #closeInfoBtn
+    // markup. initGame never rebuilds those nodes — only #grid-container's
+    // children — so the shell's one-shot wiring survives every New Game.
 }
 
 // Helper functions for event listeners
 function handleBack() {
     window.location.href = 'index.html';
-}
-
-function stopPropagation(e) {
-    e.stopPropagation();
 }
 
 // Setup initial board
@@ -684,16 +665,6 @@ function updatePieceCounts() {
 
     document.getElementById('player-1-count').textContent = `${player1Count} pieces`;
     document.getElementById('player-2-count').textContent = `${player2Count} pieces`;
-}
-
-// Show info overlay
-function showInfo() {
-    document.getElementById('infoModal').classList.add('active');
-}
-
-// Hide info overlay
-function hideInfo() {
-    document.getElementById('infoModal').classList.remove('active');
 }
 
 // Initialize on load

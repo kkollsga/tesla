@@ -7,15 +7,29 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above the <style> below — the shell's rules are all
+         single-class, so this game overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <style>
+        /* Backgammon's identity. The shell paints its chrome from these.
+           --accent-fg is #fff: the accent is a mid blue, so the label is
+           light-on-blue rather than chess's dark-on-gold. */
+        :root {
+            --accent-from: #2563eb;
+            --accent-to:   #1d4ed8;
+            --accent-fg:   #fff;
+            --accent-glow: rgba(37, 99, 235, 0.4);
+            --panel-bg: #1a1a1a;
+        }
+
+        /* The rest of this game's reset now comes from game-shell.css. This
+           one declaration does not: the shell deliberately omits it, and this
+           is a touch-first board, so the tap flash must stay suppressed. */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         body {
@@ -30,77 +44,17 @@
         }
 
 
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 500;
-            pointer-events: none;
-        }
-
-        .navbar-left, .navbar-right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .navbar-btn {
-            width: auto;
-            height: auto;
-            border: none;
-            background: none;
-            color: #888;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-style: italic;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            pointer-events: all;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .navbar-btn:hover {
-            color: #fff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
-        }
-
+        /* Un-animated modal variant: the shell's base fades in, this one never
+           has. Both properties are required to keep the current behaviour. */
         .info-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
             padding: 20px;
+            animation: none;
         }
 
-        .info-modal.active {
-            display: flex;
-        }
-
-        .info-panel {
-            background: #1a1a1a;
-            border: 2px solid #333;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            color: white;
-        }
+        /* NOTE: a second, fuller .info-panel rule used to sit further down this
+           stylesheet and completely shadowed the copy that lived here, so this
+           one painted nothing. The single surviving definition (the one that
+           actually won) is now next to the other .info-panel h2/h3/p rules. */
 
         .modal-title {
             font-size: 32px;
@@ -123,28 +77,8 @@
             flex-wrap: wrap;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #fff;
-        }
-
-        .modal-btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-        }
-
+        /* .modal-btn / .modal-btn-primary come from the shell, painted by the
+           :root accent vars above. */
 
         .game-container {
             width: 100%;
@@ -156,30 +90,8 @@
             gap: 20px;
         }
 
-        /* Matches the .game-button idiom in chess/damme/hive/isola/santorini.
-           Duplicated for now; games/game-shell.css will absorb it. */
-        .game-button {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
-            background-size: 200% 200%;
-            border: 2px solid #444;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .game-button:hover {
-            background: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
-        }
-
-        .game-button:active {
-            transform: translateY(1px);
-        }
+        /* .game-button is the shell's DARK shape byte-for-byte — game-shell.css
+           has now absorbed it, as the comment here used to promise. */
 
         /* Player Info Panels */
         .player-panel {
@@ -513,34 +425,17 @@
             box-shadow: 0 8px 30px rgba(196, 92, 38, 0.4);
         }
 
-        /* Info button */
-        
-
-        .info-button:hover {
-            background: rgba(0, 0, 0, 0.9);
-            border-color: #666;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-        }
-
-        /* Info overlay and modal */
-        
-
-        .info-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
+        /* Backgammon's panel keeps its own bordered, un-shadowed, #ddd-on-#1a1a1a
+           shape rather than the shell's 700px/14px/white/shadowed base.
+           box-shadow must be explicitly cleared — the shell's base sets one
+           this game never had. padding/max-height/overflow already match. */
         .info-panel {
-            background: #1a1a1a;
             border: 2px solid #333;
             border-radius: 12px;
-            padding: 40px;
             max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
             color: #ddd;
             position: relative;
+            box-shadow: none;
         }
 
         .info-panel h2 {
@@ -581,54 +476,6 @@
             color: #fff;
         }
 
-        .info-close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #555;
-            color: #aaa;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 24px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .info-close-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-        }
-
-        /* Back button */
-        .back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #333;
-            color: #888;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            z-index: 500;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .back-btn:hover {
-            background: rgba(0, 0, 0, 0.8);
-            border-color: #555;
-            color: #fff;
-        }
     </style>
 </head>
 <body>
@@ -2471,32 +2318,8 @@
             modal.classList.add('visible');
         }
 
-        // ============================================
-        // INFO MODAL HANDLER
-        // ============================================
-        const infoButton = document.getElementById('infoBtn');
-        const infoModal = document.getElementById('infoModal');
-        const infoCloseBtn = document.getElementById('closeInfoBtn');
-
-        if (infoButton) {
-            infoButton.addEventListener('click', () => {
-                infoModal.classList.add('active');
-            });
-        }
-
-        if (infoCloseBtn) {
-            infoCloseBtn.addEventListener('click', () => {
-                infoModal.classList.remove('active');
-            });
-        }
-
-        if (infoModal) {
-            infoModal.addEventListener('click', (e) => {
-                if (e.target === infoModal) {
-                    infoModal.classList.remove('active');
-                }
-            });
-        }
+        // The info modal is wired by game-shell.js (open / close / backdrop
+        // click / Escape) against #infoBtn / #infoModal / #closeInfoBtn.
 
         // ============================================
         // INITIALIZATION
@@ -2513,5 +2336,9 @@
         document.getElementById('playAgainBtn').addEventListener('click', initGame);
         document.getElementById('newGameBtn').addEventListener('click', initGame);
     </script>
+
+    <!-- Wires #infoBtn / #infoModal / #closeInfoBtn: open, close, backdrop
+         click, and Escape. -->
+    <script src="game-shell.js"></script>
 </body>
 </html>
