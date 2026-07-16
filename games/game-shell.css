@@ -50,6 +50,14 @@
     -ms-user-select: none;
     -webkit-user-drag: none;
     -webkit-touch-callout: none;
+    /* Kills the blue tap flash. Previously only in backgammon / sudoku /
+       nonogram, so this REMOVES the flash from the other six — a deliberate
+       behaviour change: this is a car touchscreen where board squares get
+       tapped constantly, the flash is noise, and game-design.md L443-473
+       mandates it. Without it here, every migrating game has to carry its own
+       one-line workaround, which is the duplication this file exists to
+       delete. */
+    -webkit-tap-highlight-color: transparent;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
