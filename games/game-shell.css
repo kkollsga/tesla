@@ -1,0 +1,199 @@
+/* ============================================================================
+   game-shell.css — shared chrome for the games in this folder.
+
+   LOAD ORDER MATTERS. Link this BEFORE the game's own inline <style>:
+
+       <link rel="stylesheet" href="game-shell.css">
+       <style> ... game-specific rules ... </style>
+
+   Every rule here is a single-class selector (specificity 0,1,0), so a game's
+   inline <style> can override any of it simply by coming later in the source.
+   Link it after the game's <style> and the shell silently wins those ties —
+   which is exactly the bug this ordering rule exists to prevent.
+
+   IDENTITY LIVES IN THE GAME, NOT HERE. Anything that differs between games
+   (accent colour, panel background, button palette) is a CSS custom property.
+   The :root block below is only a fallback so a half-configured page still
+   renders something sane; each game is expected to set its own values.
+   ============================================================================ */
+
+:root {
+    /* Accent — used by .modal-btn-primary. Each game overrides these.
+       --accent-glow is spelled out rather than derived from --accent-from
+       because rgba() cannot consume a hex custom property, and color-mix()
+       is not safe to assume on the target (older Chromium) browser. */
+    --accent-from: #FFD700;
+    --accent-to:   #FFA500;
+    --accent-fg:   #000;
+    --accent-glow: rgba(255, 215, 0, 0.4);
+
+    /* Info panel surface. */
+    --panel-bg: linear-gradient(135deg, #2C2C2C 0%, #1A1A1A 100%);
+
+    /* .game-button palette. Defaults are the DARK look shared byte-for-byte
+       by chess / damme / backgammon. Themed games (isola, santorini, hive)
+       override both these vars and the handful of structural properties. */
+    --btn-bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
+    --btn-bg-hover: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
+    --btn-border: #444;
+    --btn-fg: white;
+}
+
+/* ====== RESET ======
+   Deliberately NOT included: `cursor: default`. Only hive sets it globally;
+   forcing it here would change the pointer over every un-styled element in
+   the other games. A game that wants it declares it itself. */
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ====== NAVBAR ======
+   Canonical values: byte-identical across 8 of 9 games. */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 500;
+    pointer-events: none;
+}
+
+.navbar-left, .navbar-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.navbar-btn {
+    width: auto;
+    height: auto;
+    border: none;
+    background: none;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-style: italic;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    pointer-events: all;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.navbar-btn:hover {
+    color: #fff;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* ====== ANIMATION ======
+   Several games animate with fadeIn but never define it (chess: 1 reference,
+   0 definitions — its modal appeared with no fade at all). Defining it once
+   here is the fix. */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ====== INFO MODAL ======
+   The animated variant (chess / isola / santorini / hive). The un-animated
+   variant (damme / solitaire / backgammon / nonogram) adds `padding: 20px`
+   and drops the animation; those games declare both in their own <style>. */
+.info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    animation: fadeIn 0.3s ease;
+}
+
+.info-modal.active {
+    display: flex;
+}
+
+/* ====== INFO PANEL ======
+   Base = the 700px scrolling shape. Games needing the `width: 90%` + flex
+   column shape (isola, santorini, hive) override max-width/width/display in
+   their own <style>; the properties are all present here to be overridden. */
+.info-panel {
+    background: var(--panel-bg);
+    border-radius: 14px;
+    padding: 40px;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    color: white;
+}
+
+/* ====== MODAL BUTTONS ====== */
+.modal-btn {
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modal-btn-primary {
+    background: linear-gradient(135deg, var(--accent-from) 0%, var(--accent-to) 100%);
+    color: var(--accent-fg);
+}
+
+.modal-btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px var(--accent-glow);
+}
+
+.modal-btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* ====== GAME BUTTON ======
+   The DARK shape. Colours come from the --btn-* vars above. */
+.game-button {
+    background: var(--btn-bg);
+    background-size: 200% 200%;
+    border: 2px solid var(--btn-border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--btn-fg);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.game-button:hover {
+    background: var(--btn-bg-hover);
+}
+
+.game-button:active {
+    transform: translateY(1px);
+}
