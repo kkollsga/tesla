@@ -30,6 +30,14 @@
     /* Info panel surface. */
     --panel-bg: linear-gradient(135deg, #2C2C2C 0%, #1A1A1A 100%);
 
+    /* .player-info surface. A translucent TINT over the board, not an opaque
+       fill — every consumer uses alpha ~0.6 so the board reads through. This
+       is why it is NOT --panel-bg: that var is .info-panel's opaque 135deg
+       gradient, and game-theme.css already rebinds it per palette. Pointing
+       .player-info at it would swap a 60%-alpha tint for a solid gradient and
+       flatten the panel onto the board. Different surface, different var. */
+    --player-info-bg: rgba(26, 26, 26, 0.6);
+
     /* .game-button palette. Defaults are the DARK look shared byte-for-byte
        by chess / damme / backgammon. Themed games (isola, santorini, hive)
        override both these vars and the handful of structural properties. */
@@ -215,4 +223,143 @@
 
 .game-button:active {
     transform: translateY(1px);
+}
+
+/* ====== PLAYER INFO ======
+   The turn-taking panel: chess / damme / isola / santorini / hive.
+
+   WHAT IS *NOT* HERE, AND WHY. The five panels are NOT "identical but for the
+   background" — measured, they disagree on every box metric:
+
+       padding    chess/damme 20px | isola/santorini 12px | hive 25px
+       min-width  chess/damme 150px | isola/santorini 0 | hive (unset: auto)
+       width      chess/damme (auto) | isola/santorini 100% | hive 160px
+       margin     isola/hive `auto 0` | chess/damme/santorini 0
+
+   No value holds a majority, so any base metric would be a minority default
+   that three of five games must UNDO — the exact shape of the .info-panel
+   box-shadow regression. Sizing is per-game LAYOUT and stays in the games.
+   What is shared is the SURFACE and the STATE, and that is all this is: the
+   nine declarations below are byte-identical in all five today. */
+.player-info {
+    background: var(--player-info-bg);
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The suite's "your turn" signal — byte-identical in all five games, so it is
+   the language players already read. Gold is deliberately NOT a palette token:
+   game-theme.css fixes --gold outside the hue rotation precisely so it can
+   keep meaning one thing. Literal fallbacks keep this working standalone. */
+.player-info.active {
+    border-color: var(--gold, #FFD700);
+    box-shadow: 0 0 20px var(--gold-glow, rgba(255, 215, 0, 0.4));
+}
+
+/* ====== VICTORY OVERLAY ======
+   The full-screen win state: isola + santorini share it verbatim; damme is a
+   variant (see below). NOT hive — hive builds a bespoke .victory-display with
+   falling pieces via inline cssText, has no .victory-overlay element at all,
+   and is deliberately left alone.
+
+   damme differs on four counts and declares each in its own <style>: it is
+   static markup toggled by JS (display), it does not dim the board
+   (background), it does not fade in (animation), and the whole sheet is a
+   click target (cursor/pointer-events). It still shares .victory-text and
+   .victory-subtext, which is where the value is. */
+.victory-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Gold via var(); the text-shadows stay literal rgba on purpose. --gold never
+   rotates, so threading --gold-rgb through eight shadow stops buys nothing —
+   and these values are interpolated by @keyframes victory-glow below, where
+   var() substitution in an animated property is the one place this suite's
+   old-Chromium target is worth not gambling on. Same reason game-theme.css
+   refuses color-mix(). */
+.victory-text {
+    font-size: 80px;
+    font-weight: 900;
+    color: var(--gold, #FFD700);
+    text-shadow:
+        0 0 20px rgba(255, 215, 0, 0.8),
+        0 0 40px rgba(255, 215, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.4),
+        4px 4px 8px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    animation: victory-glow 2s ease-in-out infinite alternate;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+}
+
+@keyframes victory-glow {
+    from {
+        text-shadow:
+            0 0 20px rgba(255, 215, 0, 0.8),
+            0 0 40px rgba(255, 215, 0, 0.6),
+            0 0 60px rgba(255, 215, 0, 0.4),
+            4px 4px 8px rgba(0, 0, 0, 0.8);
+    }
+    to {
+        text-shadow:
+            0 0 30px rgba(255, 215, 0, 1),
+            0 0 60px rgba(255, 215, 0, 0.8),
+            0 0 90px rgba(255, 215, 0, 0.6),
+            4px 4px 8px rgba(0, 0, 0, 0.8);
+    }
+}
+
+.victory-subtext {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.8),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-align: center;
+}
+
+/* Confetti: the SHAPE is byte-identical in isola and santorini, but the FALL
+   is not — santorini drops straight (2 stops), isola flutters (6). So the rule
+   is shared and the motion is not: the keyframes below are santorini's plain
+   fall, serving as the default, and isola overrides `confetti-fall` wholesale
+   from its own <style>. Same-name @keyframes do not merge — the last
+   definition in document order wins outright, and the game's <style> is always
+   below this file. Verified in-browser, not assumed. */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 16px;
+    border-radius: 0 50% 50% 50%;
+    animation: confetti-fall 3s ease-in forwards;
+    transform: rotate(45deg);
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-20vh) translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(110vh) translateX(calc(var(--drift-x) * 3)) rotate(810deg);
+        opacity: 0;
+    }
 }

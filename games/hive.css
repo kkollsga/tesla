@@ -18,6 +18,14 @@
     --accent-glow: rgba(255, 215, 0, 0.4);
     --panel-bg: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
 
+    /* Pre-JS fallback ONLY. hive.js:3643 hard-sets .player-info's
+       backgroundColor as an INLINE style from its own runtime theme table
+       (see the 'player-info-bg' keys around hive.js:1295), so this value is
+       painted only for the instant before that runs — an inline style beats
+       any stylesheet. Kept because that instant is real, and because the
+       fallback should not be blank. */
+    --player-info-bg: rgba(13, 42, 24, 0.6);
+
     /* Themed .game-button palette (hive green). Colours ride the vars;
        the shape itself is overridden further down. */
     --btn-bg:       linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
@@ -371,25 +379,13 @@ body::before {
     font-weight: 700;
 }
 
-/* ====== PLAYER INFO ====== */
+/* ====== PLAYER INFO ======
+   Surface + .active come from the shell; only the box metrics are ours.
+   Hive is the widest of the five panels (25px padding, fixed 160px). */
 .player-info {
-    background: rgba(13, 42, 24, 0.6);
-    border-radius: 10px;
     padding: 25px;
-    color: white;
     width: 160px;
-    text-align: center;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     margin: auto 0;
-}
-
-.player-info.active {
-    border-color: #FFD700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
 .player-name {

@@ -28,6 +28,7 @@
             --accent-fg:   #000;
             --accent-glow: rgba(135, 206, 235, 0.4);
             --panel-bg: linear-gradient(135deg, #2E5A8C 0%, #1E3A5F 100%);
+            --player-info-bg: rgba(30, 58, 95, 0.6);
 
             /* Themed .game-button palette (deep blue). Colours ride the vars;
                the shape itself is overridden further down. */
@@ -122,19 +123,12 @@
             width: 100%;
         }
 
+        /* Surface + .active come from the shell; only the box metrics are ours.
+           min-width: 0 lifts the flex min-content floor so width: 100% binds. */
         .player-info {
-            background: rgba(30, 58, 95, 0.6);
-            border-radius: 10px;
             padding: 12px;
-            color: white;
             min-width: 0;
             width: 100%;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         .player-column {
@@ -154,11 +148,6 @@
             transform: translateX(-50%);
             white-space: nowrap;
             margin-bottom: 20px;
-        }
-
-        .player-info.active {
-            border-color: #FFD700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
         }
 
         .player-name {
@@ -438,84 +427,6 @@
             border-color: rgba(74, 144, 226, 0.6);
             box-shadow: 0 6px 16px rgba(74, 144, 226, 0.2);
             color: #fff;
-        }
-
-        .victory-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9998;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .victory-text {
-            font-size: 80px;
-            font-weight: 900;
-            color: #FFD700;
-            text-shadow:
-                0 0 20px rgba(255, 215, 0, 0.8),
-                0 0 40px rgba(255, 215, 0, 0.6),
-                0 0 60px rgba(255, 215, 0, 0.4),
-                4px 4px 8px rgba(0, 0, 0, 0.8);
-            text-align: center;
-            animation: victory-glow 2s ease-in-out infinite alternate;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-        }
-
-        @keyframes victory-glow {
-            from {
-                text-shadow:
-                    0 0 20px rgba(255, 215, 0, 0.8),
-                    0 0 40px rgba(255, 215, 0, 0.6),
-                    0 0 60px rgba(255, 215, 0, 0.4),
-                    4px 4px 8px rgba(0, 0, 0, 0.8);
-            }
-            to {
-                text-shadow:
-                    0 0 30px rgba(255, 215, 0, 1),
-                    0 0 60px rgba(255, 215, 0, 0.8),
-                    0 0 90px rgba(255, 215, 0, 0.6),
-                    4px 4px 8px rgba(0, 0, 0, 0.8);
-            }
-        }
-
-        .victory-subtext {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            text-shadow:
-                0 0 10px rgba(255, 255, 255, 0.8),
-                2px 2px 4px rgba(0, 0, 0, 0.8);
-            text-align: center;
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 16px;
-            border-radius: 0 50% 50% 50%;
-            animation: confetti-fall 3s ease-in forwards;
-            transform: rotate(45deg);
-        }
-
-        @keyframes confetti-fall {
-            0% {
-                transform: translateY(-20vh) translateX(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) translateX(calc(var(--drift-x) * 3)) rotate(810deg);
-                opacity: 0;
-            }
         }
 
         /* Panel shape: narrower than the shell's base, and a flex column whose

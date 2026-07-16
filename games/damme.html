@@ -23,6 +23,7 @@
             --accent-fg:   #fff;
             --accent-glow: rgba(220, 38, 38, 0.4);
             --panel-bg: #1a1a1a;
+            --player-info-bg: rgba(26, 26, 26, 0.6);
         }
 
         body {
@@ -76,27 +77,14 @@
             white-space: nowrap;
         }
 
+        /* Surface + .active come from the shell; only the box metrics are ours. */
         .player-info {
-            background: rgba(26, 26, 26, 0.6);
-            border-radius: 10px;
             padding: 20px;
-            color: white;
             min-width: 150px;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         .game-container > .player-info {
             align-self: center;
-        }
-
-        .player-info.active {
-            border-color: #FFD700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
         }
 
         .player-name {
@@ -352,44 +340,34 @@
            reads "GOT IT!" like the other 8 games. Deliberate — damme already
            uppercases its own prominent labels (.player-name, .victory-text). */
 
+        /* Damme's victory is the VARIANT of the shell's overlay. It takes the
+           shell's positioning, z-index and centring, and undoes the three
+           things the shell's base has that this game never had. Each undo is
+           deliberate, not an oversight:
+             display        static markup, hidden until damme-logic.js flips it
+                            to 'flex' inline at victory (isola/santorini build
+                            the element on the fly, so their base is 'flex')
+             background     this game does NOT dim the board behind the text
+             animation      no fade-in
+           background-COLOR, not the `background` shorthand: the shorthand
+           resets every background-* longhand it does not mention, which is the
+           bug already fixed on .game-button:hover in the shell. */
         .victory-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 9998;
             display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background-color: transparent;
+            animation: none;
             cursor: pointer;
             pointer-events: all;
         }
 
+        /* Shell's base adds margin-bottom: 30px; damme spaces with the
+           subtext's margin-top instead. */
         .victory-text {
-            font-size: 80px;
-            font-weight: 900;
-            color: #FFD700;
-            text-shadow:
-                0 0 20px rgba(255, 215, 0, 0.8),
-                0 0 40px rgba(255, 215, 0, 0.6),
-                0 0 60px rgba(255, 215, 0, 0.4),
-                4px 4px 8px rgba(0, 0, 0, 0.8);
-            text-align: center;
-            animation: victory-glow 2s ease-in-out infinite alternate;
-            letter-spacing: 8px;
-            text-transform: uppercase;
+            margin-bottom: 0;
         }
 
+        /* Purely additive over the shell's base — damme staggers the reveal. */
         .victory-subtext {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            text-shadow:
-                0 0 10px rgba(255, 255, 255, 0.8),
-                2px 2px 4px rgba(0, 0, 0, 0.8);
-            text-align: center;
             margin-top: 20px;
             opacity: 0;
             animation: fade-in-up 1s ease-out 0.5s forwards;
@@ -405,6 +383,12 @@
             animation: fade-in-up 1s ease-out 1.5s forwards;
         }
 
+        /* Kept, NOT inherited from the shell: damme's `to` stop lands on
+           4px 4px 12px rgba(0,0,0,0.9) where isola/santorini use
+           4px 4px 8px rgba(0,0,0,0.8) — a deeper drop shadow, because damme
+           draws this over an undimmed board and needs the text to hold up.
+           Same-name @keyframes replace rather than merge, and this <style> is
+           below the shell's <link>, so this definition wins outright. */
         @keyframes victory-glow {
             from {
                 text-shadow:
