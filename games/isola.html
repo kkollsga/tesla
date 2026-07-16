@@ -21,6 +21,41 @@
             box-sizing: border-box;
         }
 
+        /*
+         * Board sizing.
+         *
+         * The board is an 8x6 (landscape) grid, so its cell size is derived from
+         * whichever of the two viewport axes runs out first, measured against the
+         * chrome that surrounds the cells. The player panels are flex siblings with
+         * a FIXED width, so they are a known constant here instead of an unknown
+         * that has to cap the board (the old uniform transform: scale() shrank the
+         * panels and the board together, which let panel width dictate board height).
+         *
+         * horizontal chrome = 2*margin + 2*container-pad + 2*container-gap
+         *                     + 2*panel + 2*grid-pad + 7*cell-gap = 434px
+         * vertical chrome   = 2*margin + 2*container-pad + 2*grid-pad
+         *                     + 5*cell-gap = 106px
+         *
+         * Those two totals are literals because calc() cannot read them back out of
+         * the vars below without restating the same sum -- if you change any var
+         * here, recompute 434/106 to match, or the board will over/undershoot the
+         * viewport. --viewport-margin is not applied as a property: it is the slack
+         * the two totals reserve, which body's flex centering then splits evenly.
+         */
+        :root {
+            --viewport-margin: 8px;
+            --container-pad: 20px;
+            --container-gap: 20px;
+            --panel-width: 140px;
+            --grid-pad: 15px;
+            --cell-gap: 4px;
+
+            --cell: max(36px, min(
+                calc((100vw - 434px) / 8),
+                calc((100vh - 106px) / 6)
+            ));
+        }
+
         body {
             background: radial-gradient(ellipse at center, #8B1538 0%, #4A0E1F 100%);
             font-family: Arial, sans-serif;
@@ -97,13 +132,13 @@
         .game-container {
             background: linear-gradient(135deg, #6B1F3A 0%, #4A0E1F 100%);
             border-radius: 14px;
-            padding: 40px;
+            padding: var(--container-pad);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
             display: flex;
             flex-direction: row;
             align-items: stretch;
-            gap: 40px;
+            gap: var(--container-gap);
         }
 
         .game-header {
@@ -120,6 +155,9 @@
             justify-content: center;
             position: relative;
             gap: 20px;
+            /* Fixed width: the panels must not grow with (or constrain) the board. */
+            flex: 0 0 var(--panel-width);
+            width: var(--panel-width);
         }
 
         .player-column #new-game {
@@ -133,9 +171,10 @@
         .player-info {
             background: rgba(74, 14, 31, 0.6);
             border-radius: 10px;
-            padding: 20px;
+            padding: 12px;
             color: white;
-            min-width: 150px;
+            min-width: 0;
+            width: 100%;
             text-align: center;
             border: 2px solid transparent;
             transition: all 0.3s ease;
@@ -195,11 +234,11 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(8, 70px);
-            grid-template-rows: repeat(6, 70px);
-            gap: 4px;
+            grid-template-columns: repeat(8, var(--cell));
+            grid-template-rows: repeat(6, var(--cell));
+            gap: var(--cell-gap);
             background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
+            padding: var(--grid-pad);
             border-radius: 12px;
             box-shadow:
                 inset 0 4px 12px rgba(0,0,0,0.5),
@@ -208,8 +247,8 @@
         }
 
         .grid-cell {
-            width: 70px;
-            height: 70px;
+            width: var(--cell);
+            height: var(--cell);
             background: linear-gradient(135deg, #a8354a 0%, #8B1538 100%);
             border-radius: 6px;
             position: relative;
@@ -240,8 +279,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
+            width: calc(var(--cell) * 0.57);
+            height: calc(var(--cell) * 0.57);
             background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, transparent 70%);
         }
 
@@ -255,8 +294,9 @@
         }
 
         .pawn {
-            width: 50px;
-            height: 50px;
+            /* Keeps the pawn at the same fraction of a cell as the old 50/70. */
+            width: calc(var(--cell) * 0.71);
+            height: calc(var(--cell) * 0.71);
             border-radius: 50%;
             position: absolute;
             top: 50%;
@@ -662,9 +702,6 @@
             currentPlayerSide: null
         };
 
-        // Store current game board scale factor
-        let currentBoardScale = 1;
-
         // Utility: Throttle function
         function throttle(func, limit) {
             let inThrottle;
@@ -674,19 +711,6 @@
                     inThrottle = true;
                     setTimeout(() => inThrottle = false, limit);
                 }
-            };
-        }
-
-        // Utility: Debounce function
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
             };
         }
 
@@ -1119,72 +1143,13 @@
             initGame();
         });
 
-        // Scale game board to fit screen
-        function scaleGameBoard() {
-            const gameBoard = document.querySelector('.game-board');
-            const gameContainer = document.querySelector('.game-container');
-
-            if (!gameBoard || !gameContainer) return;
-
-            // Get viewport dimensions
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            // Define padding - 2% of viewport on each side
-            const paddingPercent = 0.02;
-            const paddingX = viewportWidth * paddingPercent;
-            const paddingY = viewportHeight * paddingPercent;
-
-            // Available space after padding
-            const availableWidth = viewportWidth - (paddingX * 2);
-            const availableHeight = viewportHeight - (paddingY * 2);
-
-            // Temporarily reset transform to measure natural size
-            gameBoard.style.transform = 'scale(1)';
-            gameBoard.style.position = 'relative';
-
-            // Base dimensions (measure actual size)
-            const baseWidth = gameContainer.offsetWidth;
-            const baseHeight = gameContainer.offsetHeight;
-
-            // Calculate scale to fit both width and height with padding
-            const scaleX = availableWidth / baseWidth;
-            const scaleY = availableHeight / baseHeight;
-            const scale = Math.min(scaleX, scaleY);
-
-            // Store the scale factor for drag operations
-            currentBoardScale = scale;
-
-            // Apply the scale transform
-            gameBoard.style.transform = `scale(${scale})`;
-
-            // Calculate the scaled dimensions
-            const scaledWidth = baseWidth * scale;
-            const scaledHeight = baseHeight * scale;
-
-            // Center the game board in the viewport
-            const leftOffset = (viewportWidth - scaledWidth) / 2;
-            const topOffset = (viewportHeight - scaledHeight) / 2;
-
-            gameBoard.style.position = 'absolute';
-            gameBoard.style.left = leftOffset + 'px';
-            gameBoard.style.top = topOffset + 'px';
-        }
-
-        // Create debounced version of scaleGameBoard for resize events
-        const debouncedScaleGameBoard = debounce(scaleGameBoard, 150);
+        // Board sizing is handled entirely in CSS (see the --cell custom property),
+        // so there is no scale transform to apply or recompute on resize.
 
         // Initialize on load
         window.addEventListener('load', () => {
             initGame();
-            scaleGameBoard();
-
-            // Rescale after a short delay to ensure DOM is fully rendered
-            setTimeout(scaleGameBoard, 100);
         });
-
-        // Use debounced version for resize to avoid excessive calls
-        window.addEventListener('resize', debouncedScaleGameBoard);
 
         // Info button functionality
         document.getElementById('infoBtn').addEventListener('click', () => {
