@@ -13,12 +13,28 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Santorini">
 
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above the <style> below — the shell's rules are all
+         single-class, so this game overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <style>
-        * {
-            user-select: none;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Santorini's identity. The shell paints its chrome from these.
+           Accent is the Aegean blue ramp, but the primary modal button keeps
+           BLACK text on it (light-on-blue would be unreadable). */
+        :root {
+            --accent-from: #87CEEB;
+            --accent-to:   #4682B4;
+            --accent-fg:   #000;
+            --accent-glow: rgba(135, 206, 235, 0.4);
+            --panel-bg: linear-gradient(135deg, #2E5A8C 0%, #1E3A5F 100%);
+
+            /* Themed .game-button palette (deep blue). Colours ride the vars;
+               the shape itself is overridden further down. */
+            --btn-bg:       linear-gradient(135deg, #1a3a52 0%, #0d1f2d 100%);
+            --btn-bg-hover: linear-gradient(135deg, #2a4a62 0%, #1d2f3d 100%);
+            --btn-border:   rgba(74, 144, 226, 0.3);
+            --btn-fg:       #e0e0e0;
         }
 
         /*
@@ -78,49 +94,6 @@
             background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.6) 100%);
             pointer-events: none;
             z-index: 1;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 500;
-            pointer-events: none;
-        }
-
-        .navbar-left, .navbar-right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .navbar-btn {
-            width: auto;
-            height: auto;
-            border: none;
-            background: none;
-            color: #888;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-style: italic;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            pointer-events: all;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .navbar-btn:hover {
-            color: #fff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .game-board {
@@ -443,30 +416,28 @@
             margin-top: 30px;
         }
 
+        /* THEMED button. Differs from the shell's DARK shape structurally,
+           not just in colour: thinner border, roomier padding, larger text,
+           a deeper shadow, and a hover that moves border-color and colour
+           too. background-size/white-space undo DARK-only shell defaults
+           (a stretched gradient and nowrap) that Santorini never had —
+           .player-column:first-child .game-button re-asserts nowrap where
+           it is actually wanted. */
         .game-button {
-            background: linear-gradient(135deg, #1a3a52 0%, #0d1f2d 100%);
-            border: 1px solid rgba(74, 144, 226, 0.3);
-            border-radius: 8px;
+            border-width: 1px;
             padding: 10px 20px;
             font-size: 14px;
-            font-weight: 600;
-            color: #e0e0e0;
-            cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
-            transition: all 0.2s ease;
+            background-size: auto;
+            white-space: normal;
         }
 
         .game-button:hover {
-            background: linear-gradient(135deg, #2a4a62 0%, #1d2f3d 100%);
             border-color: rgba(74, 144, 226, 0.6);
             box-shadow: 0 6px 16px rgba(74, 144, 226, 0.2);
             color: #fff;
-        }
-
-        .game-button:active {
-            transform: translateY(1px);
         }
 
         .victory-overlay {
@@ -482,11 +453,6 @@
             align-items: center;
             justify-content: center;
             animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .victory-text {
@@ -552,35 +518,15 @@
             }
         }
 
-        .info-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .info-modal.active {
-            display: flex;
-        }
-
+        /* Panel shape: narrower than the shell's base, and a flex column whose
+           .modal-text does the scrolling — so the panel itself must not scroll
+           (the shell's base sets overflow-y: auto). Surface = --panel-bg. */
         .info-panel {
-            background: linear-gradient(135deg, #2E5A8C 0%, #1E3A5F 100%);
-            border-radius: 14px;
-            padding: 40px;
             max-width: 600px;
             width: 90%;
-            max-height: 80vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            color: white;
+            overflow-y: visible;
         }
 
         .modal-title {
@@ -643,31 +589,6 @@
             margin-top: 20px;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-btn-primary {
-            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
-            color: #000;
-        }
-
-        .modal-btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(135, 206, 235, 0.4);
-        }
-
-        .modal-btn-primary:active {
-            transform: scale(0.98);
-        }
     </style>
 </head>
 <body>
@@ -1349,20 +1270,9 @@
             initGame();
         });
 
-        // Info button functionality
-        document.getElementById('infoBtn').addEventListener('click', () => {
-            document.getElementById('infoModal').classList.add('active');
-        });
-
-        document.getElementById('infoModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('infoModal')) {
-                document.getElementById('infoModal').classList.remove('active');
-            }
-        });
-
-        document.getElementById('closeInfoBtn').addEventListener('click', () => {
-            document.getElementById('infoModal').classList.remove('active');
-        });
+        // Info modal wiring lives in game-shell.js.
     </script>
+
+    <script src="game-shell.js"></script>
 </body>
 </html>

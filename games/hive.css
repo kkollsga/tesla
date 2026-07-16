@@ -1,20 +1,29 @@
-/* ====== GLOBAL STYLES ====== */
+/* ====== GLOBAL STYLES ======
+   The reset itself now comes from game-shell.css. Hive is the only game that
+   also wants a global `cursor: default` (the shell deliberately omits it, as
+   forcing it would change the pointer in every other game), so it is
+   re-declared here on its own.
+
+   The old `img, svg { -webkit-user-drag: none }` rule is gone: the `*` reset
+   already matches img/svg and sets the same value, so it was a no-op. */
 * {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-user-drag: none;
-    -webkit-touch-callout: none;
     cursor: default;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
 }
 
-img, svg {
-    -webkit-user-drag: none;
-    user-drag: none;
+/* Hive's identity. The shell paints its chrome from these. */
+:root {
+    --accent-from: #FFD700;
+    --accent-to:   #FFA500;
+    --accent-fg:   #000;
+    --accent-glow: rgba(255, 215, 0, 0.4);
+    --panel-bg: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
+
+    /* Themed .game-button palette (hive green). Colours ride the vars;
+       the shape itself is overridden further down. */
+    --btn-bg:       linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
+    --btn-bg-hover: linear-gradient(135deg, #3d9a5f 0%, #2a5540 100%);
+    --btn-border:   rgba(45, 122, 79, 0.3);
+    --btn-fg:       #e0e0e0;
 }
 
 body {
@@ -46,50 +55,6 @@ body::before {
     background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.6) 100%);
     pointer-events: none;
     z-index: 1;
-}
-
-/* ====== NAVBAR ====== */
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    z-index: 500;
-    pointer-events: none;
-}
-
-.navbar-left, .navbar-right {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.navbar-btn {
-    width: auto;
-    height: auto;
-    border: none;
-    background: none;
-    color: #888;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-style: italic;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    pointer-events: all;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-}
-
-.navbar-btn:hover {
-    color: #fff;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
 }
 
 /* ====== GAME WRAPPER ====== */
@@ -504,31 +469,27 @@ body::before {
     background: radial-gradient(circle at 30% 30%, #ffaa44, #dd6611);
 }
 
-/* ====== BUTTONS ====== */
+/* ====== BUTTONS ======
+   THEMED button. Differs from the shell's DARK shape structurally, not just
+   in colour: thinner border, roomier padding, larger text, a deeper shadow,
+   and a hover that moves border-color and colour too. background-size and
+   white-space undo DARK-only shell defaults (a stretched gradient and
+   nowrap) that Hive never had. */
 .game-button {
-    background: linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
-    border: 1px solid rgba(45, 122, 79, 0.3);
-    border-radius: 8px;
+    border-width: 1px;
     padding: 10px 20px;
     font-size: 14px;
-    font-weight: 600;
-    color: #e0e0e0;
-    cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     position: relative;
     overflow: hidden;
-    transition: all 0.2s ease;
+    background-size: auto;
+    white-space: normal;
 }
 
 .game-button:hover {
-    background: linear-gradient(135deg, #3d9a5f 0%, #2a5540 100%);
     border-color: rgba(45, 122, 79, 0.6);
     box-shadow: 0 6px 16px rgba(45, 122, 79, 0.2);
     color: #fff;
-}
-
-.game-button:active {
-    transform: translateY(1px);
 }
 
 .zoom-controls {
@@ -565,103 +526,6 @@ body::before {
 
 .zoom-btn:active {
     transform: translateY(1px);
-}
-
-/* ====== VICTORY OVERLAY ====== */
-.victory-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 9998;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.victory-text {
-    font-size: 80px;
-    font-weight: 900;
-    color: #FFD700;
-    text-shadow:
-        0 0 20px rgba(255, 215, 0, 0.8),
-        0 0 40px rgba(255, 215, 0, 0.6),
-        0 0 60px rgba(255, 215, 0, 0.4),
-        4px 4px 8px rgba(0, 0, 0, 0.8);
-    text-align: center;
-    animation: victory-glow 2s ease-in-out infinite alternate;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    margin-bottom: 30px;
-}
-
-@keyframes victory-glow {
-    from {
-        text-shadow:
-            0 0 20px rgba(255, 215, 0, 0.8),
-            0 0 40px rgba(255, 215, 0, 0.6),
-            0 0 60px rgba(255, 215, 0, 0.4),
-            4px 4px 8px rgba(0, 0, 0, 0.8);
-    }
-    to {
-        text-shadow:
-            0 0 30px rgba(255, 215, 0, 1),
-            0 0 60px rgba(255, 215, 0, 0.8),
-            0 0 90px rgba(255, 215, 0, 0.6),
-            4px 4px 8px rgba(0, 0, 0, 0.8);
-    }
-}
-
-.victory-subtext {
-    font-size: 32px;
-    font-weight: 700;
-    color: white;
-    text-shadow:
-        0 0 10px rgba(255, 255, 255, 0.8),
-        2px 2px 4px rgba(0, 0, 0, 0.8);
-    text-align: center;
-}
-
-.confetti {
-    position: absolute;
-    width: 10px;
-    height: 16px;
-    border-radius: 0 50% 50% 50%;
-    animation: confetti-fall 3s ease-in forwards;
-    transform: rotate(45deg);
-}
-
-@keyframes confetti-fall {
-    0% {
-        transform: translateY(-20vh) translateX(0) rotate(0deg);
-        opacity: 1;
-    }
-    10% {
-        transform: translateY(10vh) translateX(var(--drift-x)) rotate(90deg);
-    }
-    30% {
-        transform: translateY(40vh) translateX(calc(var(--drift-x) * 2)) rotate(270deg);
-    }
-    50% {
-        transform: translateY(70vh) translateX(calc(var(--drift-x) * 2.5)) rotate(450deg);
-        opacity: 1;
-    }
-    70% {
-        transform: translateY(90vh) translateX(calc(var(--drift-x) * 2.8)) rotate(630deg);
-    }
-    100% {
-        transform: translateY(110vh) translateX(calc(var(--drift-x) * 3)) rotate(810deg);
-        opacity: 0;
-    }
 }
 
 /* ====== GAME SETUP POPUP ====== */
@@ -723,36 +587,19 @@ body::before {
     margin: 6px 0;
 }
 
-/* ====== INFO MODAL ====== */
-.info-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1001;
-    animation: fadeIn 0.3s ease;
-}
+/* ====== INFO MODAL ======
+   .info-modal / .info-modal.active come from game-shell.css verbatim.
 
-.info-modal.active {
-    display: flex;
-}
-
+   Panel shape: a flex column whose .modal-text does the scrolling, so the
+   panel itself must not scroll (the shell's base sets overflow-y: auto).
+   max-width is restated because 700px is Hive's own choice, not an
+   inheritance from the shell's base. Surface = --panel-bg. */
 .info-panel {
-    background: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
-    border-radius: 14px;
-    padding: 40px;
     max-width: 700px;
     width: 90%;
-    max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    color: white;
+    overflow-y: visible;
 }
 
 .modal-title {
@@ -813,32 +660,6 @@ body::before {
     flex-wrap: wrap;
     flex-shrink: 0;
     margin-top: 20px;
-}
-
-.modal-btn {
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.modal-btn-primary {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    color: #000;
-}
-
-.modal-btn-primary:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-}
-
-.modal-btn-primary:active {
-    transform: scale(0.98);
 }
 
 /* ====== PIECE INFO POPUP ====== */

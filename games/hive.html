@@ -13,6 +13,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above hive.css — the shell's rules are all single-class,
+         so hive.css overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <!-- External CSS -->
     <link rel="stylesheet" href="hive.css">
 </head>
@@ -166,5 +171,6 @@
 
     <!-- External JavaScript -->
     <script src="hive.js"></script>
+    <script src="game-shell.js"></script>
 </body>
 </html>
