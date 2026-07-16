@@ -1034,10 +1034,19 @@
             }
 
             handleCellClick(row, col) {
+                // gameOver never resets within a puzzle (Escape closes the
+                // victory modal without a new game, and later clicks re-enter
+                // here), so capture the transition: the palette rotation below
+                // must fire once per completion, not on every post-win click.
+                const wasOver = this.logic.gameOver;
                 if (this.logic.toggleCell(row, col)) {
                     this.renderer.updateCell(row, col);
                     this.renderer.updateStatus(`Moves: ${this.logic.moveCount}`);
                     if (this.logic.gameOver) {
+                        // Completion rotates to a fresh base palette — the new
+                        // colour is the reward (dev-docs/designs/theming.md).
+                        // New puzzle does NOT rotate.
+                        if (!wasOver && window.GameTheme) GameTheme.nextPalette();
                         this.showVictory();
                     }
                 }

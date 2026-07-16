@@ -1269,12 +1269,6 @@ let gameConfig = {
    it is unaffected by the palette. */
 const PLAYER_COLORS = { 1: '#5599ff', 2: '#ffaa44' };
 
-/* The four environment palettes live in game-theme.css and are selected purely
-   by body[data-theme]. Hive itself only ever picks three of them (green while
-   playing, then the winner's hue) but all four are valid here. */
-const THEMES = ['red', 'blue', 'green', 'orange'];
-const DEFAULT_THEME = 'green';
-
 let gameState = {
     board: new Map(), // key: hex.toString(), value: Array of insects (stacked, top = last)
     hand: {
@@ -3395,50 +3389,41 @@ function showVictory() {
         document.head.appendChild(style);
     }
 
-    // Save victor's theme color
+    // Shift the page into the winner's hue — blue for Player 1, orange for
+    // Player 2, the same identity mapping as PLAYER_COLORS. The shift is
+    // transient by design (GameTheme never persists it): a reload lands back
+    // on the base palette, and New Game rotates from that base, not from here.
     const themeColor = gameState.winner === 1 ? 'blue' : 'orange';
-    saveThemeColor(themeColor);
-    applyThemeColor(themeColor);
+    GameTheme.setVictoryTheme(themeColor);
+
+    // The shared victory signal (game-theme.css) on the winner's panel.
+    // GameTheme.nextPalette() sweeps the class on the next New Game.
+    const winnerPanel = document.getElementById(`player${gameState.winner}-info`);
+    if (winnerPanel) winnerPanel.classList.add('victory-glow');
 }
 
 // ============================================
 // THEME COLOR SYSTEM
 // ============================================
 
-/* The whole theme system is now one attribute.
+/* The whole theme system now lives in game-shell.js — window.GameTheme owns
+ * body[data-theme], and hive only calls its two hooks.
  *
  * What used to be here: a 114-entry colour table, five CSS custom properties
- * (only two of which anything read), and an 86-line DOM walk that wrote 20
- * inline styles. Inline styles beat any stylesheet, which is precisely why hive
- * could not consume a CSS-variable palette — and why its :hover rules never
- * fired once. All of it is replaced by setting body[data-theme] and letting
- * game-theme.css's tokens cascade, which is also what finally lets the PAGE
- * BACKGROUND theme (body.themed-bg) — it never did before.
+ * (only two of which anything read), an 86-line DOM walk that wrote 20 inline
+ * styles — and, after the first rebuild, three wrappers around
+ * body[data-theme] persisting under a hive-private 'hiveThemeColor' key. All
+ * of it is replaced by the shared GameTheme: it restores the persisted base
+ * palette at parse time (game-shell.js sits after hive.js in <body>, still
+ * ahead of first paint), rotates it on explicit New Game (nextPalette(), in
+ * the click handler below — never on load), and applies the transient
+ * winner's-hue shift on victory (setVictoryTheme(), in showVictory()). The
+ * old 'hiveThemeColor' key is abandoned, not migrated — the suite-wide base
+ * lives under 'gameBasePalette'.
  *
  * Nothing needs re-rendering on a theme change any more: the hexagons paint
  * from var(--surface-sunken)/var(--border) (see paintEmptyHex), so the browser
  * repaints them itself. */
-function applyThemeColor(color) {
-    document.body.dataset.theme = THEMES.indexOf(color) !== -1 ? color : DEFAULT_THEME;
-}
-
-function saveThemeColor(color) {
-    try {
-        localStorage.setItem('hiveThemeColor', color);
-    } catch (e) {
-        console.error('Failed to save theme color:', e);
-    }
-}
-
-function loadThemeColor() {
-    try {
-        const saved = localStorage.getItem('hiveThemeColor');
-        return THEMES.indexOf(saved) !== -1 ? saved : DEFAULT_THEME;
-    } catch (e) {
-        console.error('Failed to load theme color:', e);
-        return DEFAULT_THEME;
-    }
-}
 
 // ============================================
 // GAME INITIALIZATION & EVENT LISTENERS
@@ -3553,7 +3538,9 @@ function initGame() {
         insectMoveCount: {}
     };
     initializeHand();
-    // Keep current theme (don't reset on new game)
+    // No theme work here: initGame also runs on page load, where the palette
+    // must not move. The New Game click handler owns the rotation
+    // (GameTheme.nextPalette()).
     renderGame();
     centerBoard(false); // Disable animation during initialization
     updateGameRulesVisibility();
@@ -3567,6 +3554,13 @@ function initializeEventListeners() {
         // that used to be here were dead: hive builds neither (its victory is
         // the bespoke .victory-display below), so they never matched anything.
         document.querySelectorAll('.victory-display').forEach(el => el.remove());
+
+        // Rotate the base palette — here on the explicit click, never in
+        // initGame(): initGame also runs on page load, and a refresh must not
+        // advance the rotation. This also replaces a victory shift (the
+        // rotation steps from the persisted base, not the winner's transient
+        // hue) and sweeps the winner panel's .victory-glow.
+        GameTheme.nextPalette();
 
         // Start the game
         initGame();
@@ -3695,39 +3689,12 @@ function initializeEventListeners() {
     }, { passive: false });
 }
 
-/* Restore the persisted palette.
- *
- * This runs at PARSE time, not in the load handler below: hive.js is loaded at
- * the end of <body>, so document.body already exists, and a synchronous script
- * runs before the first paint. So the page is already themed the first time it
- * is drawn.
- *
- * It deliberately does NOT sit in the load handler, which has to `await
- * loadInsectSVGs()` first — by then the page has painted, and since
- * .game-button/.player-info transition their colours you would SEE the palette
- * cross-fade from the markup's green to the real one. Measured, not assumed.
- *
- * This also revives the persistence: the load handler used to force-reset to
- * green and overwrite hiveThemeColor before anything could read it, which made
- * showVictory()'s save dead code — win as Blue, reload, back to green.
- *
- * .theme-booting suppresses transitions across the swap. The markup starts at
- * data-theme="green", so restoring a non-green palette is a CHANGE, and
- * .game-button/.player-info/.hexagon all transition their colours — without
- * this you watch the board fade green->blue on every load. Restoring a saved
- * palette should look like it was always that colour.
- *
- * The reflow between add and remove is load-bearing and must not be "tidied"
- * away: reading offsetWidth forces a synchronous style flush, which COMMITS the
- * new colours while transitions are still off, so re-enabling them afterwards
- * has nothing left to animate. Doing the removal in requestAnimationFrame
- * instead looks equivalent but is not — rAF is throttled in background tabs, so
- * the class could outlive the boot and silently disable every transition in the
- * game (hover, hexagons, the victory dance). This way it cannot. */
-document.body.classList.add('theme-booting');
-applyThemeColor(loadThemeColor());
-void document.body.offsetWidth;
-document.body.classList.remove('theme-booting');
+/* No palette restore here any more: game-shell.js's GameTheme does it at its
+ * own parse time. That script sits one tag after this one at the end of
+ * <body>, so the swap still lands before the first paint — the page is
+ * already themed the first time it is drawn, exactly as when the restore
+ * lived here. (The .theme-booting transition-suppression dance that guarded
+ * hive's own restore went with it.) */
 
 // Start game on load
 window.addEventListener('load', async () => {

@@ -2819,6 +2819,12 @@
                 gameWon = true;
                 clearInterval(timerInterval);
 
+                // Completion rotates to a fresh base palette — the new colour is
+                // the reward (dev-docs/designs/theming.md). The !gameWon guard
+                // above makes this fire exactly once per win; New Game does NOT
+                // rotate.
+                if (window.GameTheme) GameTheme.nextPalette();
+
                 // Calculate time in seconds
                 const timeDisplay = domCache.timer.textContent;
                 const [minutes, seconds] = timeDisplay.split(':').map(Number);

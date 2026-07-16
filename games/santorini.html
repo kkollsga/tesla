@@ -1144,6 +1144,15 @@
             `;
 
             document.body.appendChild(overlay);
+
+            // Victory theming (policy: dev-docs/designs/theming.md). Santorini's
+            // players ARE blue and orange, so the environment shifts to the
+            // winner's assigned colour (transient, never persisted — a reload
+            // lands back on the base). The gold glow marks the winning panel;
+            // GameTheme.nextPalette() sweeps it on New Game.
+            document.getElementById(`player-${gameState.winner}-info`).classList.add('victory-glow');
+            GameTheme.setVictoryTheme(winnerColor);
+
             createConfetti();
 
             overlay.addEventListener('click', () => {
@@ -1174,6 +1183,10 @@
         document.getElementById('new-game').addEventListener('click', () => {
             document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
             document.querySelectorAll('.confetti').forEach(el => el.remove());
+            // Rotate the base palette (also sweeps .victory-glow). Lives in the
+            // click handler, NOT initGame(): load calls initGame() too, and a
+            // refresh must not rotate.
+            GameTheme.nextPalette();
             initGame();
         });
 

@@ -37,22 +37,33 @@ function initGame() {
     // Event listeners (only add once using named functions)
     const newGameBtn = document.getElementById('new-game');
 
-    // Remove old listeners and add new ones to avoid duplicates
+    // Remove old listeners and add new ones to avoid duplicates. Both routes
+    // are explicit new-game actions, so both go through startNewGame (palette
+    // rotation) rather than bare initGame — the load path below stays on
+    // initGame so a refresh never rotates.
     if (newGameBtn) {
-        newGameBtn.removeEventListener('click', initGame);
-        newGameBtn.addEventListener('click', initGame);
+        newGameBtn.removeEventListener('click', startNewGame);
+        newGameBtn.addEventListener('click', startNewGame);
     }
 
     // Victory overlay click to restart
     if (victoryOverlay) {
-        victoryOverlay.removeEventListener('click', initGame);
-        victoryOverlay.addEventListener('click', initGame);
+        victoryOverlay.removeEventListener('click', startNewGame);
+        victoryOverlay.addEventListener('click', startNewGame);
     }
 
     // The info modal (open / close / backdrop click / Escape) is wired once by
     // game-shell.js against the static #infoBtn / #infoModal / #closeInfoBtn
     // markup. initGame never rebuilds those nodes — only #grid-container's
     // children — so the shell's one-shot wiring survives every New Game.
+}
+
+// Explicit new game: rotate the base palette (game-shell.js — this also
+// sweeps any leftover .victory-glow and replaces a transient red victory
+// shift with the new base), then rebuild the board.
+function startNewGame() {
+    GameTheme.nextPalette();
+    initGame();
 }
 
 // Helper functions for event listeners
@@ -598,6 +609,16 @@ function endGame(winner) {
     gameState.winner = winner;
 
     const winnerPlayer = winner === gameState.player1Color ? 'Player 1' : 'Player 2';
+
+    // Victory signal: gold glow on the winner's panel. Red maps onto a palette
+    // hue, so a red win also shifts the environment to red — transient, the
+    // persisted base palette is untouched (dev-docs/designs/theming.md). White
+    // maps to no hue, so a white win keeps the base palette and glows only.
+    const winnerInfoId = winner === gameState.player1Color ? 'player-1-info' : 'player-2-info';
+    document.getElementById(winnerInfoId).classList.add('victory-glow');
+    if (winner === 'red') {
+        GameTheme.setVictoryTheme('red');
+    }
 
     // Show victory overlay with styled text
     const overlay = document.getElementById('victory-overlay');

@@ -1572,6 +1572,12 @@
         }
 
         function checkWin() {
+            // Already won — some input paths don't guard gameOver (selectCell
+            // still works post-win, so the number pad can re-run setNumber),
+            // and re-firing the victory block would rotate the palette again.
+            // Rotation must happen only on the transition into the won state.
+            if (gameOver) return;
+
             let isFilled = true;
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
@@ -1588,6 +1594,11 @@
             if (isFilled) {
                 gameOver = true;
                 if (timerInterval) clearInterval(timerInterval);
+
+                // Completion rotates to a fresh base palette — the new colour
+                // is the reward (dev-docs/designs/theming.md). Fires once per
+                // win via the gameOver guard above; New Game does NOT rotate.
+                if (window.GameTheme) GameTheme.nextPalette();
 
                 // Hide any cell selection highlights
                 document.querySelectorAll('.cell.selected, .cell.related, .cell.same-block').forEach(c => {

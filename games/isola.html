@@ -963,6 +963,16 @@
 
             document.body.appendChild(overlay);
 
+            // Victory theming (policy: dev-docs/designs/theming.md). Isola
+            // half-maps: red is a palette hue, black is not — a red win shifts
+            // the environment to red (transient, never persisted), a black win
+            // keeps the base palette. The gold glow marks the winning panel
+            // either way; GameTheme.nextPalette() sweeps it on New Game.
+            document.getElementById(`player-${winnerSide.toLowerCase()}-info`).classList.add('victory-glow');
+            if (gameState.winner === 'red') {
+                GameTheme.setVictoryTheme('red');
+            }
+
             // Create confetti
             createConfetti();
 
@@ -997,6 +1007,10 @@
             // Remove any victory overlays
             document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
             document.querySelectorAll('.confetti').forEach(el => el.remove());
+            // Rotate the base palette (also sweeps .victory-glow). Lives in the
+            // click handler, NOT initGame(): load calls initGame() too, and a
+            // refresh must not rotate.
+            GameTheme.nextPalette();
             initGame();
         });
 

@@ -839,6 +839,12 @@ function updatePlayerStatus() {
         if (gameState.winner) {
             const winnerStatus = gameState.winner === gameState.player1Color ? status1 : status2;
             winnerStatus.textContent = 'Winner!';
+            // Victory signal is the gold panel glow only — black/white map to
+            // no palette hue, so chess never shifts the base palette
+            // (dev-docs/designs/theming.md). GameTheme.nextPalette() sweeps
+            // the class on the next new game.
+            const winnerInfo = gameState.winner === gameState.player1Color ? 'player-1-info' : 'player-2-info';
+            document.getElementById(winnerInfo).classList.add('victory-glow');
         }
     } else {
         const currentStatus = gameState.currentPlayer === gameState.player1Color ? status1 : status2;
@@ -924,6 +930,12 @@ function showVictory(message, draw = false) {
     stopPlayerTimer('player1');
     stopPlayerTimer('player2');
 
+    // Re-render the panels in their game-over state (Winner! text, victory
+    // glow, active-turn glow off). Every winner path lands here after setting
+    // gameState.gameOver, and none of them re-runs the status update itself —
+    // without this call the loser's panel keeps glowing "Your Turn".
+    updatePlayerStatus();
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
 
@@ -950,6 +962,11 @@ function showVictory(message, draw = false) {
 // Event listeners
 document.getElementById('new-game').addEventListener('click', () => {
     document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
+    // Explicit new game rotates the base palette (game-shell.js), which also
+    // sweeps any leftover .victory-glow. Deliberately here and not inside
+    // initGame — the load path calls initGame too, and a refresh must never
+    // rotate the palette.
+    GameTheme.nextPalette();
     initGame();
 });
 

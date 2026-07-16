@@ -2315,6 +2315,18 @@
             
             text.textContent = player === PLAYER1 ? 'Player 1 (Orange) Wins!' : 'Player 2 (White) Wins!';
             modal.classList.add('visible');
+
+            // Victory theming (policy: dev-docs/designs/theming.md). Backgammon
+            // half-maps: orange is a palette hue, white/cream is not — an orange
+            // win shifts the environment to orange (transient, never persisted),
+            // a white win keeps the base palette. The gold glow marks the winning
+            // panel either way; the restart buttons' GameTheme.nextPalette()
+            // sweeps it.
+            const winnerPanel = document.getElementById(player === PLAYER1 ? 'player1Panel' : 'player2Panel');
+            winnerPanel.classList.add('victory-glow');
+            if (player === PLAYER1) {
+                GameTheme.setVictoryTheme('orange');
+            }
         }
 
         // The info modal is wired by game-shell.js (open / close / backdrop
@@ -2331,9 +2343,17 @@
         });
 
         // Both restart entry points share the single reset path in initGame(),
-        // which also hides the winner modal.
-        document.getElementById('playAgainBtn').addEventListener('click', initGame);
-        document.getElementById('newGameBtn').addEventListener('click', initGame);
+        // which also hides the winner modal. Each is an explicit new game, so
+        // each also rotates the base palette — GameTheme.nextPalette(), which
+        // sweeps any .victory-glow and repaints over a victory hue. The rotation
+        // lives here in the click paths, NOT in initGame(): load calls
+        // initGame() too, and a refresh must not rotate.
+        function restartGame() {
+            GameTheme.nextPalette();
+            initGame();
+        }
+        document.getElementById('playAgainBtn').addEventListener('click', restartGame);
+        document.getElementById('newGameBtn').addEventListener('click', restartGame);
     </script>
 
     <!-- Wires #infoBtn / #infoModal / #closeInfoBtn: open, close, backdrop

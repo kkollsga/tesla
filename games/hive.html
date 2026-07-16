@@ -26,10 +26,12 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="hive.css">
 </head>
-<!-- data-theme selects the palette; hive.js rewrites it on load (restoring the
-     persisted palette) and on victory (the winner's hue). themed-bg opts into
-     the shared radial page wash — the surface that never used to theme at all.
-     The attribute is set here too so the first paint is already themed. -->
+<!-- data-theme selects the palette; game-shell.js's GameTheme owns it — it
+     restores the persisted base at parse time, and hive.js calls it to rotate
+     on New Game (nextPalette) and to shift to the winner's hue on victory
+     (setVictoryTheme, transient). themed-bg opts into the shared radial page
+     wash — the surface that never used to theme at all. The attribute is set
+     here too so the first paint is already themed. -->
 <body data-theme="green" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">

@@ -51,14 +51,9 @@ body.dragging * {
     cursor: grabbing !important;
 }
 
-/* Applied by hive.js for the single frame in which it restores the persisted
-   palette, so that restore lands instantly instead of cross-fading from the
-   markup's default green. Removed on the next animation frame — every other
-   theme change (i.e. victory) keeps its transition. */
-body.theme-booting,
-body.theme-booting * {
-    transition: none !important;
-}
+/* (The body.theme-booting transition-suppression rule that lived here is
+   gone with hive's own restore dance: game-shell.js now restores the palette
+   at parse time, before first paint, so there is no cross-fade to suppress.) */
 
 body::before {
     content: '';
