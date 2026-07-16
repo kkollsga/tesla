@@ -13,10 +13,65 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Solitaire">
 
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above the <style> below — the shell's rules are all
+         single-class, so this game overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <style>
-        * {
-            user-select: none;
+        /* Solitaire's identity. The shell paints its chrome from these.
+           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
+           "Got it!" label is light-on-blue. */
+        :root {
+            --accent-from: #2563eb;
+            --accent-to:   #1d4ed8;
+            --accent-fg:   #fff;
+            --accent-glow: rgba(37, 99, 235, 0.4);
+            --panel-bg: #1a1a1a;
         }
+
+        /* ---- Reset reconciliation ------------------------------------------
+           Solitaire is the one game in the suite that never had the
+           `margin: 0; padding: 0; box-sizing: border-box` reset the shell's `*`
+           now applies — its <style> only ever declared `user-select: none`.
+           Adopting the shell's reset here is NOT a no-op. Measured at 1180x919
+           it would have:
+             - shrunk every .card from 134x186 to 130x182 (width/height + a 2px
+               border),
+             - shrunk .game-container from 1260x666 to 1200x606 — and 1200 is
+               the base width scaleGameBoard() scales against,
+             - shrunk .stat-box from 125x62 to 95x42,
+             - flattened the info panel, whose <h3>/<p>/<ul> have no rules of
+               their own and render purely on UA margins.
+           Card and panel geometry is identity, not chrome, so the reset is
+           pinned back to what solitaire actually renders today.
+
+           <button> is excluded from content-box on purpose: the UA stylesheet
+           already makes buttons border-box, which is why .game-button's
+           height: 42px is a true 42px. content-box would inflate it to 66px. */
+        * {
+            box-sizing: content-box;
+        }
+
+        button {
+            box-sizing: border-box;
+        }
+
+        /* The shell's `*` zeroes margin/padding. Solitaire's info panel is the
+           only one in the suite with no typography rules of its own, so it was
+           rendering on the UA defaults these restore exactly:
+           h3/p/ul all get `margin-block: 1em`, ul gets its 40px bullet indent.
+           (<li> has no UA margin, so it needs nothing.) */
+        .modal-text h3,
+        .modal-text p,
+        .modal-text ul {
+            margin: 1em 0;
+        }
+
+        .modal-text ul {
+            padding-left: 40px;
+        }
+
         body {
             background: radial-gradient(ellipse at center, #8B1538 0%, #4A0E1F 100%);
             font-family: Arial, sans-serif;
@@ -42,76 +97,27 @@
             z-index: 1;
         }
         
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 500;
-            pointer-events: none;
-        }
+        /* .navbar / .navbar-left / .navbar-right / .navbar-btn were the shell's
+           canonical values byte-for-byte — all four rules now come from it. */
 
-        .navbar-left, .navbar-right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .navbar-btn {
-            width: auto;
-            height: auto;
-            border: none;
-            background: none;
-            color: #888;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-style: italic;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            pointer-events: all;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .navbar-btn:hover {
-            color: #fff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
-        }
-
+        /* Un-animated modal variant: the shell's base fades in, this one never
+           has. Both properties are required to keep the current behaviour. */
         .info-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
             padding: 20px;
+            animation: none;
         }
 
-        .info-modal.active {
-            display: flex;
-        }
-
+        /* Solitaire's panel is the smaller, bordered, un-shadowed variant rather
+           than the shell's 700px/40px/shadowed base. box-shadow must be
+           explicitly cleared — the shell's base sets one this game never had.
+           overflow-y is left alone: the shell's `auto` is what solitaire had. */
         .info-panel {
-            background: #1a1a1a;
             border: 2px solid #333;
             border-radius: 12px;
             padding: 30px;
             max-width: 600px;
             max-height: 90vh;
-            overflow-y: auto;
-            color: white;
+            box-shadow: none;
         }
 
         .modal-title {
@@ -135,28 +141,8 @@
             flex-wrap: wrap;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #fff;
-        }
-
-        .modal-btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-        }
-
+        /* .modal-btn / .modal-btn-primary were the shell's rules byte-for-byte,
+           painted by the :root accent vars above — both are gone from here. */
 
         .game-board {
             position: relative;
@@ -336,20 +322,23 @@
             flex-direction: column;
             justify-content: center;
         }
+        /* The shell's .game-button DOES express solitaire's: the palette is the
+           shell's DARK default byte-for-byte (same gradient, #444 border, white
+           label, same hover gradient) and solitaire already declared the
+           `background-size: 200% 200%` the shell carries — the shine layers
+           below sit on top of it and never interacted. Only the structural
+           properties are overridden here, the same way isola/santorini/hive do.
+           Inherited from the shell and NOT previously present: cursor: pointer
+           (buttons were on the UA's `default`), transition: all 0.2s ease (the
+           hover/press now animate) and white-space: nowrap (a no-op at these
+           labels). */
         .game-button {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
-            background-size: 200% 200%;
-            border: 2px solid #444;
-            border-radius: 8px;
             padding: 10px 20px;
             font-size: 16px;
-            font-weight: 600;
-            color: white;
             height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -388,12 +377,15 @@
             position: relative;
             z-index: 1;
         }
+        /* The hover gradient itself is the shell's --btn-bg-hover, so only the
+           background-size is restated. It has to be: the shell's
+           `.game-button:hover { background: var(--btn-bg-hover) }` is the
+           `background` SHORTHAND, which resets background-size back to `auto`
+           and undoes the 200% 200% the base sets. Solitaire always carried this
+           line for that reason. (.game-button:active was the shell's
+           translateY(1px) byte-for-byte and is gone.) */
         .game-button:hover {
-            background: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
             background-size: 200% 200%;
-        }
-        .game-button:active {
-            transform: translateY(1px);
         }
         .game-button:disabled {
             opacity: 0.5;
@@ -1064,32 +1056,8 @@
             */
         });
 
-        // ============================================
-        // INFO MODAL HANDLER
-        // ============================================
-        const infoBtn = document.getElementById('infoBtn');
-        const infoModal = document.getElementById('infoModal');
-        const closeInfoBtn = document.getElementById('closeInfoBtn');
-
-        if (infoBtn) {
-            infoBtn.addEventListener('click', () => {
-                infoModal.classList.add('active');
-            });
-        }
-
-        if (closeInfoBtn) {
-            closeInfoBtn.addEventListener('click', () => {
-                infoModal.classList.remove('active');
-            });
-        }
-
-        if (infoModal) {
-            infoModal.addEventListener('click', (e) => {
-                if (e.target === infoModal) {
-                    infoModal.classList.remove('active');
-                }
-            });
-        }
+        // The info modal (open / close / backdrop / Escape) is wired by
+        // game-shell.js.
 
         // Set up event delegation
         function setupEventDelegation() {
@@ -2910,5 +2878,6 @@
             initGame();
         });
     </script>
+    <script src="game-shell.js"></script>
 </body>
 </html>

@@ -7,16 +7,27 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above the <style> below — the shell's rules are all
+         single-class, so this game overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
+        /* Sudoku's identity. The shell paints its chrome from these.
+           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
+           "Got it!" label is light-on-blue. */
+        :root {
+            --accent-from: #2563eb;
+            --accent-to:   #1d4ed8;
+            --accent-fg:   #fff;
+            --accent-glow: rgba(37, 99, 235, 0.4);
+            --panel-bg: #1a1a1a;
         }
+
+        /* The whole of sudoku's old `*` reset — margin/padding/box-sizing, the
+           user-select family, -webkit-touch-callout and the tap-highlight kill
+           — is now the shell's `*`, byte-for-byte. */
 
         body {
             background: #0a0a0a;
@@ -70,48 +81,8 @@
             margin-bottom: 0;
         }
 
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 500;
-            pointer-events: none;
-        }
-
-        .navbar-left, .navbar-right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .navbar-btn {
-            width: auto;
-            height: auto;
-            border: none;
-            background: none;
-            color: #888;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-style: italic;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            pointer-events: all;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .navbar-btn:hover {
-            color: #fff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
-        }
+        /* .navbar / .navbar-left / .navbar-right / .navbar-btn were the shell's
+           canonical values byte-for-byte — all four rules now come from it. */
 
         .controls {
             display: flex;
@@ -589,6 +560,17 @@
             color: #ef4444;
         }
 
+        /* .modal / .modal-content are sudoku's OWN overlay shape and stay here:
+           #winModal is the only user now. The info modal used to share them
+           (<div class="modal info-modal">), which put the shell's .info-modal,
+           this .modal and a lone `.info-modal { z-index: 1001 }` — three rules
+           of identical 0,1,0 specificity — in a source-order-only standoff.
+           The info modal now uses the .info-modal > .info-panel markup the
+           other eight games use, so there is nothing left to collide: the
+           shell's .info-modal already carries the 1001 the old bump supplied,
+           and #winModal keeps its 1000 below it.
+           (@keyframes fadeIn was deleted too — the shell defines an identical
+           one; this rule still references it.) */
         .modal {
             position: fixed;
             top: 0;
@@ -607,17 +589,16 @@
             display: flex;
         }
 
-        .info-modal {
-            z-index: 1001;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background: #1a1a1a;
+        /* One shape, two panels: #winModal's .modal-content and the info
+           modal's .info-panel. Listed together so they cannot drift apart.
+           The last two properties exist only to neutralise the shell's
+           .info-panel base, which .modal-content never had — they are the
+           initial values, so they are a no-op for .modal-content:
+             - overflow-y: .modal-text is the scroll container (flex:1;
+               overflow-y:auto); a second one here nests scrollbars.
+             - box-shadow: this panel is bordered, not shadowed. */
+        .modal-content, .info-panel {
+            background: var(--panel-bg);
             border: 2px solid #2563eb;
             border-radius: 16px;
             padding: 40px;
@@ -627,6 +608,8 @@
             display: flex;
             flex-direction: column;
             animation: slideUp 0.3s ease;
+            overflow-y: visible;
+            box-shadow: none;
         }
 
         @keyframes slideUp {
@@ -779,28 +762,11 @@
             margin-top: 20px;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #fff;
-        }
-
-        .modal-btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-        }
-
+        /* .modal-btn / .modal-btn-primary were the shell's rules byte-for-byte,
+           painted by the :root accent vars above — both are gone from here.
+           .modal-btn-secondary is NOT a shell concept: it is sudoku's own
+           second button, used only by #winModal's "Back Home" link, so it
+           stays. It layers on top of the shell's .modal-btn base. */
         .modal-btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: #ddd;
@@ -823,8 +789,8 @@
     </div>
 
     <!-- Game Info Modal -->
-    <div class="modal info-modal" id="infoModal">
-        <div class="modal-content">
+    <div class="info-modal" id="infoModal">
+        <div class="info-panel">
             <div class="modal-title">How to Play Sudoku</div>
             <div class="modal-text">
                 <h3>Objective</h3>
@@ -968,19 +934,8 @@
         }
 
         function setupEventListeners() {
-            // Navbar info button
-            document.getElementById('infoBtn').addEventListener('click', () => {
-                document.getElementById('infoModal').classList.add('active');
-            });
-            document.getElementById('closeInfoBtn').addEventListener('click', () => {
-                document.getElementById('infoModal').classList.remove('active');
-            });
-            document.getElementById('infoModal').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('infoModal')) {
-                    document.getElementById('infoModal').classList.remove('active');
-                }
-            });
-
+            // The navbar info modal (open / close / backdrop / Escape) is wired
+            // by game-shell.js.
             document.getElementById('newGameBtn').addEventListener('click', startNewGame);
 
             // Difficulty dropdown
@@ -1688,5 +1643,6 @@
         // Start the game
         window.addEventListener('load', init);
     </script>
+    <script src="game-shell.js"></script>
 </body>
 </html>

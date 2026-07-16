@@ -10,23 +10,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="puzzle-generator.js"></script>
     <script src="puzzle-curator.js"></script>
+
+    <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
+         MUST stay above the <style> below — the shell's rules are all
+         single-class, so this game overrides them purely by source order. -->
+    <link rel="stylesheet" href="game-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-user-drag: none;
-            user-drag: none;
-            cursor: default;
+        /* Nonogram's identity. The shell paints its chrome from these.
+           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
+           "Got it!" label is light-on-blue. */
+        :root {
+            --accent-from: #2563eb;
+            --accent-to:   #1d4ed8;
+            --accent-fg:   #fff;
+            --accent-glow: rgba(37, 99, 235, 0.4);
+            --panel-bg: #1a1a1a;
         }
 
-        img, svg {
-            -webkit-user-drag: none;
-            user-drag: none;
+        /* The rest of this reset — margin/padding/box-sizing, the user-select
+           and user-drag family, -webkit-touch-callout and the tap-highlight
+           kill — now comes from the shell's `*`. `cursor: default` does not:
+           the shell deliberately leaves it out, so nonogram keeps its own.
+           (The old `img, svg { -webkit-user-drag: none }` rule went with it —
+           the shell's `*` already matches img and svg.) */
+        * {
+            cursor: default;
         }
 
         body {
@@ -42,38 +51,9 @@
             cursor: grabbing !important;
         }
 
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 500;
-            pointer-events: none;
-            background: transparent;
-        }
-
-        .navbar-btn {
-            border: none;
-            background: none;
-            color: #888;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: all;
-            transition: all 0.2s ease;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .navbar-btn:hover {
-            color: #fff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
-        }
+        /* .navbar / .navbar-btn now come from the shell. Nonogram's copies had
+           drifted from the other eight games and the shell corrects them —
+           see the migration notes on the exit link's underline. */
 
         .sidebar {
             position: fixed;
@@ -502,33 +482,24 @@
             transform: scale(0.98);
         }
 
+        /* Un-animated modal variant: the shell's base fades in, this one never
+           has. Both properties are required to keep the current behaviour. */
         .info-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
             padding: 20px;
+            animation: none;
         }
 
-        .info-modal.active {
-            display: flex;
-        }
-
+        /* Nonogram's panel is the smaller, bordered, un-shadowed variant rather
+           than the shell's 700px/40px/shadowed base. box-shadow must be
+           explicitly cleared — the shell's base sets one this game never had.
+           overflow-y is left alone: the shell's `auto` is what nonogram had. */
         .info-panel {
-            background: #1a1a1a;
             border: 2px solid #333;
             border-radius: 12px;
             padding: 30px;
             max-width: 600px;
             max-height: 90vh;
-            overflow-y: auto;
-            color: white;
+            box-shadow: none;
         }
 
         .modal-title {
@@ -560,22 +531,14 @@
             margin-bottom: 8px;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .modal-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-        }
+        /* .modal-btn / .modal-btn-primary now come from the shell, painted by
+           the :root accent vars above. This game had merged the two into a
+           single .modal-btn rule, so the markup below gained the
+           `modal-btn-primary` class it was missing — without it the shell's
+           bare .modal-btn is unpainted and the button renders transparent.
+           This game previously dropped the shared uppercase + letter-spacing,
+           so its button read "Got it!"; it now reads "GOT IT!" like the other
+           8 games, and gains the shared :active press. */
     </style>
 </head>
 <body>
@@ -714,7 +677,7 @@
                 </ul>
             </div>
             <div style="margin-top: 20px;">
-                <button class="modal-btn" id="closeInfoBtn">Got it!</button>
+                <button class="modal-btn modal-btn-primary" id="closeInfoBtn">Got it!</button>
             </div>
         </div>
     </div>
@@ -1089,9 +1052,6 @@
         let input = null;
         let timeInterval = null;
 
-        const infoBtn = document.getElementById('infoBtn');
-        const infoModal = document.getElementById('infoModal');
-        const closeInfoBtn = document.getElementById('closeInfoBtn');
         const gameWrapper = document.getElementById('gameWrapper');
         const victoryModal = document.getElementById('victoryModal');
         const newGameBtn = document.getElementById('newGameBtn');
@@ -1099,18 +1059,10 @@
         const sizeSelector = document.getElementById('sizeSelector');
         const difficultySelector = document.getElementById('difficultySelector');
 
-        infoBtn.addEventListener('click', () => {
-            infoModal.classList.add('active');
-        });
-
-        closeInfoBtn.addEventListener('click', () => {
-            infoModal.classList.remove('active');
-        });
-
+        /* The info modal (open / close / backdrop / Escape) is wired by
+           game-shell.js. The victory modal is nonogram's own, so its Escape
+           handler stays here. */
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && infoModal.classList.contains('active')) {
-                infoModal.classList.remove('active');
-            }
             if (e.key === 'Escape' && victoryModal.classList.contains('active')) {
                 victoryModal.classList.remove('active');
             }
@@ -1223,5 +1175,6 @@
         // Start with medium size, medium difficulty
         initializeGame(10, 'medium');
     </script>
+    <script src="game-shell.js"></script>
 </body>
 </html>

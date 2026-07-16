@@ -40,9 +40,16 @@
 }
 
 /* ====== RESET ======
-   Deliberately NOT included: `cursor: default`. Only hive sets it globally;
-   forcing it here would change the pointer over every un-styled element in
-   the other games. A game that wants it declares it itself. */
+   Deliberately NOT included: `cursor: default`. hive and nonogram set it
+   globally; forcing it here would change the pointer over every un-styled
+   element in the other seven. A game that wants it declares it itself.
+
+   NOTE the margin/padding/box-sizing below are NOT universal in this suite:
+   solitaire had ONLY `user-select: none` in its `*` and is laid out against
+   the UA defaults (content-box cards, UA margins on h3/p/ul). Adopting this
+   block wholesale silently resized every card, the container, and the stat
+   boxes — so solitaire carries a documented counter-reset. Check any new
+   game against this before deleting its reset. */
 * {
     user-select: none;
     -webkit-user-select: none;
@@ -199,7 +206,11 @@
 }
 
 .game-button:hover {
-    background: var(--btn-bg-hover);
+    /* background-IMAGE, not the `background` shorthand. The shorthand resets
+       every background-* longhand it doesn't mention — including the
+       background-size: 200% 200% set on the base rule above, which would snap
+       to `auto` on hover and silently kill the shimmer. */
+    background-image: var(--btn-bg-hover);
 }
 
 .game-button:active {
