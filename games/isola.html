@@ -13,28 +13,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Isola">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's --accent-*/--panel-bg/--btn-* per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Isola's identity. The shell paints its chrome from these. */
-        :root {
-            --accent-from: #FFD700;
-            --accent-to:   #FFA500;
-            --accent-fg:   #000;
-            --accent-glow: rgba(255, 215, 0, 0.4);
-            --panel-bg: linear-gradient(135deg, #6B1F3A 0%, #4A0E1F 100%);
-            --player-info-bg: rgba(74, 14, 31, 0.6);
-
-            /* Themed .game-button palette (crimson). Colours ride the vars;
-               the shape itself is overridden further down. */
-            --btn-bg:       linear-gradient(135deg, #5a1f32 0%, #3a0f20 100%);
-            --btn-bg-hover: linear-gradient(135deg, #7a2f42 0%, #4a1f30 100%);
-            --btn-border:   rgba(220, 53, 69, 0.3);
-            --btn-fg:       #e0e0e0;
-        }
+        /* Isola's identity used to be a :root block here — its own crimson
+           accent, panel and button variables. It is gone because
+           game-theme.css declares all of them on body[data-theme] (red, for
+           this game), and a declaration ON an element beats one merely
+           inherited from :root — the old block would have been dead weight
+           fighting the palette. Only the layout :root below is Isola's own. */
 
         /*
          * Board sizing.
@@ -72,7 +67,16 @@
         }
 
         body {
-            background: radial-gradient(ellipse at center, #8B1538 0%, #4A0E1F 100%);
+            /* .player-info's surface. game-shell.css documents this as a
+               translucent TINT over the board rather than an opaque fill, and
+               --bg-edge-rgb is exactly the rung for it — in the red palette
+               this IS the old rgba(74,14,31,0.6). Declared on body, not :root:
+               a var() here has to resolve against body[data-theme]'s tokens,
+               and on :root it would only ever see the green defaults. */
+            --player-info-bg: rgba(var(--bg-edge-rgb), 0.6);
+
+            /* The page wash comes from body.themed-bg in game-theme.css. It
+               used to be a hardcoded crimson radial here. */
             font-family: Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
@@ -102,7 +106,7 @@
         }
 
         .game-container {
-            background: linear-gradient(135deg, #6B1F3A 0%, #4A0E1F 100%);
+            background: var(--panel-bg);
             border-radius: 14px;
             padding: var(--container-pad);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -166,7 +170,7 @@
             font-size: 14px;
             font-weight: 600;
             margin-top: 12px;
-            color: #FFD700;
+            color: var(--gold);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -185,10 +189,12 @@
 
         .pawn-preview.red {
             background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+            border: 3px solid #7F1D1D;
         }
 
         .pawn-preview.black {
             background: radial-gradient(circle at 30% 30%, #444, #111);
+            border: 3px solid #3F3F46;
         }
 
         .grid-container {
@@ -208,7 +214,12 @@
         .grid-cell {
             width: var(--cell);
             height: var(--cell);
-            background: linear-gradient(135deg, #a8354a 0%, #8B1538 100%);
+            /* Isola is one of only two games that THEME their board (the other
+               is hive). The old crimson gradient maps to the accent-deep and
+               border rungs — chosen because they reproduce today's lightness,
+               keeping the deliberate compromise between the red pawn (which
+               wants a dark cell) and the black pawn (which wants a light one). */
+            background: linear-gradient(135deg, var(--accent-deep) 0%, var(--border) 100%);
             border-radius: 6px;
             position: relative;
             cursor: pointer;
@@ -226,7 +237,9 @@
         }
 
         .grid-cell.removed {
-            background: linear-gradient(135deg, #2a0a14 0%, #1a0508 100%);
+            /* The hole a removed tile leaves. --surface-sunken is the "well"
+               rung; the inset shadow and the ::after vignette carry the depth. */
+            background: linear-gradient(135deg, var(--surface-sunken) 0%, var(--bg-edge) 100%);
             box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
             cursor: not-allowed;
             pointer-events: none;
@@ -267,12 +280,18 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* PIECE IDENTITY — literals by design, never palette tokens. The 3px
+           deep-tone rim is damme's checker idiom: the pawns were the only
+           pieces in the suite with no rim at all, and the rim is what keeps
+           the red pawn separable from the red palette's themed cell. */
         .pawn.red {
             background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+            border: 3px solid #7F1D1D;
         }
 
         .pawn.black {
             background: radial-gradient(circle at 30% 30%, #444, #111);
+            border: 3px solid #3F3F46;
         }
 
         .pawn.dragging {
@@ -317,13 +336,9 @@
         }
 
         .game-button:hover {
-            border-color: rgba(220, 53, 69, 0.6);
-            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.2);
+            border-color: rgba(var(--accent-rgb), 0.6);
+            box-shadow: 0 6px 16px rgba(var(--accent-rgb), 0.2);
             color: #fff;
-        }
-
-        .status-message {
-            display: none;
         }
 
         /* Panel shape: narrower than the shell's base, and a flex column whose
@@ -340,7 +355,7 @@
         .modal-title {
             font-size: 32px;
             font-weight: 700;
-            color: #FFD700;
+            color: var(--gold);
             margin-bottom: 20px;
             margin-top: 0;
         }
@@ -357,7 +372,7 @@
 
         .modal-text h3 {
             font-size: 18px;
-            color: #FFD700;
+            color: var(--gold);
             margin-top: 25px;
             margin-bottom: 12px;
             font-weight: 700;
@@ -385,7 +400,7 @@
         }
 
         .modal-text li strong {
-            color: #FFD700;
+            color: var(--gold);
         }
 
         .modal-buttons {
@@ -430,7 +445,9 @@
         }
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette (red — isola's crimson heritage);
+     themed-bg opts into the shared radial page wash from game-theme.css. -->
+<body data-theme="red" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>
@@ -442,11 +459,6 @@
 
     <div class="game-board">
         <div class="game-container">
-            <!-- Status Message -->
-            <div class="status-message" id="status-message">
-                Game Starting...
-            </div>
-
             <!-- Left Column: Left Player -->
             <div class="player-column">
                 <!-- New Game Button -->

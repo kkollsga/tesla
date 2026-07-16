@@ -8,22 +8,23 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's --accent-*/--panel-bg/--btn-* per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Backgammon's identity. The shell paints its chrome from these.
-           --accent-fg is #fff: the accent is a mid blue, so the label is
-           light-on-blue rather than chess's dark-on-gold. */
-        :root {
-            --accent-from: #2563eb;
-            --accent-to:   #1d4ed8;
-            --accent-fg:   #fff;
-            --accent-glow: rgba(37, 99, 235, 0.4);
-            --panel-bg: #1a1a1a;
-        }
+        /* Backgammon's chrome is painted by game-theme.css's palette tokens,
+           selected by body[data-theme] — the old :root accent block is gone
+           because a declaration ON body beats one inherited from :root, so it
+           would have silently overridden the palette. The palette themes only
+           the ENVIRONMENT (panels, modal, buttons); the canvas board and the
+           orange/cream checker identity are game rules and stay literal. */
 
         body {
             background: #0a0a0a;
@@ -144,7 +145,7 @@
             position: absolute;
             top: -4px;
             right: -4px;
-            background: #FFD700;
+            background: var(--gold);
             color: #1a1a1a;
             width: 24px;
             height: 24px;
@@ -390,9 +391,9 @@
 
         .winner-content h1 {
             font-size: 48px;
-            color: #FFD700;
+            color: var(--gold);
             margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            text-shadow: 0 0 30px rgba(var(--gold-rgb), 0.5);
         }
 
         .winner-content p {
@@ -423,7 +424,7 @@
            box-shadow must be explicitly cleared — the shell's base sets one
            this game never had. padding/max-height/overflow already match. */
         .info-panel {
-            border: 2px solid #333;
+            border: 2px solid var(--border);
             border-radius: 12px;
             max-width: 600px;
             color: #ddd;
@@ -431,8 +432,11 @@
             box-shadow: none;
         }
 
+        /* Headings were #E8A060 — a warm orange picked to echo the wooden
+           board. --accent-bright is the palette's designated h3 rung, so the
+           modal's chrome now follows the environment instead. */
         .info-panel h2 {
-            color: #E8A060;
+            color: var(--accent-bright);
             font-size: 28px;
             margin-bottom: 20px;
             text-transform: uppercase;
@@ -440,7 +444,7 @@
         }
 
         .info-panel h3 {
-            color: #E8A060;
+            color: var(--accent-bright);
             font-size: 18px;
             margin-top: 24px;
             margin-bottom: 12px;
@@ -471,7 +475,9 @@
 
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette. No themed-bg: backgammon is deliberately
+     flat #0a0a0a, so the shared radial wash is not adopted. -->
+<body data-theme="blue">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>

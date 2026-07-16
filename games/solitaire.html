@@ -13,22 +13,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Solitaire">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's accent, panel and button variables per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Solitaire's identity. The shell paints its chrome from these.
-           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
-           "Got it!" label is light-on-blue. */
-        :root {
-            --accent-from: #2563eb;
-            --accent-to:   #1d4ed8;
-            --accent-fg:   #fff;
-            --accent-glow: rgba(37, 99, 235, 0.4);
-            --panel-bg: #1a1a1a;
-        }
+        /* Solitaire's chrome colours now come from game-theme.css's palette
+           tokens, selected by body[data-theme] — the old :root block of
+           accent, glow and panel variables is gone. The CTA now follows the
+           environment palette rather than solitaire's old mid-blue. The cards
+           and their red/black suits are piece identity and stay literal. */
 
         /* ---- Reset reconciliation ------------------------------------------
            Solitaire is the one game in the suite that never had the
@@ -73,7 +73,10 @@
         }
 
         body {
-            background: radial-gradient(ellipse at center, #8B1538 0%, #4A0E1F 100%);
+            /* The page wash comes from body.themed-bg in game-theme.css. It
+               used to be a hardcoded crimson radial here — the same crimson
+               that seeded the red palette, so data-theme="red" is the
+               rotation that reproduces the old look. */
             font-family: Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
@@ -490,7 +493,7 @@
         .victory-text {
             font-size: 80px;
             font-weight: 900;
-            color: #FFD700;
+            color: var(--gold); /* victory is gold in every palette */
             text-shadow:
                 0 0 20px rgba(255, 215, 0, 0.8),
                 0 0 40px rgba(255, 215, 0, 0.6),
@@ -542,10 +545,22 @@
                 transform: translateY(0);
             }
         }
+
+        /* pauseGame()'s overlay entrance. Named pause-fade-in on purpose:
+           this used to be a `@keyframes fadeIn` <style> that pauseGame()
+           injected into document.head on EVERY pause — each pause appended
+           another copy, and every copy overrode the shell's global fadeIn
+           on this page. Declared once, under a name nothing else claims. */
+        @keyframes pause-fade-in {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
         
-        /* Custom board styling */
+        /* Custom board styling. The felt frame is environment, not board
+           surface — the cards sitting on it stay white. The old maroon pair
+           #6B1F3A -> #4A0E1F sits at almost exactly these two rungs. */
         .game-container {
-            background: linear-gradient(135deg, #6B1F3A 0%, #4A0E1F 100%);
+            background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
             border-radius: 14px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -553,7 +568,10 @@
         }
 
         .stat-container {
-            background: rgba(74, 14, 31, 0.6);
+            /* Was rgba(74, 14, 31, 0.6) — isola's maroon, stranded here when
+               the games still shared it. --bg-edge-rgb at 0.6 is exactly that
+               rung, and now it follows the palette. */
+            background: rgba(var(--bg-edge-rgb), 0.6);
             border-radius: 8px;
             padding: 10px 15px;
             color: white;
@@ -562,7 +580,9 @@
         /* Responsive styles - handled by JavaScript now */
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette; themed-bg opts into the shared radial
+     page wash from game-theme.css. -->
+<body data-theme="red" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>
@@ -1720,7 +1740,7 @@
                 text-align: center;
                 z-index: 1000;
                 pointer-events: none;
-                animation: fadeIn 0.5s ease-out;
+                animation: pause-fade-in 0.5s ease-out;
             `;
 
             pauseOverlay.innerHTML = `
@@ -1747,16 +1767,9 @@
                 ">No points are lost while paused</div>
             `;
 
-            // Add CSS animation for fade in
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translate(-50%, -60%); }
-                    to { opacity: 1; transform: translate(-50%, -50%); }
-                }
-            `;
-            document.head.appendChild(style);
-
+            // The pause-fade-in keyframes live in this page's <style> block.
+            // (This used to inject a competing @keyframes fadeIn into
+            // document.head on every pause.)
             domCache.gameBoard.appendChild(pauseOverlay);
         }
 

@@ -11,22 +11,23 @@
     <script src="puzzle-generator.js"></script>
     <script src="puzzle-curator.js"></script>
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's accent, panel and button variables per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Nonogram's identity. The shell paints its chrome from these.
-           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
-           "Got it!" label is light-on-blue. */
-        :root {
-            --accent-from: #2563eb;
-            --accent-to:   #1d4ed8;
-            --accent-fg:   #fff;
-            --accent-glow: rgba(37, 99, 235, 0.4);
-            --panel-bg: #1a1a1a;
-        }
+        /* Nonogram's chrome colours now come from game-theme.css's palette
+           tokens, selected by body[data-theme] — the old :root block of
+           accent, glow and panel variables is gone, and the chrome's old
+           mid-blue now follows the environment palette. The grid is board
+           surface, not chrome: the dark cells and the filled-cell blue need
+           a fixed ground and stay literal (see palettes.md, section 1). */
 
         /* The rest of this reset — margin/padding/box-sizing, the user-select
            and user-drag family, -webkit-touch-callout and the tap-highlight
@@ -39,7 +40,8 @@
         }
 
         body {
-            background: radial-gradient(ellipse at center, #1a472a 0%, #0a1f13 100%);
+            /* The page wash comes from body.themed-bg in game-theme.css. It
+               used to be hive's green felt, hardcoded here byte-for-byte. */
             overflow: hidden;
             height: 100vh;
             width: 100vw;
@@ -70,7 +72,9 @@
         }
 
         .sidebar-content {
-            background: rgba(13, 42, 24, 0.6);
+            /* Was rgba(13, 42, 24, 0.6) — a hand-mixed tint of the old green
+               felt. --surface-rgb is the panel-tint rung. */
+            background: rgba(var(--surface-rgb), 0.6);
             border-radius: 10px;
             padding: 25px;
             border: 2px solid transparent;
@@ -100,7 +104,9 @@
 
         .sidebar-value {
             font-size: 24px;
-            color: #2563eb;
+            /* Stat readouts are text on a dark tint, so they take the bright
+               rung rather than the accent itself. */
+            color: var(--accent-bright);
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
         }
@@ -153,9 +159,9 @@
         }
 
         .size-btn:hover, .difficulty-btn:hover {
-            border-color: #2563eb;
+            border-color: var(--accent);
             color: #fff;
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(var(--accent-rgb), 0.1);
         }
 
         .size-btn.active, .difficulty-btn.active {
@@ -194,8 +200,8 @@
 
         .check-btn {
             padding: 10px 20px;
-            border: 2px solid #2563eb;
-            background: rgba(37, 99, 235, 0.2);
+            border: 2px solid var(--accent);
+            background: rgba(var(--accent-rgb), 0.2);
             color: #fff;
             border-radius: 4px;
             font-size: 12px;
@@ -206,8 +212,8 @@
         }
 
         .check-btn:hover {
-            border-color: #2563eb;
-            background: rgba(37, 99, 235, 0.3);
+            border-color: var(--accent);
+            background: rgba(var(--accent-rgb), 0.3);
             transform: scale(1.05);
         }
 
@@ -361,8 +367,11 @@
         }
 
         .victory-panel {
-            background: linear-gradient(135deg, #1a472a 0%, #0a3a1f 100%);
-            border: 3px solid #FFD700;
+            /* Was another hand-mixed copy of the old green felt; now the
+               shared panel gradient rungs. The gold frame never rotates —
+               gold is the victory signal in every palette. */
+            background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+            border: 3px solid var(--gold);
             border-radius: 12px;
             padding: 40px;
             max-width: 500px;
@@ -386,7 +395,7 @@
             font-size: 72px;
             font-weight: 900;
             margin-bottom: 30px;
-            color: #FFD700;
+            color: var(--gold);
             text-shadow:
                 0 0 20px rgba(255, 215, 0, 0.8),
                 0 0 40px rgba(255, 215, 0, 0.6),
@@ -427,7 +436,7 @@
             padding: 20px;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-            border: 2px solid rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(var(--gold-rgb), 0.3);
         }
 
         .stat {
@@ -437,7 +446,7 @@
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: #FFD700;
+            color: var(--gold);
         }
 
         .stat-label {
@@ -455,27 +464,27 @@
         .victory-btn {
             flex: 1;
             padding: 15px 30px;
-            border: 2px solid #FFD700;
+            border: 2px solid var(--gold);
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-            background: rgba(255, 215, 0, 0.1);
-            color: #FFD700;
+            background: rgba(var(--gold-rgb), 0.1);
+            color: var(--gold);
         }
 
         .victory-btn-primary {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000;
-            border-color: #FFD700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+            color: var(--gold-fg);
+            border-color: var(--gold);
             text-shadow: none;
         }
 
         .victory-btn-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+            box-shadow: 0 8px 25px rgba(var(--gold-rgb), 0.6);
         }
 
         .victory-btn-primary:active {
@@ -541,7 +550,9 @@
            8 games, and gains the shared :active press. */
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette; themed-bg opts into the shared radial
+     page wash from game-theme.css. -->
+<body data-theme="green" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info">

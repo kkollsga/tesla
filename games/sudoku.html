@@ -8,22 +8,24 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's --accent-*/--panel-bg/--btn-* per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Sudoku's identity. The shell paints its chrome from these.
-           --accent-fg is #fff: the accent is a mid-blue (#2563eb), so the
-           "Got it!" label is light-on-blue. */
-        :root {
-            --accent-from: #2563eb;
-            --accent-to:   #1d4ed8;
-            --accent-fg:   #fff;
-            --accent-glow: rgba(37, 99, 235, 0.4);
-            --panel-bg: #1a1a1a;
-        }
+        /* Sudoku's chrome is painted by game-theme.css's palette tokens,
+           selected by body[data-theme] — the old :root accent block is gone
+           because a declaration ON body beats one inherited from :root, so it
+           would have silently overridden the palette. The palette themes only
+           the ENVIRONMENT (sidebar buttons, modals); the white board, its
+           number/notes colouring and the semantic difficulty colours
+           (green/amber/red) are a fixed legibility system and stay literal. */
 
         /* The whole of sudoku's old `*` reset — margin/padding/box-sizing, the
            user-select family, -webkit-touch-callout and the tap-highlight kill
@@ -55,13 +57,9 @@
             padding-top: 60px;
         }
 
-        .header {
-            display: none;
-        }
-
-        .title {
-            display: none;
-        }
+        /* The old .header/.title pair (both display:none) is gone along with
+           its markup — the navbar replaced that header long ago and nothing
+           in the script ever reached for either. */
 
         .sidebar {
             display: flex;
@@ -106,7 +104,7 @@
         }
 
         .btn {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
             color: #fff;
             border: none;
             padding: 12px 20px;
@@ -122,7 +120,7 @@
         }
 
         #newGameBtn {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, var(--accent-bright) 0%, var(--accent) 100%);
         }
 
         #newGameBtn.easy {
@@ -200,7 +198,7 @@
 
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 8px 20px var(--accent-glow);
         }
 
         .btn:active {
@@ -599,7 +597,7 @@
              - box-shadow: this panel is bordered, not shadowed. */
         .modal-content, .info-panel {
             background: var(--panel-bg);
-            border: 2px solid #2563eb;
+            border: 2px solid var(--accent);
             border-radius: 16px;
             padding: 40px;
             max-width: 600px;
@@ -630,7 +628,7 @@
             transform: translateX(-50%);
             font-size: 48px;
             font-weight: 900;
-            color: #FFD700;
+            color: var(--gold);
             text-shadow:
                 0 0 20px rgba(255, 215, 0, 0.8),
                 0 0 40px rgba(255, 215, 0, 0.6),
@@ -722,7 +720,7 @@
 
         .modal-text h3 {
             font-size: 18px;
-            color: #2563eb;
+            color: var(--accent-bright);
             margin-top: 25px;
             margin-bottom: 12px;
             font-weight: 700;
@@ -778,7 +776,9 @@
         }
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette. No themed-bg: sudoku is deliberately
+     flat #0a0a0a, so the shared radial wash is not adopted. -->
+<body data-theme="blue">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>
@@ -845,10 +845,6 @@
     </div>
 
     <div class="game-container">
-        <div class="header">
-            <div class="title">Sudoku</div>
-        </div>
-
         <div class="sidebar">
             <div class="controls">
                 <div class="control-row">

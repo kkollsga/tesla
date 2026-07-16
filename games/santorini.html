@@ -13,30 +13,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Santorini">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's --accent-*/--panel-bg/--btn-* per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Santorini's identity. The shell paints its chrome from these.
-           Accent is the Aegean blue ramp, but the primary modal button keeps
-           BLACK text on it (light-on-blue would be unreadable). */
-        :root {
-            --accent-from: #87CEEB;
-            --accent-to:   #4682B4;
-            --accent-fg:   #000;
-            --accent-glow: rgba(135, 206, 235, 0.4);
-            --panel-bg: linear-gradient(135deg, #2E5A8C 0%, #1E3A5F 100%);
-            --player-info-bg: rgba(30, 58, 95, 0.6);
-
-            /* Themed .game-button palette (deep blue). Colours ride the vars;
-               the shape itself is overridden further down. */
-            --btn-bg:       linear-gradient(135deg, #1a3a52 0%, #0d1f2d 100%);
-            --btn-bg-hover: linear-gradient(135deg, #2a4a62 0%, #1d2f3d 100%);
-            --btn-border:   rgba(74, 144, 226, 0.3);
-            --btn-fg:       #e0e0e0;
-        }
+        /* Santorini's identity used to be a :root block here — its own Aegean
+           blue accent, panel and button variables. It is gone because
+           game-theme.css declares all of them on body[data-theme] (blue, for
+           this game), and a declaration ON an element beats one merely
+           inherited from :root — the old block would have been dead weight
+           fighting the palette. Only the layout :root below is Santorini's own. */
 
         /*
          * Board sizing.
@@ -74,7 +67,15 @@
         }
 
         body {
-            background: radial-gradient(ellipse at center, #4A90E2 0%, #1E3A5F 100%);
+            /* .player-info's surface. game-shell.css documents this as a
+               translucent TINT over the board rather than an opaque fill, and
+               --bg-edge-rgb is exactly the rung for it. Declared on body, not
+               :root: a var() here has to resolve against body[data-theme]'s
+               tokens, and on :root it would only ever see the green defaults. */
+            --player-info-bg: rgba(var(--bg-edge-rgb), 0.6);
+
+            /* The page wash comes from body.themed-bg in game-theme.css. It
+               used to be a hardcoded blue radial here. */
             font-family: Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
@@ -104,7 +105,7 @@
         }
 
         .game-container {
-            background: linear-gradient(135deg, #2E5A8C 0%, #1E3A5F 100%);
+            background: var(--panel-bg);
             border-radius: 14px;
             padding: var(--container-pad);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -167,7 +168,7 @@
             font-size: 14px;
             font-weight: 600;
             margin-top: 12px;
-            color: #FFD700;
+            color: var(--gold);
             opacity: 0;
             transition: opacity 0.3s ease;
             min-height: 20px;
@@ -424,8 +425,8 @@
         }
 
         .game-button:hover {
-            border-color: rgba(74, 144, 226, 0.6);
-            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.2);
+            border-color: rgba(var(--accent-rgb), 0.6);
+            box-shadow: 0 6px 16px rgba(var(--accent-rgb), 0.2);
             color: #fff;
         }
 
@@ -443,7 +444,7 @@
         .modal-title {
             font-size: 32px;
             font-weight: 700;
-            color: #FFD700;
+            color: var(--gold);
             margin-bottom: 20px;
             margin-top: 0;
         }
@@ -460,7 +461,7 @@
 
         .modal-text h3 {
             font-size: 18px;
-            color: #FFD700;
+            color: var(--gold);
             margin-top: 25px;
             margin-bottom: 12px;
             font-weight: 700;
@@ -488,7 +489,7 @@
         }
 
         .modal-text li strong {
-            color: #FFD700;
+            color: var(--gold);
         }
 
         .modal-buttons {
@@ -502,7 +503,9 @@
 
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette (blue — santorini's Aegean heritage);
+     themed-bg opts into the shared radial page wash from game-theme.css. -->
+<body data-theme="blue" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>

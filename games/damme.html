@@ -8,25 +8,42 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's accent, panel and button variables per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Damme's identity. The shell paints its chrome from these.
-           --accent-fg is #fff, not chess's #000: this accent is a deep red
-           (#DC2626), so the "Got it!" label is light-on-red. */
-        :root {
-            --accent-from: #DC2626;
-            --accent-to:   #B91C1C;
-            --accent-fg:   #fff;
-            --accent-glow: rgba(220, 38, 38, 0.4);
-            --panel-bg: #1a1a1a;
-            --player-info-bg: rgba(26, 26, 26, 0.6);
-        }
+        /* Damme's colours come from game-theme.css's palette tokens, selected
+           by body[data-theme]. What used to be here: a :root block declaring
+           damme's own deep-red accent, panel and player-info variables. The
+           accent and panel vars are gone because game-theme.css declares all
+           of them on body[data-theme] — red is now a palette the whole suite
+           shares, not damme's identity, and a leftover copy here would
+           silently win over whichever palette is active. --player-info-bg
+           survives (it has no palette equivalent) and now lives on the body
+           rule below.
+
+           THE RULE (see game-theme.css): the palette themes the ENVIRONMENT —
+           panels, buttons, headings, glow. It NEVER themes player identity:
+           the red/white checkers and the neutral grey board squares are game
+           rules and stay literal. */
 
         body {
+            /* .player-info's surface: a translucent tint, and --bg-edge-rgb
+               is exactly the rung for it. Declared on body, not :root, so its
+               var() resolves against the active palette rather than :root's
+               green defaults. */
+            --player-info-bg: rgba(var(--bg-edge-rgb), 0.6);
+
+            /* Deliberately NOT themed-bg: damme's wash is this near-neutral
+               linear gradient, not the suite's radial ellipse — forcing the
+               radial on it would be a redesign, not a theming. */
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
@@ -54,7 +71,9 @@
                which in turn shrinks the board to fit beside the panels. */
             min-width: 0;
             max-width: 100vw;
-            background: linear-gradient(135deg, #2C2C2C 0%, #1A1A1A 100%);
+            /* Same surface as the info panel — the shell's var, rebound per
+               palette by game-theme.css. Was this exact gradient in grey. */
+            background: var(--panel-bg);
             border-radius: 14px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -105,13 +124,15 @@
             font-size: 14px;
             font-weight: 600;
             margin-top: 12px;
-            color: #FFD700;
+            /* The "Your turn" text: gold is the fixed cross-palette signal
+               and never rotates — var(--gold) is spelling, not theming. */
+            color: var(--gold);
             min-height: 20px;
         }
 
         .piece-count {
             font-size: 14px;
-            color: #888;
+            color: var(--text-dim);
             margin-top: 4px;
         }
 
@@ -288,7 +309,7 @@
            than the shell's 700px/40px/shadowed base. box-shadow must be
            explicitly cleared — the shell's base sets one this game never had. */
         .info-panel {
-            border: 2px solid #444;
+            border: 2px solid var(--border);
             border-radius: 12px;
             padding: 30px;
             max-width: 600px;
@@ -296,14 +317,16 @@
             box-shadow: none;
         }
 
+        /* These were damme's identity reds (#DC2626 / #EF4444); headings are
+           environment chrome, so they now take whichever palette is active. */
         .info-panel h2 {
-            color: #DC2626;
+            color: var(--accent);
             margin-bottom: 20px;
             font-size: 28px;
         }
 
         .info-panel h3 {
-            color: #EF4444;
+            color: var(--accent-bright);
             margin-top: 20px;
             margin-bottom: 10px;
             font-size: 20px;
@@ -335,7 +358,7 @@
         }
 
         /* .modal-btn / .modal-btn-primary now come from the shell, painted by
-           the :root accent vars above. This game previously dropped the shared
+           the palette's accent. This game previously dropped the shared
            uppercase + letter-spacing, so its button read "Got it!"; it now
            reads "GOT IT!" like the other 8 games. Deliberate — damme already
            uppercases its own prominent labels (.player-name, .victory-text). */
@@ -418,7 +441,9 @@
         }
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette. No themed-bg: damme keeps its own
+     near-neutral linear wash (see the body rule above). -->
+<body data-theme="red">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>

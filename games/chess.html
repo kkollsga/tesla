@@ -13,24 +13,39 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chess">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's accent, panel and button variables per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above the <style> below — the shell's rules are all
          single-class, so this game overrides them purely by source order. -->
     <link rel="stylesheet" href="game-shell.css">
 
     <style>
-        /* Chess's identity. The shell paints its chrome from these. */
-        :root {
-            --accent-from: #FFD700;
-            --accent-to:   #FFA500;
-            --accent-fg:   #000;
-            --accent-glow: rgba(255, 215, 0, 0.4);
-            --panel-bg: linear-gradient(135deg, #2C2C2C 0%, #1A1A1A 100%);
-            --player-info-bg: rgba(26, 26, 26, 0.6);
-        }
+        /* Chess's colours come from game-theme.css's palette tokens, selected
+           by body[data-theme]. What used to be here: a :root block declaring
+           chess's gold accent, panel and player-info variables. The accent and
+           panel vars are gone because game-theme.css already declares all of
+           them on body[data-theme] — a leftover copy here would silently win
+           over the palette. --player-info-bg survives (it has no palette
+           equivalent) and now lives on the body rule below.
+
+           THE RULE (see game-theme.css): the palette themes the ENVIRONMENT —
+           page wash, panels, buttons, glow. It NEVER themes player identity
+           (the black/white pieces) or the neutral grey board squares, and gold
+           keeps its fixed "your turn / active" role via var(--gold). */
 
         body {
-            background: radial-gradient(ellipse at center, #3D3D3D 0%, #1A1A1A 100%);
+            /* .player-info's surface: a translucent tint over the wash, and
+               --bg-edge-rgb is exactly the rung for it. Declared on body, not
+               :root, so its var() resolves against the active palette rather
+               than :root's green defaults. */
+            --player-info-bg: rgba(var(--bg-edge-rgb), 0.6);
+
+            /* The page wash comes from body.themed-bg in game-theme.css; the
+               hardcoded grey radial that used to sit here is what it replaces. */
             font-family: Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
@@ -66,7 +81,9 @@
         }
 
         .game-container {
-            background: linear-gradient(135deg, #2C2C2C 0%, #1A1A1A 100%);
+            /* Same surface as the info panel — the shell's var, rebound per
+               palette by game-theme.css. Was this exact gradient in grey. */
+            background: var(--panel-bg);
             border-radius: 14px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -111,7 +128,7 @@
             font-size: 32px;
             font-weight: 700;
             font-family: 'Courier New', monospace;
-            color: #FFD700;
+            color: var(--gold);
             margin: 10px 0;
         }
 
@@ -119,7 +136,7 @@
             font-size: 14px;
             font-weight: 600;
             margin-top: 12px;
-            color: #FFD700;
+            color: var(--gold);
         }
 
         .resign-button {
@@ -145,10 +162,12 @@
         }
 
         .time-control-selector {
-            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            /* Painted like the game buttons — the shell's --btn-* vars, which
+               game-theme.css rebinds per palette. Was the same look in grey. */
+            background: var(--btn-bg);
             border-radius: 8px;
             padding: 12px 16px;
-            border: 2px solid #444;
+            border: 2px solid var(--btn-border);
             box-shadow:
                 0 4px 12px rgba(0,0,0,0.5),
                 inset 0 2px 4px rgba(255,255,255,0.1);
@@ -156,17 +175,19 @@
             transition: all 0.2s ease;
             text-align: center;
             font-size: 12px;
-            color: #888;
+            color: var(--text-dim);
             margin-bottom: 10px;
         }
 
         .time-control-selector:hover:not(.active) {
-            border-color: #666;
+            border-color: rgba(var(--accent-rgb), 0.6);
         }
 
+        /* The current selection keeps GOLD, not the accent: "active" is the
+           fixed cross-palette signal and never rotates. */
         .time-control-selector.active {
-            border-color: #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold-glow);
             cursor: default;
         }
 
@@ -361,8 +382,8 @@
         }
 
         .time-option {
-            background: #2d2d2d;
-            border: 2px solid #444;
+            background: var(--surface-raised);
+            border: 2px solid var(--border);
             border-radius: 8px;
             padding: 20px;
             color: white;
@@ -371,9 +392,11 @@
             transition: all 0.2s ease;
         }
 
+        /* Hover is environment chrome, so it rotates — gold used to double as
+           both hover affordance and turn signal here; it now means one thing. */
         .time-option:hover {
-            border-color: #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            border-color: var(--accent-bright);
+            box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.3);
         }
 
         .time-option-label {
@@ -394,8 +417,10 @@
         }
 
         .promotion-option {
+            /* The .white/.black variants below replace this background with a
+               text-clipped gradient, so only the border actually shows. */
             background: #2d2d2d;
-            border: 2px solid #444;
+            border: 2px solid var(--border);
             border-radius: 8px;
             padding: 20px;
             font-size: 48px;
@@ -461,29 +486,34 @@
         }
 
         .promotion-option:hover {
-            border-color: #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            border-color: var(--accent-bright);
+            box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.3);
             transform: scale(1.1);
         }
 
+        /* Modal headings stay GOLD across every palette (hive's precedent):
+           gold is the fixed signal colour and never rotates, so var(--gold)
+           here is spelling, not theming. The rgba gold tints below stay
+           literal for the same reason the shell keeps its gold text-shadows
+           literal — they can never change. */
         .modal-title {
             margin-top: 0;
             margin-bottom: 35px;
-            color: #FFD700;
+            color: var(--gold);
             font-size: 36px;
             font-weight: 700;
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 2px;
             text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-            border-bottom: 3px solid #FFD700;
+            border-bottom: 3px solid var(--gold);
             padding-bottom: 20px;
         }
 
         .modal-text h3 {
             margin-top: 28px;
             margin-bottom: 16px;
-            color: #FFD700;
+            color: var(--gold);
             font-size: 18px;
             font-weight: 700;
             text-transform: uppercase;
@@ -516,7 +546,7 @@
         }
 
         .modal-text strong {
-            color: #FFD700;
+            color: var(--gold);
             font-weight: 700;
         }
 
@@ -534,7 +564,7 @@
         }
 
         .definition-item strong {
-            color: #FFD700;
+            color: var(--gold);
         }
 
         .piece-icon {
@@ -545,11 +575,14 @@
             text-align: center;
         }
 
-        /* .modal-btn / .modal-btn-primary come from the shell; the gold
-           accent is set via the :root vars at the top of this block. */
+        /* .modal-btn / .modal-btn-primary come from the shell, painted by the
+           palette's accent — no longer gold, so the CTA and the your-turn
+           signal stop competing for the same colour. */
     </style>
 </head>
-<body>
+<!-- data-theme selects the palette; themed-bg opts into the shared radial
+     page wash, replacing the grey radial this file used to hardcode. -->
+<body data-theme="green" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>
