@@ -953,10 +953,6 @@ document.getElementById('new-game').addEventListener('click', () => {
     initGame();
 });
 
-document.getElementById('back-button').addEventListener('click', () => {
-    window.location.href = 'https://kkollsga.github.io/tesla/';
-});
-
 document.getElementById('time-control-selector').addEventListener('click', () => {
     if (gameState.gameStarted) return;
     showTimeSelection();
