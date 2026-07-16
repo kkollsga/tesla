@@ -26,17 +26,63 @@
             height: 95vh;
             max-width: 1600px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
         }
 
+        /* Top bar — space only, deliberately unstyled (no background/border).
+           Holds the chrome that would otherwise eat grid cells. */
+        .topbar {
+            height: 60px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            margin-bottom: 12px;
+        }
+
+        .topbar-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #888;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .topbar-btn:hover { color: #fff; }
+        .topbar-btn .topbar-icon { width: 24px; height: 24px; }
+
+        .topbar-abrp {
+            color: #4CAF50;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .topbar-abrp:hover { color: #6FCF73; }
+        .topbar-abrp .topbar-icon { width: 28px; height: 28px; }
+
+        /* Columns are chosen by available width, not by a viewport breakpoint:
+           3 up at the Tesla's compact 1180px, 4 up once there's room (~1495px+).
+           This is deliberate — the fullscreen viewport has never been measured,
+           so a hardcoded breakpoint would be a guess whose failure mode is
+           silent. auto-fit degrades gracefully instead.
+           grid-auto-rows replaces a pinned repeat(4, 1fr), which could not
+           reflow when tiles are hidden. */
         .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            grid-auto-rows: 1fr;
             gap: 20px;
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
         }
 
         .service-link {
@@ -117,9 +163,6 @@
         
         .globo { border-color: #0047BB; }
         .globo:hover { border-color: #0047BB; box-shadow: 0 0 20px rgba(0, 71, 187, 0.3); }
-
-        .fullscreen-btn { border-color: #333; }
-        .fullscreen-btn:hover { border-color: #666; box-shadow: 0 0 20px rgba(102, 102, 102, 0.3); }
 
         .games { border-color: #8B1538; }
         .games:hover { border-color: #DC2626; box-shadow: 0 0 20px rgba(139, 21, 56, 0.5); }
@@ -338,6 +381,37 @@
 </head>
 <body>
     <div class="container">
+        <!-- Top bar. These links must keep flowing through navigateToService —
+             that handler IS the Tesla YouTube-redirect hack. The listener binds
+             `.service-link, .topbar-btn`, so behaviour comes from the selector,
+             not from borrowing the tile class. -->
+        <div class="topbar">
+            <a href="./" class="topbar-btn" data-url="./" title="Go Fullscreen">
+                <svg class="topbar-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25 25 L25 40 M25 25 L40 25" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M75 25 L75 40 M75 25 L60 25" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M25 75 L25 60 M25 75 L40 75" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M75 75 L75 60 M75 75 L60 75" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                </svg>
+                <span>Fullscreen</span>
+            </a>
+
+            <a href="https://abetterrouteplanner.com" class="topbar-btn topbar-abrp" data-url="https://abetterrouteplanner.com" title="A Better Route Planner">
+                <svg class="topbar-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 76 C20 52, 50 60, 50 38 C50 20, 68 20, 78 24" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"/>
+                    <circle cx="20" cy="76" r="8" fill="currentColor"/>
+                    <path d="M80 14 L88 30 L70 30 Z" fill="currentColor"/>
+                </svg>
+                <span>A Better Route Planner</span>
+            </a>
+
+            <button class="topbar-btn" id="settings-button" title="Settings" aria-label="Settings">
+                <svg class="topbar-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 32 L78 32 M22 50 L78 50 M22 68 L78 68" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+
         <div class="grid">
             <!-- Row 1 -->
             <a href="https://www.netflix.com" class="service-link netflix" data-url="https://www.netflix.com">
@@ -385,15 +459,6 @@
             <div class="service-link favorite-game" id="favorite-game-link">
                 <!-- Icon will be dynamically inserted -->
             </div>
-            <a href="./" class="service-link fullscreen-btn" data-url="./">
-                <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M25 25 L25 40 M25 25 L40 25" stroke="#888" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M75 25 L75 40 M75 25 L60 25" stroke="#888" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M25 75 L25 60 M25 75 L40 75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M75 75 L75 60 M75 75 L60 75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
-                </svg>
-                <div class="service-name">Go Fullscreen</div>
-            </a>
             <div class="service-link games" id="games-button">
                 <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <!-- Game controller icon -->
@@ -697,10 +762,14 @@
             }
         }
 
-        document.querySelectorAll('.service-link').forEach(link => {
+        // Anything that navigates: grid tiles and the top bar alike. Selecting on
+        // both classes keeps navigation independent of tile styling — a top-bar
+        // link must not have to look like a tile just to reach the Tesla hack.
+        document.querySelectorAll('.service-link, .topbar-btn').forEach(link => {
             link.addEventListener('click', function(e) {
                 const url = this.getAttribute('data-url');
-                // Only navigate if this element has a data-url (not the games button)
+                // Only navigate if this element has a data-url (not the games or
+                // settings buttons, which open modals instead)
                 if (url) {
                     navigateToService(url, e);
                 }
