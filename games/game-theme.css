@@ -1,0 +1,282 @@
+/* ============================================================================
+   game-theme.css — the four environment palettes (red / blue / green / orange).
+
+   LOAD ORDER. Link this BEFORE game-shell.css, which BEFORE the game's <style>:
+
+       <link rel="stylesheet" href="game-theme.css">
+       <link rel="stylesheet" href="game-shell.css">
+       <style> ... game-specific rules ... </style>
+
+   This file only DECLARES tokens — it has no selectors of its own beyond
+   :root and body[data-theme]. It cannot break a game that ignores it.
+
+   ---------------------------------------------------------------------------
+   THE ONE RULE: the palette themes the ENVIRONMENT, never player identity.
+
+   Environment = page wash, board frame, panels, borders, buttons, glow.
+   Rotates freely — nothing is at stake, so hue carries no information.
+
+   Player identity = chess's black/white, damme's red/white, backgammon's
+   orange/cream, hive's blue/orange tiles, solitaire's red/black suits. These
+   are GAME RULES. A white checker must stay white in the red palette or the
+   game stops being readable. NEVER assign a palette token to a piece.
+
+   Corollary, verified across all 9 games: 7 of 9 board surfaces are FIXED by
+   legibility and must NOT consume --surface* either — chess/damme's neutral
+   greys, santorini's sand (the only thing making its blue worker legible),
+   sudoku's white cells, nonogram's dark cells, backgammon's canvas board,
+   solitaire's white cards. Only isola (crimson tiles) and hive (dark hexes)
+   theme their board, and only those two should touch the surface rungs.
+   ---------------------------------------------------------------------------
+
+   THE SPINE. All four palettes are ONE lightness ramp with the hue rotated:
+
+       hue:  red 22deg | orange 55deg | green 152deg | blue 257deg  (OKLCH)
+
+   Every token below sits at an IDENTICAL OKLCH lightness in all four palettes.
+   Chroma is min(target, 90% of that hue's sRGB ceiling) — so red spends its
+   large gamut headroom and reads as a true red, while orange and green sit at
+   their ceilings. That is why these read as siblings rather than as four
+   hand-mixed one-offs: swapping palette changes HUE, not MOOD.
+
+   OKLCH is a DESIGN-TIME tool only. Every value here is concrete hex/rgb.
+   Nothing depends on runtime oklch() or color-mix() support — the target is
+   the car's Chromium and it may be old. See dev-docs/designs/palettes.md.
+
+   THE rgba() DECISION: hex custom properties cannot feed rgba(). Where a
+   token is needed at partial alpha, use its --*-rgb companion:
+
+       rgba(var(--accent-rgb), 0.3)   ..... CORRECT
+       rgba(var(--accent), 0.3)       ..... BROKEN, never do this
+
+   color-mix() would be tidier and is deliberately NOT used: game-shell.css
+   already rejected it for this exact target. Only the three tokens that
+   actually appear at partial alpha in the games carry an -rgb companion.
+   ============================================================================ */
+
+
+/* ============================================================================
+   FIXED TOKENS — these do NOT rotate. They are the shared state language.
+
+   Gold #ffd700 is the one existing cross-game token: it is in all 9 games and
+   means "active / your turn / victory". It must keep that role and stay
+   legible on every palette, so it sits OUTSIDE the rotation.
+   Measured against every palette: 9.8-10.4 on --surface, 6.8-7.4 on
+   --surface-raised, 7.4-8.1 on --bg-center. Never in doubt.
+
+   Do NOT place gold directly on --accent (2.4-2.8 only). Gold belongs on
+   surfaces and washes, which is where all 9 games already put it.
+   ============================================================================ */
+:root {
+    --gold:       #ffd700;  /* active / your turn / victory. Never rotates. */
+    --gold-deep:  #ffa500;  /* gold gradient's second stop */
+    --gold-fg:    #000;     /* text on gold */
+    --gold-rgb:   255, 215, 0;
+    --gold-glow:  rgba(255, 215, 0, 0.4);
+}
+
+
+/* ============================================================================
+   THE TOKEN VOCABULARY — 11 ramp tokens + 3 rgba companions, per palette.
+
+   Ordered dark -> light. Each game picks the rungs it needs; the ramp exists
+   so a game can pick a NEIGHBOURING rung rather than invent a colour.
+
+     --bg-edge         page radial-gradient OUTER stop / darkest thing shown
+     --bg-center       page radial-gradient CENTRE — the big chromatic wash
+     --surface-sunken  wells: hive's empty hex, inset holes. Deliberately only
+                       just below --surface: hive's #071508 sits 0.18 lightness
+                       under its wash and reads as a HOLE, not a surface. This
+                       rung is the fix for that bug, not a copy of it.
+     --surface         panel / .game-container base, panel gradient dark stop
+     --surface-raised  panel gradient light stop, raised cells
+     --border          panel / modal / button borders. Also isola's board cell
+                       light stop — it reproduces today's #a8354a lightness.
+     --accent-deep     accent gradient's dark stop; isola's cell dark stop
+     --accent          THE theme colour: primary button, headings, active chrome
+     --accent-bright   hover, h3, bright-on-dark text (5.9-6.3 on --surface)
+     --text-dim        secondary text (6.0-6.2 on --surface — AA)
+     --text            primary text (12.6-13.3 on --surface — AAA)
+
+     --accent-rgb      for rgba(var(--accent-rgb), a) — button borders, glows
+     --surface-rgb     for rgba(var(--surface-rgb), a) — panel tints
+     --bg-edge-rgb     for rgba(var(--bg-edge-rgb), a) — .player-info tints
+                       (isola's rgba(74,14,31,0.6) is exactly this)
+   ============================================================================ */
+
+
+/* ====== GREEN — the default ======
+   :root carries green so a page with no data-theme keeps today's implicit
+   default. body[data-theme="green"] repeats it so rotation can name it. */
+:root,
+body[data-theme="green"] {
+    --bg-edge:        #03200d;
+    --bg-center:      #0e4925;
+    --surface-sunken: #042510;
+    --surface:        #073519;
+    --surface-raised: #105029;
+    --border:         #196c3a;
+    --accent-deep:    #1e7c44;
+    --accent:         #299e58;
+    --accent-bright:  #59c47c;
+    --text-dim:       #a2afa5;
+    --text:           #f0f7f2;
+
+    --accent-rgb:     41, 158, 88;
+    --surface-rgb:    7, 53, 25;
+    --bg-edge-rgb:    3, 32, 13;
+}
+
+/* ====== RED ======
+   Seeded from isola/solitaire's crimson (#8B1538 -> #4A0E1F), the best-judged
+   colour already in the repo, then regenerated onto the spine. */
+body[data-theme="red"] {
+    --bg-edge:        #2e0d0d;
+    --bg-center:      #6d1b20;
+    --surface-sunken: #341212;
+    --surface:        #4a191a;
+    --surface-raised: #702628;
+    --border:         #9a3135;
+    --accent-deep:    #b4343b;
+    --accent:         #e2484f;
+    --accent-bright:  #f88382;
+    --text-dim:       #b7a6a5;
+    --text:           #fcf3f2;
+
+    --accent-rgb:     226, 72, 79;
+    --surface-rgb:    74, 25, 26;
+    --bg-edge-rgb:    46, 13, 13;
+}
+
+/* ====== ORANGE ======
+   Hue 55deg, deliberately pulled away from gold's 95deg so the gold "your
+   turn" signal stays a distinct colour rather than a brighter accent.
+   Honest caveat: orange at low lightness IS brown — that is the sRGB gamut,
+   not a mixing error. This is the weakest hue identity of the four at the
+   --surface rungs, and it is as good as an orange this dark gets. */
+body[data-theme="orange"] {
+    --bg-edge:        #2a1202;
+    --bg-center:      #5c300b;
+    --surface-sunken: #311603;
+    --surface:        #432105;
+    --surface-raised: #64340c;
+    --border:         #874815;
+    --accent-deep:    #9b5419;
+    --accent:         #c46c23;
+    --accent-bright:  #f08f47;
+    --text-dim:       #b5a89f;
+    --text:           #fbf3ef;
+
+    --accent-rgb:     196, 108, 35;
+    --surface-rgb:    67, 33, 5;
+    --bg-edge-rgb:    42, 18, 2;
+}
+
+/* ====== BLUE ====== */
+body[data-theme="blue"] {
+    --bg-edge:        #071932;
+    --bg-center:      #0b3b78;
+    --surface-sunken: #0c1e37;
+    --surface:        #102b50;
+    --surface-raised: #184179;
+    --border:         #1d59a7;
+    --accent-deep:    #1b66c5;
+    --accent:         #2e83f3;
+    --accent-bright:  #78adf7;
+    --text-dim:       #a3acb8;
+    --text:           #f1f5fc;
+
+    --accent-rgb:     46, 131, 243;
+    --surface-rgb:    16, 43, 80;
+    --bg-edge-rgb:    7, 25, 50;
+}
+
+
+/* ============================================================================
+   SHELL COMPOSITION.
+
+   game-shell.css declares its accent, panel and button variables in its own
+   :root as hardcoded fallbacks. Those are NOT edited here — that file belongs
+   to another phase. Instead the re-declarations below are made on
+   body[data-theme], and they win for a reason that has nothing to do with
+   load order or specificity: shell's values sit on <html> and merely INHERIT
+   down to <body>, while these are declared ON <body> itself. An element's own
+   declaration always beats an inherited one. So this composes correctly no
+   matter which stylesheet is linked first.
+
+   The seam: a game opts in purely by putting data-theme on <body>.
+
+   NOTE FOR THE PHASE THAT OWNS game-shell.css (report only, do not apply
+   here): shell's :root would be cleaner as references into these tokens —
+
+       --accent-from: var(--accent,      #FFD700);
+       --accent-to:   var(--accent-deep, #FFA500);
+       --accent-fg:   var(--accent-fg,   #000);
+       --accent-glow: rgba(var(--accent-rgb, 255,215,0), 0.4);
+       --panel-bg:    linear-gradient(135deg, var(--surface-raised, #2C2C2C) 0%,
+                                             var(--surface,        #1A1A1A) 100%);
+       --btn-bg:       linear-gradient(135deg, var(--surface-raised,#2d2d2d) 0%,
+                                              var(--surface,       #1a1a1a) 100%);
+       --btn-border:   rgba(var(--accent-rgb, 68,68,68), 0.4);
+       --btn-fg:       var(--text, white);
+
+   ...with the var() fallbacks preserving today's exact look for any page that
+   does not link this file. If that lands, the body[data-theme] block below
+   becomes redundant and should be deleted rather than left to fight it.
+   ============================================================================ */
+body[data-theme="red"],
+body[data-theme="blue"],
+body[data-theme="green"],
+body[data-theme="orange"] {
+    /* .modal-btn-primary. The primary CTA becomes the palette hue — this is
+       environment chrome, so it rotates. It also FIXES an existing overload:
+       chess/isola/hive currently spend gold on both the CTA *and* the
+       your-turn signal, so the signal competes with a button. Gold now means
+       exactly one thing. */
+    --accent-from: var(--accent);
+    --accent-to:   var(--accent-deep);
+    --accent-glow: rgba(var(--accent-rgb), 0.4);
+
+    /* Text ON --accent. Because every palette's accent sits at the SAME
+       lightness (L=0.62), the answer is the same for all four: black, at
+       5.3-6.2 contrast. That single fact is worth the whole spine — today
+       damme and backgammon hand-flip this to #fff precisely because their
+       accents drift in lightness. Declared here, not in :root above, because
+       shell also declares it at :root and would win on load order. */
+    --accent-fg:   #0d0d0d;
+
+    /* .info-panel */
+    --panel-bg: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+
+    /* .game-button */
+    --btn-bg:       linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    --btn-bg-hover: linear-gradient(135deg, var(--border) 0%, var(--surface-raised) 100%);
+    --btn-border:   rgba(var(--accent-rgb), 0.4);
+    --btn-fg:       var(--text);
+}
+
+
+/* ============================================================================
+   OPTIONAL CONVENIENCE — the page wash.
+
+   8 of 9 games paint the same shape: a radial ellipse from a chromatic centre
+   to a dark edge. A game adopts the wash by deleting its hardcoded gradient
+   and adding class="themed-bg" to <body>. Not automatic on body, because
+   sudoku and backgammon are deliberately flat #0a0a0a and damme is a linear
+   gradient — forcing the radial on them would be a redesign, not a theming.
+   ============================================================================ */
+body.themed-bg {
+    background: radial-gradient(ellipse at center,
+                                var(--bg-center) 0%,
+                                var(--bg-edge) 100%);
+}
+
+/* The victory signal, promoted from .player-info.active's gold border+glow —
+   byte-identical in 5 games already, so it is the language players read.
+   Kept gold in ALL palettes on purpose: per dev-docs/designs/theming.md the
+   base palette rotates for variation, so a hue cannot also mean "winner".
+   Gold can, because it never rotates. */
+.victory-glow {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-glow) !important;
+}
