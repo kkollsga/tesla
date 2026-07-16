@@ -3798,21 +3798,8 @@ function initGame() {
 }
 
 // Initialize event listeners
+// The info modal is wired by game-shell.js (open / close / backdrop / Escape).
 function initializeEventListeners() {
-    document.getElementById('infoBtn').addEventListener('click', () => {
-        document.getElementById('infoModal').classList.add('active');
-    });
-
-    document.getElementById('closeInfoBtn').addEventListener('click', () => {
-        document.getElementById('infoModal').classList.remove('active');
-    });
-
-    document.getElementById('infoModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('infoModal')) {
-            document.getElementById('infoModal').classList.remove('active');
-        }
-    });
-
     document.getElementById('new-game').addEventListener('click', () => {
         // Clear any existing victory screens
         document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
