@@ -3197,56 +3197,6 @@ function updatePlayerInfo() {
 }
 
 // ============================================
-// UI HELPER FUNCTIONS
-// ============================================
-
-function showPieceInfo(insect, event) {
-    const popup = document.getElementById('pieceInfoPopup');
-    const insectData = INSECT_TYPES[insect.insect];
-
-    if (currentPopupCloser) {
-        document.removeEventListener('click', currentPopupCloser);
-        document.removeEventListener('contextmenu', currentPopupCloser);
-    }
-
-    document.getElementById('pieceInfoTitle').textContent = insectData.name;
-    document.getElementById('pieceInfoDetails').textContent = insectData.movement;
-    document.getElementById('pieceInfoOwner').textContent = `${insect.player === 1 ? 'Left (Blue)' : 'Right (Orange)'}`;
-
-    popup.classList.add('active');
-
-    let x = event.clientX + 10;
-    let y = event.clientY + 10;
-
-    popup.style.left = x + 'px';
-    popup.style.top = y + 'px';
-
-    const rect = popup.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
-        x = window.innerWidth - rect.width - 10;
-        popup.style.left = x + 'px';
-    }
-    if (rect.bottom > window.innerHeight) {
-        y = window.innerHeight - rect.height - 10;
-        popup.style.top = y + 'px';
-    }
-
-    currentPopupCloser = (e) => {
-        if (popup.contains(e.target)) return;
-        popup.classList.remove('active');
-        document.removeEventListener('click', currentPopupCloser);
-        document.removeEventListener('contextmenu', currentPopupCloser);
-        currentPopupCloser = null;
-    };
-
-    setTimeout(() => {
-        document.addEventListener('click', currentPopupCloser);
-        document.addEventListener('contextmenu', currentPopupCloser);
-    }, 10);
-}
-
-
-// ============================================
 // PIECE INFO POPUP
 // ============================================
 
