@@ -156,6 +156,31 @@
             gap: 20px;
         }
 
+        /* Matches the .game-button idiom in chess/damme/hive/isola/santorini.
+           Duplicated for now; games/game-shell.css will absorb it. */
+        .game-button {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
+            background-size: 200% 200%;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .game-button:hover {
+            background: linear-gradient(135deg, #202020 0%, #333333 25%, #202020 50%, #333333 75%, #202020 100%);
+        }
+
+        .game-button:active {
+            transform: translateY(1px);
+        }
+
         /* Player Info Panels */
         .player-panel {
             width: 180px;
@@ -692,6 +717,7 @@
                 <div class="bearoff-label">Borne Off</div>
                 <div class="bearoff-pieces" id="p1-bearoff"></div>
             </div>
+            <button class="game-button" id="newGameBtn">New Game</button>
         </div>
 
         <!-- Game Board -->
@@ -832,6 +858,30 @@
         // INITIALIZATION
         // ============================================
         function initGame() {
+            // Invalidate any animation chain from the previous game, so an in-flight
+            // dice roll can't settle and finalize into the fresh board.
+            gameGeneration++;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            // Reset transient dice interaction state
+            dicePhysicsActive = false;
+            heldDiceIndex = -1;
+            velocityHistory = [];
+            shakeIntensity = 0;
+            dice.forEach(d => { d.held = false; });
+
+            // Reset in-progress piece drag
+            dragState.isDragging = false;
+            dragState.fromPoint = -1;
+            dragState.validMoves = [];
+            dragState.player = null;
+
+            // Hide the winner modal (no-op unless restarting from a finished game)
+            document.getElementById('winnerModal').classList.remove('visible');
+
             // Reset board
             gameState.board = new Array(26).fill(0);
 
@@ -1545,6 +1595,8 @@
         
         let dicePhysicsActive = false;
         let heldDiceIndex = -1;
+        // Bumped by initGame() so animation chains started before a restart abort themselves
+        let gameGeneration = 0;
         let pointerX = 0, pointerY = 0;
         let lastPointerX = 0, lastPointerY = 0;
         let velocityHistory = [];
@@ -1890,12 +1942,16 @@
             
             let frame = 0;
             const totalFrames = 20;
-            
+            const gen = gameGeneration;
+
             const start1X = dice[0].x, start1Y = dice[0].y;
             const start2X = dice[1].x, start2Y = dice[1].y;
             const startRot1 = dice[0].rotation, startRot2 = dice[1].rotation;
             
             function animate() {
+                // A New Game started mid-animation - abandon this roll
+                if (gen !== gameGeneration) return;
+
                 frame++;
                 const t = frame / totalFrames;
                 const ease = 1 - Math.pow(1 - t, 3); // Ease out cubic
@@ -2452,10 +2508,10 @@
             setupBoardInteraction();
         });
 
-        document.getElementById('playAgainBtn').addEventListener('click', () => {
-            document.getElementById('winnerModal').classList.remove('visible');
-            initGame();
-        });
+        // Both restart entry points share the single reset path in initGame(),
+        // which also hides the winner modal.
+        document.getElementById('playAgainBtn').addEventListener('click', initGame);
+        document.getElementById('newGameBtn').addEventListener('click', initGame);
     </script>
 </body>
 </html>
