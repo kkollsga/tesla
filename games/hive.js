@@ -1258,174 +1258,22 @@ let gameConfig = {
     tournamentRules: false
 };
 
-// Centralized theme color definitions (organized by UI component)
-const THEME_COLORS = {
-    green: {
-        // === HEXAGONS ===
-        'hexagon-empty': '#071508',
-        'hexagon-stroke': '#1a4530',
-        'hexagon-glow': 'rgba(45, 122, 79, 0.8)',
-        'valid-move-glow': 'rgba(74, 159, 104, 0.9)',
+/* PLAYER IDENTITY — blue is Left, orange is Right. These are GAME RULES, not
+   decoration: a blue tile must stay blue in every palette or the board stops
+   being readable. They are deliberately NOT palette tokens and never rotate.
+   See the "ONE RULE" banner in game-theme.css.
 
-        // === BOARD AREA ===
-        'board-area-gradient-start': 'rgba(26, 71, 42, 0.3)',
-        'board-area-gradient-end': 'rgba(13, 42, 24, 0.3)',
-        'board-dark': '#050f08',
+   This is also where the insect SVGs get their colour: loadInsectSVGs() fetches
+   assets/*.svg, and processSVG() swaps the templates' #00FF00 placeholder for
+   the owning player's colour below. That path never touched the theme table, so
+   it is unaffected by the palette. */
+const PLAYER_COLORS = { 1: '#5599ff', 2: '#ffaa44' };
 
-        // === HAND AREA ===
-        'hand-border': '#2d7a4f',
-        'hand-insect-bg-start': '#1a4530',
-        'hand-insect-bg-end': '#0d2a18',
-        'hand-insect-border': '#2d7a4f',
-        'hand-insect-hover': '#6bb98a',
-        'hand-insect-shadow': 'rgba(45, 122, 79, 0.1)',
-        'hand-insect-hover-shadow': 'rgba(45, 122, 79, 0.6)',
-
-        // === BUTTONS ===
-        'button-background': 'rgba(45, 122, 79, 0.5)',
-        'button-border': '#2d7a4f',
-        'button-border-opacity': 'rgba(45, 122, 79, 0.3)',
-        'button-hover-bg': '#3d9a5f',
-        'button-hover-border': 'rgba(45, 122, 79, 0.6)',
-        'button-hover-shadow': 'rgba(45, 122, 79, 0.2)',
-        'button-active-light': '#3d9a5f',
-        'button-active-bg-end': '#2a5540',
-
-        // === PLAYER INFO ===
-        'player-info-bg': '#0a1f13',
-        'player-message-bg': '#0a1f13',
-        'player-dragging-label': '#4a9f68',
-
-        // === MODALS & POPUPS ===
-        'modal-border': '#2d7a4f',
-        'modal-bg': 'rgba(13, 42, 24, 0.95)',
-        'piece-info-popup-bg': 'rgba(13, 42, 24, 0.95)',
-        'piece-info-popup-border': '#4a9f68',
-        'popup-background': 'rgba(45, 122, 79, 0.1)',
-
-        // === BODY & CONTAINER ===
-        'body-bg-light': '#1a472a',
-        'body-bg-dark': '#0a1f13',
-        'container-bg-start': '#1a472a',
-        'container-bg-end': '#0d2a18',
-        'wrapper-gradient-start': 'rgba(45, 122, 79, 0.5)',
-        'wrapper-gradient-end': 'rgba(45, 122, 79, 0.1)',
-
-        // === MISC ===
-        'default-accent': '#4a9f68',
-        'game-rules-link': '#ff8800'
-    },
-    blue: {
-        // === HEXAGONS ===
-        'hexagon-empty': '#051020',
-        'hexagon-stroke': '#2255aa',
-        'hexagon-glow': 'rgba(85, 153, 255, 0.8)',
-        'valid-move-glow': 'rgba(100, 170, 255, 0.9)',
-
-        // === BOARD AREA ===
-        'board-area-gradient-start': 'rgba(40, 70, 130, 0.3)',
-        'board-area-gradient-end': 'rgba(25, 42, 75, 0.3)',
-        'board-dark': '#030c18',
-
-        // === HAND AREA ===
-        'hand-border': '#5599ff',
-        'hand-insect-bg-start': '#1a3d77',
-        'hand-insect-bg-end': '#0d2550',
-        'hand-insect-border': '#5599ff',
-        'hand-insect-hover': '#88bbff',
-        'hand-insect-shadow': 'rgba(85, 153, 255, 0.05)',
-        'hand-insect-hover-shadow': 'rgba(85, 153, 255, 0.6)',
-
-        // === BUTTONS ===
-        'button-background': 'rgba(85, 153, 255, 0.5)',
-        'button-border': '#5599ff',
-        'button-border-opacity': 'rgba(85, 153, 255, 0.3)',
-        'button-hover-bg': '#66aaff',
-        'button-hover-border': 'rgba(85, 153, 255, 0.6)',
-        'button-hover-shadow': 'rgba(85, 153, 255, 0.2)',
-        'button-active-light': '#66aaff',
-        'button-active-bg-end': '#3377cc',
-
-        // === PLAYER INFO ===
-        'player-info-bg': '#0a1a35',
-        'player-message-bg': '#0a1a35',
-        'player-dragging-label': '#5599ff',
-
-        // === MODALS & POPUPS ===
-        'modal-border': '#5599ff',
-        'modal-bg': 'rgba(25, 50, 90, 0.95)',
-        'piece-info-popup-bg': 'rgba(25, 50, 90, 0.95)',
-        'piece-info-popup-border': '#5599ff',
-        'popup-background': 'rgba(85, 153, 255, 0.05)',
-
-        // === BODY & CONTAINER ===
-        'body-bg-light': '#1a3a6a',
-        'body-bg-dark': '#0a1a35',
-        'container-bg-start': '#1a3a6a',
-        'container-bg-end': '#0d2550',
-        'wrapper-gradient-start': 'rgba(85, 153, 255, 0.5)',
-        'wrapper-gradient-end': 'rgba(85, 153, 255, 0.05)',
-
-        // === MISC ===
-        'default-accent': '#5599ff',
-        'game-rules-link': '#88bbff'
-    },
-    orange: {
-        // === HEXAGONS ===
-        'hexagon-empty': '#201508',
-        'hexagon-stroke': '#cc7722',
-        'hexagon-glow': 'rgba(255, 170, 68, 0.8)',
-        'valid-move-glow': 'rgba(255, 190, 100, 0.9)',
-
-        // === BOARD AREA ===
-        'board-area-gradient-start': 'rgba(130, 85, 35, 0.3)',
-        'board-area-gradient-end': 'rgba(75, 50, 20, 0.3)',
-        'board-dark': '#150c05',
-
-        // === HAND AREA ===
-        'hand-border': '#ffaa44',
-        'hand-insect-bg-start': '#995522',
-        'hand-insect-bg-end': '#503510',
-        'hand-insect-border': '#ffaa44',
-        'hand-insect-hover': '#ffcc88',
-        'hand-insect-shadow': 'rgba(255, 170, 68, 0.05)',
-        'hand-insect-hover-shadow': 'rgba(255, 170, 68, 0.6)',
-
-        // === BUTTONS ===
-        'button-background': 'rgba(255, 170, 68, 0.5)',
-        'button-border': '#ffaa44',
-        'button-border-opacity': 'rgba(255, 170, 68, 0.3)',
-        'button-hover-bg': '#ffbb66',
-        'button-hover-border': 'rgba(255, 170, 68, 0.6)',
-        'button-hover-shadow': 'rgba(255, 170, 68, 0.2)',
-        'button-active-light': '#ffbb66',
-        'button-active-bg-end': '#dd8833',
-
-        // === PLAYER INFO ===
-        'player-info-bg': '#352510',
-        'player-message-bg': '#352510',
-        'player-dragging-label': '#ffaa44',
-
-        // === MODALS & POPUPS ===
-        'modal-border': '#ffaa44',
-        'modal-bg': 'rgba(90, 60, 25, 0.95)',
-        'piece-info-popup-bg': 'rgba(90, 60, 25, 0.95)',
-        'piece-info-popup-border': '#ffaa44',
-        'popup-background': 'rgba(255, 170, 68, 0.05)',
-
-        // === BODY & CONTAINER ===
-        'body-bg-light': '#6a4a1a',
-        'body-bg-dark': '#352510',
-        'container-bg-start': '#6a4a1a',
-        'container-bg-end': '#503510',
-        'wrapper-gradient-start': 'rgba(255, 170, 68, 0.5)',
-        'wrapper-gradient-end': 'rgba(255, 170, 68, 0.05)',
-
-        // === MISC ===
-        'default-accent': '#ffaa44',
-        'game-rules-link': '#dd6611'
-    }
-};
+/* The four environment palettes live in game-theme.css and are selected purely
+   by body[data-theme]. Hive itself only ever picks three of them (green while
+   playing, then the winner's hue) but all four are valid here. */
+const THEMES = ['red', 'blue', 'green', 'orange'];
+const DEFAULT_THEME = 'green';
 
 let gameState = {
     board: new Map(), // key: hex.toString(), value: Array of insects (stacked, top = last)
@@ -1556,6 +1404,33 @@ function createHexagon(hex) {
     return div;
 }
 
+/* Paint a hexagon as EMPTY, from the palette.
+ *
+ * The values are var() references rather than resolved colours on purpose: the
+ * browser re-resolves them whenever body[data-theme] changes, so a palette swap
+ * needs no re-render and no JS colour table. This replaces eight
+ * getComputedStyle round-trips that read --theme-hexagon-empty/-stroke back out
+ * of the DOM on every paint.
+ *
+ * It writes .style rather than the fill/stroke ATTRIBUTES because SVG
+ * presentation attributes do not accept var(), and because every other paint
+ * site here must then also use .style — an inline style silently beats an
+ * attribute, so mixing the two is how the drag highlight would break. The
+ * !important in hive.css's .valid-move/.invalid-move rules still wins over
+ * both, which is what keeps the highlight on top. */
+function paintEmptyHex(polygon) {
+    polygon.style.fill = 'var(--surface-sunken)';
+    polygon.style.stroke = 'var(--border)';
+    polygon.style.strokeWidth = '2';
+}
+
+/* Paint a hexagon as OCCUPIED, in its owner's identity colour — never themed. */
+function paintOccupiedHex(polygon, player) {
+    polygon.style.fill = player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
+    polygon.style.stroke = PLAYER_COLORS[player];
+    polygon.style.strokeWidth = '2';
+}
+
 function createHexagonSVG() {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 100 100');
@@ -1571,9 +1446,7 @@ function createHexagonSVG() {
         points.push(`${x},${y}`);
     }
     polygon.setAttribute('points', points.join(' '));
-    polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
-    polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
-    polygon.setAttribute('stroke-width', '2');
+    paintEmptyHex(polygon);
 
     // Add smooth transitions for fill and stroke
     polygon.style.transition = 'fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease';
@@ -1891,14 +1764,15 @@ function updateHexagonStyle(hexElement, isValid, playerColor = null) {
 
     if (isValid) {
         // Valid move styling
-        polygon.setAttribute('stroke', playerColor || '#4a9f68');
-        polygon.setAttribute('stroke-width', '3');
-        polygon.style.filter = `drop-shadow(0 0 3px ${playerColor || '#4a9f68'})`;
+        polygon.style.stroke = playerColor || 'var(--accent)';
+        polygon.style.strokeWidth = '3';
+        polygon.style.filter = `drop-shadow(0 0 3px ${playerColor || 'var(--accent)'})`;
     } else {
-        // Invalid move styling
-        polygon.setAttribute('stroke', 'rgba(255, 100, 100, 0.4)');
-        polygon.setAttribute('stroke-width', '2');
-        polygon.setAttribute('fill', 'rgba(255, 100, 100, 0.1)');
+        // Invalid move styling. Fixed red: this is an error signal, not
+        // environment chrome, so it must not rotate with the palette.
+        polygon.style.stroke = 'rgba(255, 100, 100, 0.4)';
+        polygon.style.strokeWidth = '2';
+        polygon.style.fill = 'rgba(255, 100, 100, 0.1)';
     }
 }
 
@@ -1908,11 +1782,7 @@ function clearHexagonStyle(hexElement) {
     if (!polygon) return;
 
     // Restore default styling
-    const defaultFill = getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)';
-    const defaultStroke = getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f';
-    polygon.setAttribute('fill', defaultFill);
-    polygon.setAttribute('stroke', defaultStroke);
-    polygon.setAttribute('stroke-width', '2');
+    paintEmptyHex(polygon);
     polygon.style.filter = '';
 }
 
@@ -1949,7 +1819,7 @@ function updateDropZoneHighlight(x, y) {
     }
 
     const hex = new Hex(...hexKey.split(',').map(Number));
-    const playerColor = gameState.currentPlayer === 1 ? '#5599ff' : '#ffaa44';
+    const playerColor = PLAYER_COLORS[gameState.currentPlayer];
 
     if (dragState.dragSource === 'hand') {
         const isOccupied = isHexOccupied(hexKey);
@@ -2814,7 +2684,7 @@ function createInsectSVG(type, player, applyScale = false) {
     }
 
     // Get player color
-    const color = player === 1 ? '#5599ff' : '#ffaa44';
+    const color = PLAYER_COLORS[player];
 
     // Determine scale: queen is 1.0 (100%), all others are 0.8 (80%) when applyScale is true
     const scale = (applyScale && type !== 'queen') ? 0.8 : 1.0;
@@ -2966,11 +2836,7 @@ function renderBoard() {
             // Update hexagon appearance based on top insect
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
-                const playerColor = topInsect.player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
-                const strokeColor = topInsect.player === 1 ? '#5599ff' : '#ffaa44';
-                polygon.setAttribute('fill', playerColor);
-                polygon.setAttribute('stroke', strokeColor);
-                polygon.setAttribute('stroke-width', '2');
+                paintOccupiedHex(polygon, topInsect.player);
             }
 
             // Mark hexagon as movable if it belongs to current player and queen is placed
@@ -2988,9 +2854,7 @@ function renderBoard() {
 
             const polygon = hexElement.querySelector('svg polygon');
             if (polygon) {
-                polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
-                polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
-                polygon.setAttribute('stroke-width', '2');
+                paintEmptyHex(polygon);
             }
 
             // Remove movable class from empty hexagons
@@ -3068,10 +2932,6 @@ function renderHand() {
 
     handArea.innerHTML = '';
 
-    // Get current theme
-    const currentTheme = loadThemeColor();
-    const theme = THEME_COLORS[currentTheme];
-
     for (let type in INSECT_TYPES) {
         let count = handData[type] || 0;
 
@@ -3084,11 +2944,9 @@ function renderHand() {
             const div = document.createElement('div');
             div.className = 'hand-insect';
             div.dataset.insectType = type;
-
-            // Apply theme colors (hand insects match theme: green/blue/orange)
-            div.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
-            div.style.borderColor = theme['hand-insect-border'];
-            div.style.boxShadow = `0 4px 12px rgba(0,0,0,0.4)`;
+            // No inline colours: .hand-insect is themed by hive.css from the
+            // palette tokens. Writing them here is what used to kill the
+            // :hover rule, since an inline style beats any stylesheet.
 
             // Check if this insect can be placed
             const canPlace = canPlaceInsectType(type);
@@ -3412,7 +3270,7 @@ function centerBoard(animate = true) {
 
 function showVictory() {
     const winnerPlayer = gameState.winner === 1 ? 'Left' : 'Right';
-    const winnerColor = gameState.winner === 1 ? '#5599ff' : '#ffaa44';
+    const winnerColor = PLAYER_COLORS[gameState.winner];
     const winnerColorName = gameState.winner === 1 ? 'Blue' : 'Orange';
 
     // Calculate game duration
@@ -3469,8 +3327,7 @@ function showVictory() {
             if (polygon) {
                 setTimeout(() => {
                     polygon.style.transition = 'fill 1.5s ease-in, stroke 1.5s ease-in';
-                    polygon.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-empty') || 'rgba(45, 122, 79, 0.35)');
-                    polygon.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--theme-hexagon-stroke') || '#2d7a4f');
+                    paintEmptyHex(polygon);
                 }, 1200); // Delay slightly after pieces start falling
             }
         }
@@ -3548,6 +3405,23 @@ function showVictory() {
 // THEME COLOR SYSTEM
 // ============================================
 
+/* The whole theme system is now one attribute.
+ *
+ * What used to be here: a 114-entry colour table, five CSS custom properties
+ * (only two of which anything read), and an 86-line DOM walk that wrote 20
+ * inline styles. Inline styles beat any stylesheet, which is precisely why hive
+ * could not consume a CSS-variable palette — and why its :hover rules never
+ * fired once. All of it is replaced by setting body[data-theme] and letting
+ * game-theme.css's tokens cascade, which is also what finally lets the PAGE
+ * BACKGROUND theme (body.themed-bg) — it never did before.
+ *
+ * Nothing needs re-rendering on a theme change any more: the hexagons paint
+ * from var(--surface-sunken)/var(--border) (see paintEmptyHex), so the browser
+ * repaints them itself. */
+function applyThemeColor(color) {
+    document.body.dataset.theme = THEMES.indexOf(color) !== -1 ? color : DEFAULT_THEME;
+}
+
 function saveThemeColor(color) {
     try {
         localStorage.setItem('hiveThemeColor', color);
@@ -3559,122 +3433,10 @@ function saveThemeColor(color) {
 function loadThemeColor() {
     try {
         const saved = localStorage.getItem('hiveThemeColor');
-        return saved || 'green'; // Default to green
+        return THEMES.indexOf(saved) !== -1 ? saved : DEFAULT_THEME;
     } catch (e) {
         console.error('Failed to load theme color:', e);
-        return 'green';
-    }
-}
-
-// Helper function to get current theme colors
-function getThemeColor(key) {
-    const currentTheme = loadThemeColor();
-    return THEME_COLORS[currentTheme][key];
-}
-
-function applyThemeColor(color) {
-    const theme = THEME_COLORS[color] || THEME_COLORS.green;
-
-    // Update CSS custom properties
-    document.documentElement.style.setProperty('--theme-hexagon-empty', theme['hexagon-empty']);
-    document.documentElement.style.setProperty('--theme-hexagon-stroke', theme['hexagon-stroke']);
-    document.documentElement.style.setProperty('--theme-board-dark', theme['board-dark']);
-    document.documentElement.style.setProperty('--theme-button-background', theme['button-background']);
-    document.documentElement.style.setProperty('--theme-button-border', theme['button-border']);
-
-    // Apply theme to UI elements
-    applyThemeToUI(theme);
-
-    // Re-render the game to apply new colors
-    if (gameState.board) {
-        renderGame();
-    }
-}
-
-function applyThemeToUI(theme) {
-    // Update all buttons with gradients
-    const gameButtons = document.querySelectorAll('.game-button');
-    gameButtons.forEach(btn => {
-        btn.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
-        btn.style.borderColor = theme['button-border'];
-    });
-
-    // Update zoom buttons with gradients
-    const zoomButtons = document.querySelectorAll('.zoom-btn');
-    zoomButtons.forEach(btn => {
-        btn.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
-        btn.style.borderColor = theme['button-border'];
-    });
-
-    // Update game container
-    const gameContainer = document.querySelector('.game-container');
-    if (gameContainer) {
-        gameContainer.style.background = `linear-gradient(135deg, ${theme['container-bg-start']}, ${theme['container-bg-end']})`;
-    }
-
-    // Update game wrapper
-    const gameWrapper = document.querySelector('.game-wrapper');
-    if (gameWrapper) {
-        gameWrapper.style.background = `linear-gradient(135deg, ${theme['wrapper-gradient-start']}, ${theme['wrapper-gradient-end']})`;
-    }
-
-    // Update board area with dark background
-    const boardArea = document.querySelector('.board-area');
-    if (boardArea) {
-        boardArea.style.backgroundColor = theme['board-dark'];
-        boardArea.style.borderColor = theme['hexagon-stroke'];
-    }
-
-    // Update hand area
-    const handArea = document.querySelector('.hand-area');
-    if (handArea) {
-        handArea.style.borderColor = theme['hand-border'];
-    }
-
-    // Update hand insect circles (match theme: green/blue/orange)
-    const handInsects = document.querySelectorAll('.hand-insect');
-    handInsects.forEach(insect => {
-        insect.style.background = `linear-gradient(135deg, ${theme['hand-insect-bg-start']}, ${theme['hand-insect-bg-end']})`;
-        insect.style.borderColor = theme['hand-insect-border'];
-        insect.style.boxShadow = `0 4px 12px rgba(0,0,0,0.4)`;
-    });
-
-    // Update player info backgrounds
-    const playerInfos = document.querySelectorAll('.player-info');
-    playerInfos.forEach(info => {
-        info.style.backgroundColor = theme['player-info-bg'];
-    });
-
-    // Update player dragging labels
-    const draggingLabels = document.querySelectorAll('.player-dragging-label');
-    draggingLabels.forEach(label => {
-        label.style.color = theme['player-dragging-label'];
-    });
-
-    // Update game rules link
-    const gameRulesLink = document.querySelector('.game-rules-link');
-    if (gameRulesLink) {
-        gameRulesLink.style.color = theme['game-rules-link'];
-    }
-
-    // Update modals
-    const modals = document.querySelectorAll('.info-panel, .setup-panel');
-    modals.forEach(modal => {
-        modal.style.background = `linear-gradient(135deg, ${theme['container-bg-start']}, ${theme['container-bg-end']})`;
-        modal.style.borderColor = theme['modal-border'];
-    });
-
-    // Update piece info popup
-    const pieceInfoPopup = document.querySelector('.piece-info-popup');
-    if (pieceInfoPopup) {
-        pieceInfoPopup.style.backgroundColor = theme['piece-info-popup-bg'];
-        pieceInfoPopup.style.borderColor = theme['piece-info-popup-border'];
-    }
-
-    // Update game setup popup background
-    const setupPopup = document.querySelector('.game-setup-popup');
-    if (setupPopup) {
-        setupPopup.style.backgroundColor = theme['popup-background'];
+        return DEFAULT_THEME;
     }
 }
 
@@ -3801,9 +3563,9 @@ function initGame() {
 // The info modal is wired by game-shell.js (open / close / backdrop / Escape).
 function initializeEventListeners() {
     document.getElementById('new-game').addEventListener('click', () => {
-        // Clear any existing victory screens
-        document.querySelectorAll('.victory-overlay').forEach(el => el.remove());
-        document.querySelectorAll('.confetti').forEach(el => el.remove());
+        // Clear the victory display. The .victory-overlay / .confetti sweeps
+        // that used to be here were dead: hive builds neither (its victory is
+        // the bespoke .victory-display below), so they never matched anything.
         document.querySelectorAll('.victory-display').forEach(el => el.remove());
 
         // Start the game
@@ -3933,15 +3695,46 @@ function initializeEventListeners() {
     }, { passive: false });
 }
 
+/* Restore the persisted palette.
+ *
+ * This runs at PARSE time, not in the load handler below: hive.js is loaded at
+ * the end of <body>, so document.body already exists, and a synchronous script
+ * runs before the first paint. So the page is already themed the first time it
+ * is drawn.
+ *
+ * It deliberately does NOT sit in the load handler, which has to `await
+ * loadInsectSVGs()` first — by then the page has painted, and since
+ * .game-button/.player-info transition their colours you would SEE the palette
+ * cross-fade from the markup's green to the real one. Measured, not assumed.
+ *
+ * This also revives the persistence: the load handler used to force-reset to
+ * green and overwrite hiveThemeColor before anything could read it, which made
+ * showVictory()'s save dead code — win as Blue, reload, back to green.
+ *
+ * .theme-booting suppresses transitions across the swap. The markup starts at
+ * data-theme="green", so restoring a non-green palette is a CHANGE, and
+ * .game-button/.player-info/.hexagon all transition their colours — without
+ * this you watch the board fade green->blue on every load. Restoring a saved
+ * palette should look like it was always that colour.
+ *
+ * The reflow between add and remove is load-bearing and must not be "tidied"
+ * away: reading offsetWidth forces a synchronous style flush, which COMMITS the
+ * new colours while transitions are still off, so re-enabling them afterwards
+ * has nothing left to animate. Doing the removal in requestAnimationFrame
+ * instead looks equivalent but is not — rAF is throttled in background tabs, so
+ * the class could outlive the boot and silently disable every transition in the
+ * game (hover, hexagons, the victory dance). This way it cannot. */
+document.body.classList.add('theme-booting');
+applyThemeColor(loadThemeColor());
+void document.body.offsetWidth;
+document.body.classList.remove('theme-booting');
+
 // Start game on load
 window.addEventListener('load', async () => {
     // Load insect SVG assets first
     await loadInsectSVGs();
 
     loadGameConfig();
-    // Reset theme to green on page refresh
-    saveThemeColor('green');
-    applyThemeColor('green');
     initializeEventListeners();
     initGame();
 

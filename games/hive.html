@@ -13,6 +13,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- The four environment palettes. MUST stay above game-shell.css: it
+         declares tokens only, and its body[data-theme] block is what rebinds
+         the shell's --accent-*/--panel-bg/--btn-* per palette. -->
+    <link rel="stylesheet" href="game-theme.css">
+
     <!-- Shared chrome: navbar, info modal, modal buttons, game buttons.
          MUST stay above hive.css — the shell's rules are all single-class,
          so hive.css overrides them purely by source order. -->
@@ -21,7 +26,11 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="hive.css">
 </head>
-<body>
+<!-- data-theme selects the palette; hive.js rewrites it on load (restoring the
+     persisted palette) and on victory (the winner's hue). themed-bg opts into
+     the shared radial page wash — the surface that never used to theme at all.
+     The attribute is set here too so the first paint is already themed. -->
+<body data-theme="green" class="themed-bg">
     <div class="navbar">
         <div class="navbar-left">
             <button class="navbar-btn" id="infoBtn" title="Game Info"><i class="fas fa-info-circle"></i></button>

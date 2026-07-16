@@ -10,32 +10,30 @@
     cursor: default;
 }
 
-/* Hive's identity. The shell paints its chrome from these. */
-:root {
-    --accent-from: #FFD700;
-    --accent-to:   #FFA500;
-    --accent-fg:   #000;
-    --accent-glow: rgba(255, 215, 0, 0.4);
-    --panel-bg: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
+/* ====== THEMING ======
+   Hive's colours come from game-theme.css's palette tokens, selected by
+   body[data-theme]. Nothing here hardcodes a hue.
 
-    /* Pre-JS fallback ONLY. hive.js:3643 hard-sets .player-info's
-       backgroundColor as an INLINE style from its own runtime theme table
-       (see the 'player-info-bg' keys around hive.js:1295), so this value is
-       painted only for the instant before that runs — an inline style beats
-       any stylesheet. Kept because that instant is real, and because the
-       fallback should not be blank. */
-    --player-info-bg: rgba(13, 42, 24, 0.6);
+   What used to be in this file: a :root block declaring hive's own green
+   accent, panel and button variables. It is gone because game-theme.css
+   already declares all of them on body[data-theme] — and a declaration ON an
+   element beats one merely INHERITED from :root, so these would have been dead
+   weight fighting the palette.
 
-    /* Themed .game-button palette (hive green). Colours ride the vars;
-       the shape itself is overridden further down. */
-    --btn-bg:       linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
-    --btn-bg-hover: linear-gradient(135deg, #3d9a5f 0%, #2a5540 100%);
-    --btn-border:   rgba(45, 122, 79, 0.3);
-    --btn-fg:       #e0e0e0;
-}
+   THE RULE (see game-theme.css): the palette themes the ENVIRONMENT — page
+   wash, board, panels, buttons, glow. It NEVER themes player identity: the
+   blue/orange tiles, previews and insects are game rules and stay literal. */
 
 body {
-    background: radial-gradient(ellipse at center, #1a472a 0%, #0a1f13 100%);
+    /* .player-info's surface. game-shell.css documents this as a translucent
+       TINT over the board rather than an opaque fill, and --bg-edge-rgb is
+       exactly the rung for it. Declared on body, not :root, so it beats the
+       shell's inherited default. */
+    --player-info-bg: rgba(var(--bg-edge-rgb), 0.6);
+
+    /* The page wash comes from body.themed-bg in game-theme.css. It used to be
+       a hardcoded green radial here, which is why the largest surface on screen
+       stayed green even after winning as Blue. */
     font-family: Arial, sans-serif;
     overflow: hidden;
     height: 100vh;
@@ -51,6 +49,15 @@ body {
 body.dragging,
 body.dragging * {
     cursor: grabbing !important;
+}
+
+/* Applied by hive.js for the single frame in which it restores the persisted
+   palette, so that restore lands instantly instead of cross-fading from the
+   markup's default green. Removed on the next animation frame — every other
+   theme change (i.e. victory) keeps its transition. */
+body.theme-booting,
+body.theme-booting * {
+    transition: none !important;
 }
 
 body::before {
@@ -88,7 +95,7 @@ body::before {
 }
 
 .game-container {
-    background: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
+    background: var(--panel-bg);
     border-radius: 14px;
     padding: 20px 30px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -130,7 +137,7 @@ body::before {
 }
 
 .game-rules-link {
-    color: #ff8800;
+    color: var(--accent-bright);
     font-size: 12px;
     text-align: center;
     cursor: pointer;
@@ -176,8 +183,12 @@ body::before {
     flex: 1;
     aspect-ratio: 1 / 1;
     width: 100%;
-    background: linear-gradient(135deg, rgba(26, 71, 42, 0.3) 0%, rgba(13, 42, 24, 0.3) 100%);
-    border: 2px solid #2d7a4f;
+    /* The well the hexes sit in. --bg-edge is the darkest rung, so the empty
+       hexes (--surface-sunken) read as sitting ON it. Previously a green
+       gradient here that JS immediately overpainted with an inline flat
+       'board-dark'; this is that flat dark, themed. */
+    background: var(--bg-edge);
+    border: 2px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
@@ -223,13 +234,16 @@ body::before {
 
 .hexagon.valid-placement {
     cursor: copy;
-    filter: drop-shadow(0 0 8px rgba(45, 122, 79, 0.8));
+    filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.8));
 }
 
+/* --player-color is the dragging player's IDENTITY colour, set inline by
+   hive.js. It stays literal; only the fallback rides the palette. The
+   !important is what keeps this above paintEmptyHex's inline style. */
 .hexagon.valid-move svg polygon {
-    stroke: var(--player-color, #4a9f68) !important;
+    stroke: var(--player-color, var(--accent)) !important;
     stroke-width: 3 !important;
-    filter: drop-shadow(0 0 3px var(--player-color, #4a9f68));
+    filter: drop-shadow(0 0 3px var(--player-color, var(--accent)));
 }
 
 .hexagon.invalid-move svg polygon {
@@ -239,7 +253,7 @@ body::before {
 }
 
 .insect.selected {
-    filter: drop-shadow(0 0 8px rgba(74, 159, 104, 0.9));
+    filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.9));
 }
 
 .hexagon.movable {
@@ -247,11 +261,11 @@ body::before {
 }
 
 .hexagon.movable svg polygon {
-    filter: drop-shadow(0 0 6px rgba(74, 159, 104, 0.8));
+    filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.8));
 }
 
 .hexagon.movable:hover svg polygon {
-    filter: brightness(1.2) drop-shadow(0 0 12px rgba(74, 159, 104, 0.9));
+    filter: brightness(1.2) drop-shadow(0 0 12px rgba(var(--accent-rgb), 0.9));
 }
 
 /* Make non-movable occupied hexagons more subtle */
@@ -317,12 +331,15 @@ body::before {
     overflow-y: hidden;
 }
 
+/* Themed from the palette, not from JS. renderHand() used to write these three
+   properties inline on every render, which beat the :hover rule below and left
+   it dead from first paint. */
 .hand-insect {
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
-    border: 2px solid #4a9f68;
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -334,8 +351,8 @@ body::before {
 
 .hand-insect:hover {
     transform: scale(1.1);
-    border-color: #6bb98a;
-    box-shadow: 0 0 15px rgba(45, 122, 79, 0.6);
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.6);
 }
 
 .hand-insect.disabled {
@@ -347,7 +364,7 @@ body::before {
 
 .hand-insect.disabled:hover {
     transform: none;
-    border-color: #4a9f68;
+    border-color: var(--border);
     box-shadow: none;
 }
 
@@ -368,7 +385,7 @@ body::before {
     top: 5px;
     right: 5px;
     background: rgba(0, 0, 0, 0.7);
-    color: #FFD700;
+    color: var(--gold);
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -405,7 +422,7 @@ body::before {
 .player-dragging-label {
     font-size: 12px;
     font-weight: 600;
-    color: #4a9f68;
+    color: var(--accent-bright);
     margin-bottom: 10px;
     min-height: 16px;
     opacity: 0;
@@ -429,7 +446,7 @@ body::before {
 }
 
 .player-message.queen {
-    color: #FFD700;
+    color: var(--gold);
 }
 
 .player-message.error {
@@ -440,7 +457,7 @@ body::before {
     font-size: 12px;
     font-weight: 600;
     margin-top: 8px;
-    color: #FFD700;
+    color: var(--gold);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -482,9 +499,12 @@ body::before {
     white-space: normal;
 }
 
+/* This hover has never fired: applyThemeToUI() wrote background/borderColor
+   inline on every .game-button, and inline styles beat a stylesheet. With the
+   inline writes gone, this — and the shell's background-image swap — work. */
 .game-button:hover {
-    border-color: rgba(45, 122, 79, 0.6);
-    box-shadow: 0 6px 16px rgba(45, 122, 79, 0.2);
+    border-color: rgba(var(--accent-rgb), 0.6);
+    box-shadow: 0 6px 16px rgba(var(--accent-rgb), 0.2);
     color: #fff;
 }
 
@@ -499,10 +519,10 @@ body::before {
     flex: 1;
     min-width: 0;
     padding: 8px 6px;
-    background: linear-gradient(135deg, #2d7a4f 0%, #1a4530 100%);
-    border: 1px solid rgba(45, 122, 79, 0.3);
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
     border-radius: 6px;
-    color: #e0e0e0;
+    color: var(--btn-fg);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -514,9 +534,9 @@ body::before {
 }
 
 .zoom-btn:hover {
-    background: linear-gradient(135deg, #3d9a5f 0%, #2a5540 100%);
-    border-color: rgba(45, 122, 79, 0.6);
-    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.2);
+    background: var(--btn-bg-hover);
+    border-color: rgba(var(--accent-rgb), 0.6);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
     color: #fff;
 }
 
@@ -531,7 +551,12 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    /* A faint accent wash, not a dimming scrim. This rule said rgba(0,0,0,0.5)
+       but applyThemeToUI() overpainted it inline with the theme's 0.1-alpha
+       'popup-background', so the near-transparent version is what has always
+       shipped. Preserved deliberately — this phase re-homes colours, it does
+       not redesign them. */
+    background: rgba(var(--accent-rgb), 0.1);
     display: none;
     align-items: flex-start;
     justify-content: center;
@@ -545,8 +570,8 @@ body::before {
 }
 
 .setup-panel {
-    background: linear-gradient(135deg, #1a472a 0%, #0d2a18 100%);
-    border: 2px solid rgba(255, 215, 0, 0.3);
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
     border-radius: 8px;
     padding: 16px 20px;
     min-width: 200px;
@@ -567,7 +592,7 @@ body::before {
     width: 16px;
     height: 16px;
     cursor: pointer;
-    accent-color: #FFD700;
+    accent-color: var(--gold);
 }
 
 .setup-option label {
@@ -579,7 +604,7 @@ body::before {
 
 .setup-divider {
     height: 1px;
-    background: rgba(255, 215, 0, 0.2);
+    background: rgba(var(--gold-rgb), 0.2);
     margin: 6px 0;
 }
 
@@ -601,7 +626,7 @@ body::before {
 .modal-title {
     font-size: 32px;
     font-weight: 700;
-    color: #FFD700;
+    color: var(--gold);
     margin-bottom: 20px;
     margin-top: 0;
 }
@@ -618,7 +643,7 @@ body::before {
 
 .modal-text h3 {
     font-size: 18px;
-    color: #FFD700;
+    color: var(--gold);
     margin-top: 25px;
     margin-bottom: 12px;
     font-weight: 700;
@@ -646,7 +671,7 @@ body::before {
 }
 
 .modal-text li strong {
-    color: #FFD700;
+    color: var(--gold);
 }
 
 .modal-buttons {
@@ -661,8 +686,8 @@ body::before {
 /* ====== PIECE INFO POPUP ====== */
 .piece-info-popup {
     position: fixed;
-    background: rgba(13, 42, 24, 0.95);
-    border: 2px solid #4a9f68;
+    background: rgba(var(--surface-rgb), 0.95);
+    border: 2px solid var(--accent-bright);
     border-radius: 8px;
     padding: 15px;
     color: white;
@@ -692,7 +717,7 @@ body::before {
 
 .piece-info-title {
     font-weight: 700;
-    color: #FFD700;
+    color: var(--gold);
     margin-bottom: 8px;
     font-size: 14px;
     text-align: center;
@@ -710,5 +735,5 @@ body::before {
     color: #888;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid rgba(77, 159, 104, 0.3);
+    border-top: 1px solid rgba(var(--accent-rgb), 0.3);
 }
