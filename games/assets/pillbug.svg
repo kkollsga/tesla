@@ -1,64 +1,7 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <!-- A few legs peeking out -->
-    <path d="M22 42 Q16 44 12 48" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
-    <path d="M78 42 Q84 44 88 48" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
-    <path d="M22 56 Q16 58 12 62" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
-    <path d="M78 56 Q84 58 88 62" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round"/>
-
-    <!-- Pill-shaped body: consistent width, rounded ends -->
-    <!-- All segments are ~same width (x=22 to x=78) -->
-
-    <!-- Pleon (rounded tail cap) -->
-    <path d="M22 74 L78 74 Q78 86 50 90 Q22 86 22 74 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <path d="M26 74 L74 74" fill="none" stroke="white" stroke-width="0.8" opacity="0.2"/>
-
-    <!-- Pereonite 7 -->
-    <path d="M22 68 L78 68 L78 74 L22 74 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-
-    <!-- Pereonite 6 -->
-    <path d="M22 62 L78 62 L78 68 L22 68 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-
-    <!-- Pereonite 5 -->
-    <path d="M22 56 L78 56 L78 62 L22 62 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <line x1="26" y1="56" x2="74" y2="56" stroke="white" stroke-width="0.8" opacity="0.2"/>
-
-    <!-- Pereonite 4 -->
-    <path d="M22 50 L78 50 L78 56 L22 56 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <line x1="26" y1="50" x2="74" y2="50" stroke="white" stroke-width="0.8" opacity="0.22"/>
-
-    <!-- Pereonite 3 -->
-    <path d="M22 44 L78 44 L78 50 L22 50 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <line x1="26" y1="44" x2="74" y2="44" stroke="white" stroke-width="0.8" opacity="0.22"/>
-
-    <!-- Pereonite 2 -->
-    <path d="M22 38 L78 38 L78 44 L22 44 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-
-    <!-- Pereonite 1 -->
-    <path d="M22 32 L78 32 L78 38 L22 38 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-    <line x1="26" y1="32" x2="74" y2="32" stroke="white" stroke-width="0.8" opacity="0.2"/>
-
-    <!-- Cephalon (rounded head cap, same width) -->
-    <path d="M22 32 Q22 16 50 10 Q78 16 78 32 Z" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
-    <ellipse cx="46" cy="22" rx="8" ry="4" fill="white" opacity="0.12"/>
-
-    <!-- 3D highlight along left side -->
-    <path d="M24 32 L24 74" stroke="white" stroke-width="1.5" opacity="0.08"/>
-
-    <!-- Antennae -->
-    <path d="M40 18 Q34 10 28 6" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="28" cy="6" r="1.3" fill="#000"/>
-    <path d="M60 18 Q66 10 72 6" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="72" cy="6" r="1.3" fill="#000"/>
-
-    <!-- Eyes (on sides of head) -->
-    <circle cx="28" cy="26" r="2" fill="#000"/>
-    <circle cx="72" cy="26" r="2" fill="#000"/>
-    <circle cx="29" cy="25" r="0.7" fill="white"/>
-    <circle cx="73" cy="25" r="0.7" fill="white"/>
-
-    <!-- Uropods -->
-    <path d="M44 90 Q42 94 40 98" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
-    <path d="M56 90 Q58 94 60 98" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 34 23 27M68 34 77 27M27 46H16M73 46H84M26 59H14M74 59H86M29 72 19 78M71 72 81 78M35 83 29 91M65 83 71 91M43 20 38 10M57 20 62 10" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M50 16C33 16 26 32 26 53C26 77 35 89 50 91C65 89 74 77 74 53C74 32 67 16 50 16Z" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M32 33Q50 25 68 33M28 46Q50 38 72 46M28 59Q50 51 72 59M31 72Q50 64 69 72M37 83Q50 77 63 83" fill="none" stroke="#000" stroke-width="5"/>
   </g>
 </svg>

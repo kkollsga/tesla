@@ -63,7 +63,7 @@
         .game-container {
             display: flex;
             align-items: stretch;
-            gap: 40px;
+            gap: 24px;
             position: relative;
             /* Flex item of .game-board: min-width:auto would floor this at its
                min-content width (panels + board + gaps) and overflow the
@@ -75,7 +75,7 @@
                palette by game-theme.css. Was this exact gradient in grey. */
             background: var(--panel-bg);
             border-radius: 14px;
-            padding: 40px;
+            padding: 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
@@ -155,7 +155,7 @@
                then shrinks it down to whatever the panels leave over, so the
                board derives its size from real leftover space rather than from
                a hardcoded panel width. */
-            width: min(90vw, 90vh);
+            width: min(100vw, calc(100vh - 48px));
             /* height MUST stay auto: with both width and height set,
                aspect-ratio is ignored and a shrunk board renders as a
                non-square rectangle. auto lets aspect-ratio keep it square. */
@@ -440,6 +440,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="game-polish.css">
 </head>
 <!-- data-theme selects the palette. No themed-bg: damme keeps its own
      near-neutral linear wash (see the body rule above). -->

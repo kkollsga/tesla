@@ -57,6 +57,10 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow: hidden;
+        }
+
         /* The shell's `*` zeroes margin/padding. Solitaire's info panel is the
            only one in the suite with no typography rules of its own, so it was
            rendering on the UA defaults these restore exactly:
@@ -579,6 +583,7 @@
 
         /* Responsive styles - handled by JavaScript now */
     </style>
+    <link rel="stylesheet" href="game-polish.css">
 </head>
 <!-- data-theme selects the palette; themed-bg opts into the shared radial
      page wash from game-theme.css. -->
@@ -874,7 +879,10 @@
             const availableHeight = viewportHeight - (paddingY * 2);
 
             // Base dimensions of the game container (the design width/height)
-            const baseWidth = 1200;
+            // Include the container's horizontal padding. Scaling against only
+            // its declared content width made the painted frame 60px wider
+            // than the available compact viewport.
+            const baseWidth = gameContainer.offsetWidth;
             const baseHeight = gameContainer.scrollHeight || 900; // Use actual height or fallback
 
             // Calculate scale to fit both width and height with padding

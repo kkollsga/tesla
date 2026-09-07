@@ -85,7 +85,7 @@
                palette by game-theme.css. Was this exact gradient in grey. */
             background: var(--panel-bg);
             border-radius: 14px;
-            padding: 40px;
+            padding: 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             position: relative;
         }
@@ -94,7 +94,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 40px;
+            gap: 24px;
         }
 
         .game-left-column {
@@ -217,7 +217,7 @@
                shrinks it down to whatever the panels leave over, so the board
                derives its size from real leftover space rather than from a
                hardcoded panel width. */
-            width: min(90vw, 90vh);
+            width: min(100vw, calc(100vh - 48px));
             /* height MUST stay auto: with both width and height set,
                aspect-ratio is ignored and a shrunk board renders as a
                non-square rectangle. auto lets aspect-ratio keep it square. */
@@ -579,6 +579,7 @@
            palette's accent — no longer gold, so the CTA and the your-turn
            signal stop competing for the same colour. */
     </style>
+    <link rel="stylesheet" href="game-polish.css">
 </head>
 <!-- data-theme selects the palette; themed-bg opts into the shared radial
      page wash, replacing the grey radial this file used to hardcode. -->

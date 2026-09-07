@@ -269,11 +269,12 @@
             align-items: center;
             justify-content: flex-end;
             padding-right: 6px;
-            font-size: clamp(7px, 1.2vmin, 11px);
+            font-size: clamp(13px, 1.55vmin, 16px);
             color: #aaa;
             font-weight: 500;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
-            min-width: 45px;
+            min-width: clamp(76px, 8vw, 112px);
+            white-space: nowrap;
         }
 
         .clues-row {
@@ -284,14 +285,25 @@
 
         .clue-cell {
             width: var(--cell-size);
-            height: 20px;
+            height: var(--top-clue-height, 64px);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: clamp(7px, 1.2vmin, 10px);
+            justify-content: flex-end;
+            gap: 1px;
+            padding-bottom: 3px;
+            font-size: clamp(13px, 1.55vmin, 16px);
             color: #aaa;
             font-weight: 500;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .clue-cell span {
+            line-height: 16px;
+        }
+
+        .clue-corner {
+            height: var(--top-clue-height, 64px);
         }
 
         .game-board {
@@ -549,6 +561,7 @@
            so its button read "Got it!"; it now reads "GOT IT!" like the other
            8 games, and gains the shared :active press. */
     </style>
+    <link rel="stylesheet" href="game-polish.css">
 </head>
 <!-- data-theme selects the palette; themed-bg opts into the shared radial
      page wash from game-theme.css. -->
@@ -610,7 +623,7 @@
     <div class="game-container" id="gameContainer">
         <div class="game-board-wrapper" id="gameWrapper" style="display: none;">
             <div>
-                <div style="height: 20px;"></div>
+                <div class="clue-corner"></div>
                 <div class="clues-column" id="leftClues"></div>
             </div>
             <div>
@@ -943,7 +956,11 @@
                 for (let col = 0; col < this.logic.size; col++) {
                     const clueCell = document.createElement('div');
                     clueCell.className = 'clue-cell';
-                    clueCell.textContent = this.logic.columnClues[col].join(' ');
+                    this.logic.columnClues[col].forEach(value => {
+                        const clue = document.createElement('span');
+                        clue.textContent = value;
+                        clueCell.appendChild(clue);
+                    });
                     topClues.appendChild(clueCell);
                 }
 
@@ -1120,8 +1137,14 @@
             const hardSize = 15; // Hard board is 15x15
             const zoom = Math.min(2, hardSize / game.size);
 
-            const availableHeight = window.innerHeight - 100; // Navbar + padding
-            const availableWidth = window.innerWidth - 160 - 60 - 20; // Sidebar + clues + padding
+            // Stack column clues so every run stays legible even for legal
+            // 15x15 patterns with eight separate runs. Size the board from the
+            // height remaining below that actual clue depth.
+            const maxColumnRuns = Math.max(...game.columnClues.map(clues => clues.length));
+            const topClueHeight = Math.max(40, maxColumnRuns * 17 + 6);
+            document.documentElement.style.setProperty('--top-clue-height', `${topClueHeight}px`);
+            const availableHeight = window.innerHeight - topClueHeight - 35;
+            const availableWidth = window.innerWidth - 160 - 112 - 20; // Sidebar + widest row clues + padding
 
             // Calculate cell size for the hard board (baseline at 1x zoom)
             const hardCellSize = Math.min(

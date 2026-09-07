@@ -146,9 +146,9 @@ tesla/
 
 The launcher includes special handling for Tesla's browser:
 
-- **YouTube Redirect Hack**: On a Tesla, navigation is routed via `youtube.com/redirect?q=`, which appears to be what lets a link escape into the Tesla browser's fullscreen context
-- **Resolution Detection**: Detects the Tesla-specific compact viewport (1180x919) to decide when to apply that hack
-- **Relative internal links**: Games are linked relatively and absolutized only when handed to the redirect, so a local checkout stays local and the redirect still gets the absolute URL it needs
+- **Fullscreen button**: Only an explicit click on Fullscreen uses `youtube.com/redirect?q=` to escape into the Tesla browser's fullscreen context. Services, games, favorites and ABRP navigate directly.
+- **Fullscreen detection**: Native fullscreen state is used when available. For Tesla's browser, the launcher records an explicit request made at the known compact viewport (1180x919) and hides the button after the returned viewport changes; returning to 1180x919 shows it again.
+- **Relative internal links**: Games stay relative, so a local checkout remains local. Only the launcher's fullscreen destination is absolutized for YouTube's redirect parameter.
 - **No layout breakpoint**: The grid uses `auto-fit` rather than a hardcoded fullscreen width — the fullscreen viewport has never been measured, and a wrong breakpoint would fail silently
 
 To add more Tesla distributions, edit the `TESLA_DISTRIBUTIONS` array in [index.html](index.html).
@@ -164,11 +164,11 @@ The project uses vanilla JavaScript with no build process. To modify or extend:
 - Game modal uses localStorage to persist favorite game selection
 
 ### Games
-1. Each game is self-contained in its own HTML, CSS, and JS files
-2. Game-specific styles are in individual CSS files (e.g., `hive.css`)
-3. Game logic is in corresponding JavaScript files (e.g., `hive.js`)
-4. All games follow similar structure for consistency
-5. Games support dynamic theming (green, blue, orange) based on game state
+1. Each game keeps its structure, board styling, and logic in its own HTML, CSS, and JS files
+2. `game-theme.css` supplies the shared color palettes, `game-shell.css` supplies shared components, and `game-polish.css` is loaded last for consistent typography and visual feedback
+3. Game-specific styles remain in individual CSS files (for example, `hive.css`)
+4. Game logic is in corresponding JavaScript files (for example, `hive.js`)
+5. Games support dynamic red, blue, green, and orange environment themes while player and piece colors retain their game meaning
 
 ## 📝 License
 

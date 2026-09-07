@@ -59,6 +59,12 @@
         .topbar-btn:hover { color: #fff; }
         .topbar-btn .topbar-icon { width: 24px; height: 24px; }
 
+        /* Preserve the left slot so the centered control does not shift. */
+        .topbar-btn.fullscreen-active {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         .topbar-abrp {
             color: #4CAF50;
             font-size: 17px;
@@ -452,12 +458,9 @@
 </head>
 <body>
     <div class="container">
-        <!-- Top bar. These links must keep flowing through navigateToService —
-             that handler IS the Tesla YouTube-redirect hack. The listener binds
-             `.service-link, .topbar-btn`, so behaviour comes from the selector,
-             not from borrowing the tile class. -->
+        <!-- Only Fullscreen uses Tesla's YouTube redirect workaround. -->
         <div class="topbar">
-            <a href="./" class="topbar-btn" data-url="./" title="Go Fullscreen">
+            <a href="./" class="topbar-btn" id="fullscreen-button" title="Go Fullscreen">
                 <svg class="topbar-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M25 25 L25 40 M25 25 L40 25" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
                     <path d="M75 25 L75 40 M75 25 L60 25" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
@@ -810,8 +813,10 @@
 
     <script>
         const YOUTUBE_REDIRECT_BASE = 'https://www.youtube.com/redirect?q=';
+        const TESLA_FULLSCREEN_REQUESTED_KEY = 'tesla-fullscreen-requested';
 
-        // Tesla browser distributions that should use YouTube redirect hack
+        // Known Tesla compact browser distributions where Fullscreen can use
+        // the explicit YouTube redirect workaround.
         const TESLA_DISTRIBUTIONS = [
             { width: 1180, height: 919 }
             // Add more distributions as needed: { width: 1920, height: 1080 }
@@ -828,26 +833,74 @@
 
         function navigateToService(url, event) {
             event.preventDefault();
+            window.location.href = url;
+        }
 
-            // Tesla's browser gets the YouTube-redirect hack; everyone else
-            // navigates directly.
-            //
-            // Internal links (games, the launcher itself) are relative so that a
-            // local checkout stays local. The redirect's q= param can't take a
-            // relative path — YouTube has no way to resolve it — so absolutize
-            // here, at the one place that needs it.
-            if (isTeslaDistribution()) {
-                const absolute = new URL(url, window.location.href).href;
-                window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(absolute);
-            } else {
-                window.location.href = url;
+        const fullscreenButton = document.getElementById('fullscreen-button');
+
+        function readFullscreenRequest() {
+            try {
+                return sessionStorage.getItem(TESLA_FULLSCREEN_REQUESTED_KEY) === 'true';
+            } catch (error) {
+                return false;
             }
         }
 
-        // Anything that navigates: grid tiles and the top bar alike. Selecting on
-        // both classes keeps navigation independent of tile styling — a top-bar
-        // link must not have to look like a tile just to reach the Tesla hack.
+        function writeFullscreenRequest(requested) {
+            try {
+                if (requested) {
+                    sessionStorage.setItem(TESLA_FULLSCREEN_REQUESTED_KEY, 'true');
+                } else {
+                    sessionStorage.removeItem(TESLA_FULLSCREEN_REQUESTED_KEY);
+                }
+            } catch (error) {
+                // The fullscreen navigation still works if storage is unavailable.
+            }
+        }
+
+        function isNativeFullscreen() {
+            return Boolean(document.fullscreenElement) ||
+                window.matchMedia('(display-mode: fullscreen)').matches;
+        }
+
+        function updateFullscreenButton() {
+            const compactTeslaViewport = isTeslaDistribution();
+            if (compactTeslaViewport && readFullscreenRequest()) {
+                // The measured compact size means fullscreen ended, or never opened.
+                writeFullscreenRequest(false);
+            }
+
+            // The Tesla fallback only applies after an explicit request from the
+            // known compact viewport. Arbitrary desktop dimensions are not used
+            // as evidence of fullscreen mode.
+            const active = isNativeFullscreen() ||
+                (readFullscreenRequest() && !compactTeslaViewport);
+            fullscreenButton.classList.toggle('fullscreen-active', active);
+            fullscreenButton.setAttribute('aria-hidden', String(active));
+            fullscreenButton.tabIndex = active ? -1 : 0;
+        }
+
+        fullscreenButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            if (fullscreenButton.classList.contains('fullscreen-active')) return;
+
+            if (isTeslaDistribution()) {
+                writeFullscreenRequest(true);
+                const launcherUrl = new URL('./', window.location.href).href;
+                window.location.href = YOUTUBE_REDIRECT_BASE + encodeURIComponent(launcherUrl);
+            } else {
+                window.location.href = './';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        window.addEventListener('resize', updateFullscreenButton);
+        window.addEventListener('pageshow', updateFullscreenButton);
+        updateFullscreenButton();
+
+        // Services and the other top-bar link always navigate directly.
         document.querySelectorAll('.service-link, .topbar-btn').forEach(link => {
+            if (link === fullscreenButton) return;
             link.addEventListener('click', function(e) {
                 const url = this.getAttribute('data-url');
                 // Only navigate if this element has a data-url (not the games or

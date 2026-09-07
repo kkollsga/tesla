@@ -1416,20 +1416,62 @@ function paintEmptyHex(polygon) {
     polygon.style.fill = 'var(--surface-sunken)';
     polygon.style.stroke = 'var(--border)';
     polygon.style.strokeWidth = '2';
+    const svg = polygon.closest('svg');
+    svg?.querySelectorAll('.hex-sidewall, .hex-bevel').forEach(layer => {
+        layer.style.display = 'none';
+    });
 }
 
 /* Paint a hexagon as OCCUPIED, in its owner's identity colour — never themed. */
 function paintOccupiedHex(polygon, player) {
-    polygon.style.fill = player === 1 ? 'rgba(85, 153, 255, 0.2)' : 'rgba(255, 170, 68, 0.2)';
-    polygon.style.stroke = PLAYER_COLORS[player];
-    polygon.style.strokeWidth = '2';
+    const svg = polygon.closest('svg');
+    const isBlue = player === 1;
+    polygon.style.fill = `url(#${polygon.dataset[isBlue ? 'blueFill' : 'orangeFill']})`;
+    polygon.style.stroke = isBlue ? '#304959' : '#594127';
+    polygon.style.strokeWidth = '1.5';
+
+    const sidewall = svg?.querySelector('.hex-sidewall');
+    if (sidewall) {
+        sidewall.style.display = '';
+        sidewall.style.fill = isBlue ? '#49677D' : '#80613E';
+        sidewall.style.stroke = isBlue ? '#304959' : '#594127';
+    }
+    svg?.querySelectorAll('.hex-bevel').forEach(layer => {
+        layer.style.display = '';
+        layer.style.stroke = isBlue
+            ? (layer.classList.contains('hex-bevel-light') ? '#D8E7F0' : '#49677D')
+            : (layer.classList.contains('hex-bevel-light') ? '#F2E3CB' : '#80613E');
+    });
 }
+
+let hexSvgSequence = 0;
 
 function createHexagonSVG() {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 100 100');
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const svgId = ++hexSvgSequence;
+    [['blue-resin-face', '#B8CFE0', '#98B4C9'], ['orange-resin-face', '#E3CCAB', '#C9AA7F']].forEach(([name, start, end]) => {
+        const id = `${name}-${svgId}`;
+        const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        gradient.id = id;
+        gradient.setAttribute('x1', '0');
+        gradient.setAttribute('y1', '0');
+        gradient.setAttribute('x2', '0.35');
+        gradient.setAttribute('y2', '1');
+        const first = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        first.setAttribute('stop-color', start);
+        const last = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        last.setAttribute('offset', '1');
+        last.setAttribute('stop-color', end);
+        gradient.append(first, last);
+        defs.appendChild(gradient);
+    });
+    svg.appendChild(defs);
+
+    const sidewall = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     const points = [];
     for (let i = 0; i < 6; i++) {
@@ -1439,14 +1481,47 @@ function createHexagonSVG() {
         const y = 50 + 45 * Math.sin(angle);
         points.push(`${x},${y}`);
     }
+    sidewall.setAttribute('points', '11.029,72.5 50,95 88.971,72.5 88.971,76.5 50,99 11.029,76.5');
+    sidewall.classList.add('hex-sidewall');
     polygon.setAttribute('points', points.join(' '));
+    polygon.classList.add('hex-face');
+    polygon.dataset.blueFill = `blue-resin-face-${svgId}`;
+    polygon.dataset.orangeFill = `orange-resin-face-${svgId}`;
     paintEmptyHex(polygon);
+
+    const lightBevel = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    lightBevel.setAttribute('d', 'M12.7 71.5V28.5L50 7 87.3 28.5');
+    lightBevel.classList.add('hex-bevel', 'hex-bevel-light');
+    const darkBevel = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    darkBevel.setAttribute('d', 'M12.7 71.5 50 93 87.3 71.5V28.5');
+    darkBevel.classList.add('hex-bevel', 'hex-bevel-dark');
 
     // Add smooth transitions for fill and stroke
     polygon.style.transition = 'fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease';
 
+    svg.appendChild(sidewall);
     svg.appendChild(polygon);
+    svg.append(lightBevel, darkBevel);
+    paintEmptyHex(polygon);
     return svg;
+}
+
+function updateStackLayers(hexElement, stack) {
+    const svg = hexElement.querySelector(':scope > svg');
+    if (!svg) return;
+    svg.querySelectorAll('.hex-stack-rim').forEach(layer => layer.remove());
+
+    // Show up to two underlying tile rims. They sit inside the same 100x100
+    // SVG, so the board coordinate and pointer target never move.
+    stack.slice(0, -1).slice(-2).forEach((insect, index, visible) => {
+        const rim = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        rim.classList.add('hex-stack-rim');
+        rim.setAttribute('points', '11.029,72.5 50,95 88.971,72.5 88.971,76.5 50,99 11.029,76.5');
+        rim.style.fill = insect.player === 1 ? '#49677D' : '#80613E';
+        rim.style.stroke = insect.player === 1 ? '#304959' : '#594127';
+        rim.style.transform = `translateY(${-3 * (visible.length - index)}px)`;
+        svg.insertBefore(rim, svg.querySelector('.hex-sidewall'));
+    });
 }
 
 // ============================================
@@ -1626,6 +1701,30 @@ function selectAndDragTouch(touch, element, source, data) {
     document.addEventListener('touchcancel', cancelDragIfNotStarted);
 }
 
+let dragTileCloneSequence = 0;
+
+function cloneTileSvg(sourceSvg) {
+    const clone = sourceSvg.cloneNode(true);
+    const suffix = `-drag-${++dragTileCloneSequence}`;
+    const idMap = new Map();
+    clone.querySelectorAll('linearGradient[id]').forEach(gradient => {
+        const oldId = gradient.id;
+        gradient.id = `${oldId}${suffix}`;
+        idMap.set(oldId, gradient.id);
+    });
+    const face = clone.querySelector('.hex-face');
+    if (face) {
+        for (const key of ['blueFill', 'orangeFill']) {
+            const oldId = face.dataset[key];
+            if (idMap.has(oldId)) face.dataset[key] = idMap.get(oldId);
+        }
+        for (const [oldId, newId] of idMap) {
+            if (face.style.fill.includes(oldId)) face.style.fill = face.style.fill.replace(oldId, newId);
+        }
+    }
+    return clone;
+}
+
 function beginDragOnMove(e) {
     if (dragState.isDragging) {
         handleDragMove(e);
@@ -1643,9 +1742,23 @@ function beginDragOnMove(e) {
         updateHandVisualCount(); // Update count badge without full re-render (performance)
     }
 
-    // For both hand and board insects, clone only the SVG and use consistent sizing
     const svg = dragState.dragElement.querySelector('svg');
-    dragState.dragClone = document.createElement('div');
+    if (dragState.dragSource === 'hand') {
+        dragState.dragClone = dragState.dragElement.cloneNode(true);
+        dragState.dragClone.querySelector('.insect-count')?.remove();
+        dragState.dragClone.classList.remove('disabled');
+    } else {
+        // Lift a complete physical tile rather than a floating insect print.
+        dragState.dragClone = document.createElement('div');
+        dragState.dragClone.className = 'board-drag-tile';
+        const tileSvg = dragState.dragElement.closest('.hexagon')?.querySelector(':scope > svg');
+        if (tileSvg) dragState.dragClone.appendChild(cloneTileSvg(tileSvg));
+        if (svg) {
+            const print = svg.cloneNode(true);
+            print.classList.add('drag-insect-print');
+            dragState.dragClone.appendChild(print);
+        }
+    }
     dragState.dragClone.style.position = 'fixed';
     dragState.dragClone.style.zIndex = '1000';
     dragState.dragClone.style.pointerEvents = 'none';
@@ -1657,7 +1770,7 @@ function beginDragOnMove(e) {
     dragState.dragClone.style.alignItems = 'center';
     dragState.dragClone.style.justifyContent = 'center';
 
-    if (svg) {
+    if (svg && dragState.dragSource === 'hand' && !dragState.dragClone.querySelector('svg')) {
         dragState.dragClone.appendChild(svg.cloneNode(true));
     }
 
@@ -1753,7 +1866,7 @@ function handleDragMoveTouch(e) {
 
 // Helper function to update hexagon polygon styling directly
 function updateHexagonStyle(hexElement, isValid, playerColor = null) {
-    const polygon = hexElement.querySelector('svg polygon');
+    const polygon = hexElement.querySelector('svg .hex-face');
     if (!polygon) return;
 
     if (isValid) {
@@ -1766,17 +1879,22 @@ function updateHexagonStyle(hexElement, isValid, playerColor = null) {
         // environment chrome, so it must not rotate with the palette.
         polygon.style.stroke = 'rgba(255, 100, 100, 0.4)';
         polygon.style.strokeWidth = '2';
-        polygon.style.fill = 'rgba(255, 100, 100, 0.1)';
+        if (!hexElement.classList.contains('occupied')) {
+            polygon.style.fill = 'rgba(255, 100, 100, 0.1)';
+        }
     }
 }
 
 // Helper function to clear hexagon styling
 function clearHexagonStyle(hexElement) {
-    const polygon = hexElement.querySelector('svg polygon');
+    const polygon = hexElement.querySelector('svg .hex-face');
     if (!polygon) return;
 
-    // Restore default styling
-    paintEmptyHex(polygon);
+    // Restore the material that belongs at this coordinate. Occupied targets
+    // must not flash back to the empty-grid paint after a drag hover.
+    const occupant = getTopInsect(hexElement.dataset.hex);
+    if (occupant) paintOccupiedHex(polygon, occupant.player);
+    else paintEmptyHex(polygon);
     polygon.style.filter = '';
 }
 
@@ -2680,8 +2798,9 @@ function createInsectSVG(type, player, applyScale = false) {
     // Get player color
     const color = PLAYER_COLORS[player];
 
-    // Determine scale: queen is 1.0 (100%), all others are 0.8 (80%) when applyScale is true
-    const scale = (applyScale && type !== 'queen') ? 0.8 : 1.0;
+    // Keep prints inside the physical tile's inset bevel. The queen remains
+    // slightly larger than the other insects for hierarchy.
+    const scale = applyScale ? (type === 'queen' ? 0.88 : 0.8) : 1.0;
 
     // Process the SVG template with player color and scale
     const svg = processSVG(template, color, scale);
@@ -2805,30 +2924,27 @@ function renderBoard() {
         if (stack && stack.length > 0) {
             // Check if we need to update the display by comparing full stack
             const stackIds = stack.map(i => i.id).join(',');
-            const existingIds = Array.from(existingInsects).map(el => el.dataset.insectId).join(',');
+            const existingIds = hexElement.dataset.stackIds || '';
             const needsUpdate = stackIds !== existingIds;
 
             if (needsUpdate) {
                 // Remove all existing insects
                 existingInsects.forEach(el => el.remove());
 
-                // Render all insects in the stack with incremental z-index
-                stack.forEach((insect, index) => {
-                    const insectElement = createInsectElement(insect);
-                    insectElement.style.position = 'absolute';
-                    insectElement.style.zIndex = (10 + index).toString();
-
-                    // Disable pointer events on all except the top insect
-                    if (index < stack.length - 1) {
-                        insectElement.style.pointerEvents = 'none';
-                    }
-
-                    hexElement.appendChild(insectElement);
-                });
+                // A physical stack has one readable top glyph; the lower tiles
+                // are represented by their owner-coloured rims beneath it.
+                hexElement.appendChild(createInsectElement(topInsect));
+                hexElement.dataset.stackIds = stackIds;
             }
 
+            updateStackLayers(hexElement, stack);
+            hexElement.classList.add('occupied');
+            hexElement.classList.toggle('stacked', stack.length > 1);
+            hexElement.dataset.stackHeight = stack.length;
+            hexElement.style.setProperty('--stack-lift', `${Math.min(stack.length - 1, 2) * 3}px`);
+
             // Update hexagon appearance based on top insect
-            const polygon = hexElement.querySelector('svg polygon');
+            const polygon = hexElement.querySelector('svg .hex-face');
             if (polygon) {
                 paintOccupiedHex(polygon, topInsect.player);
             }
@@ -2845,8 +2961,13 @@ function renderBoard() {
         } else {
             // No insects on this hex - remove if exists and reset appearance
             existingInsects.forEach(el => el.remove());
+            delete hexElement.dataset.stackIds;
+            delete hexElement.dataset.stackHeight;
+            hexElement.classList.remove('occupied', 'stacked');
+            hexElement.style.removeProperty('--stack-lift');
+            updateStackLayers(hexElement, []);
 
-            const polygon = hexElement.querySelector('svg polygon');
+            const polygon = hexElement.querySelector('svg .hex-face');
             if (polygon) {
                 paintEmptyHex(polygon);
             }
@@ -2937,6 +3058,7 @@ function renderHand() {
         if (count > 0) {
             const div = document.createElement('div');
             div.className = 'hand-insect';
+            div.classList.add(`player-${player}`);
             div.dataset.insectType = type;
             // No inline colours: .hand-insect is themed by hive.css from the
             // palette tokens. Writing them here is what used to kill the
@@ -2951,7 +3073,13 @@ function renderHand() {
             }
             // Event listeners added via delegation in initializeEventListeners
 
-            const svg = createInsectSVG(type, player);
+            const tileSvg = createHexagonSVG();
+            tileSvg.classList.add('hand-tile-surface');
+            paintOccupiedHex(tileSvg.querySelector('.hex-face'), player);
+            div.appendChild(tileSvg);
+
+            const svg = createInsectSVG(type, player, true);
+            svg.classList.add('hand-insect-print');
             div.appendChild(svg);
 
             // Show count badge if visualCount > 1 (not if being dragged and was the last one)
@@ -3279,49 +3407,39 @@ function showVictory() {
     const allHexes = container.querySelectorAll('.hexagon');
 
     allHexes.forEach(hexElement => {
-        const insects = hexElement.querySelectorAll('.insect');
-        let hasWinningPiece = false;
-        let hasLosingPiece = false;
+        const stack = getInsectStack(hexElement.dataset.hex) || [];
+        const hasWinningPiece = stack.some(insect => insect.player === gameState.winner);
+        const hasLosingPiece = stack.some(insect => insect.player === losingPlayer);
+        const topInsect = stack[stack.length - 1];
+        const insectElement = hexElement.querySelector('.insect');
 
-        insects.forEach(insectElement => {
-            const insectId = insectElement.dataset.insectId;
-            // Find the insect data
-            for (let hexKey of gameState.board.keys()) {
-                const stack = getInsectStack(hexKey);
-                const insect = stack?.find(i => i.id === insectId);
-                if (insect) {
-                    if (insect.player === losingPlayer) {
-                        hasLosingPiece = true;
-                        // Losing team: fall off screen
-                        const randomDelay = Math.random() * 1000;
-                        const randomRotation = (Math.random() - 0.5) * 720;
-                        const randomX = (Math.random() - 0.5) * 500;
-
-                        setTimeout(() => {
-                            insectElement.style.transition = 'all 1.5s ease-in';
-                            insectElement.style.transform = `translateY(1000px) translateX(${randomX}px) rotate(${randomRotation}deg)`;
-                            insectElement.style.opacity = '0';
-                        }, randomDelay);
-                    } else {
-                        hasWinningPiece = true;
-                        // Winning team: celebratory dance (jump animation)
-                        const randomDelay = Math.random() * 500;
-                        setTimeout(() => {
-                            insectElement.style.animation = 'victoryDance 1s ease-in-out infinite';
-                        }, randomDelay);
-                    }
-                    break;
-                }
-            }
-        });
+        if (insectElement && topInsect?.player === losingPlayer) {
+            const randomDelay = Math.random() * 1000;
+            const randomRotation = (Math.random() - 0.5) * 720;
+            const randomX = (Math.random() - 0.5) * 500;
+            setTimeout(() => {
+                insectElement.style.transition = 'all 1.5s ease-in';
+                insectElement.style.transform = `translateY(1000px) translateX(${randomX}px) rotate(${randomRotation}deg)`;
+                insectElement.style.opacity = '0';
+            }, randomDelay);
+        } else if (insectElement && topInsect) {
+            const randomDelay = Math.random() * 500;
+            setTimeout(() => {
+                insectElement.style.animation = 'victoryDance 1s ease-in-out infinite';
+            }, randomDelay);
+        }
 
         // If hexagon only has losing pieces, reset to theme color (remove player coloring)
         if (hasLosingPiece && !hasWinningPiece) {
-            const polygon = hexElement.querySelector('svg polygon');
+            const polygon = hexElement.querySelector('svg .hex-face');
             if (polygon) {
                 setTimeout(() => {
                     polygon.style.transition = 'fill 1.5s ease-in, stroke 1.5s ease-in';
                     paintEmptyHex(polygon);
+                    hexElement.querySelectorAll('.hex-stack-rim').forEach(rim => rim.remove());
+                    hexElement.classList.remove('occupied', 'stacked', 'movable');
+                    hexElement.style.removeProperty('--stack-lift');
+                    delete hexElement.dataset.stackHeight;
                 }, 1200); // Delay slightly after pieces start falling
             }
         }

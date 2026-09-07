@@ -227,6 +227,31 @@ body::before {
     pointer-events: none; /* Let events bubble to hexagon container */
 }
 
+.hex-sidewall,
+.hex-stack-rim {
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.hex-face,
+.hex-bevel {
+    transform: translateY(calc(var(--stack-lift, 0px) * -1));
+    transform-origin: center;
+}
+
+.hex-bevel {
+    fill: none;
+    pointer-events: none;
+    stroke-linejoin: round;
+}
+
+.hex-bevel-light { stroke-width: 1.8; }
+.hex-bevel-dark { stroke-width: 1.5; opacity: 0.5; }
+
+.hexagon.occupied > svg {
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
 .hexagon.valid-placement {
     cursor: copy;
     filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.8));
@@ -235,15 +260,18 @@ body::before {
 /* --player-color is the dragging player's IDENTITY colour, set inline by
    hive.js. It stays literal; only the fallback rides the palette. The
    !important is what keeps this above paintEmptyHex's inline style. */
-.hexagon.valid-move svg polygon {
+.hexagon.valid-move svg .hex-face {
     stroke: var(--player-color, var(--accent)) !important;
     stroke-width: 3 !important;
     filter: drop-shadow(0 0 3px var(--player-color, var(--accent)));
 }
 
-.hexagon.invalid-move svg polygon {
+.hexagon.invalid-move svg .hex-face {
     stroke: rgba(255, 100, 100, 0.4) !important;
     stroke-width: 2 !important;
+}
+
+.hexagon.invalid-move:not(.occupied) svg .hex-face {
     fill: rgba(255, 100, 100, 0.1) !important;
 }
 
@@ -255,17 +283,33 @@ body::before {
     cursor: grab;
 }
 
-.hexagon.movable svg polygon {
-    filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.8));
+.hexagon.movable svg .hex-face {
+    stroke-width: 2.3 !important;
+    filter: brightness(1.04);
 }
 
-.hexagon.movable:hover svg polygon {
-    filter: brightness(1.2) drop-shadow(0 0 12px rgba(var(--accent-rgb), 0.9));
+.hexagon.movable:hover svg .hex-face {
+    filter: brightness(1.1);
 }
 
-/* Make non-movable occupied hexagons more subtle */
-.hexagon:not(.movable) svg polygon {
-    opacity: 0.6;
+.hexagon.stacked::after {
+    content: '×' attr(data-stack-height);
+    position: absolute;
+    right: 7%;
+    bottom: 8%;
+    z-index: 30;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 10px;
+    background: rgba(8, 12, 16, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
 }
 
 /* ====== INSECT STYLES ====== */
@@ -280,6 +324,7 @@ body::before {
     justify-content: center;
     z-index: 5;
     pointer-events: none; /* Let events bubble to hexagon */
+    transform: translateY(calc(var(--stack-lift, 0px) * -1));
 }
 
 .insect svg {
@@ -298,6 +343,21 @@ body::before {
     opacity: 0.4;
 }
 
+.board-drag-tile {
+    filter: drop-shadow(0 8px 7px rgba(0, 0, 0, 0.55));
+}
+
+.board-drag-tile > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.board-drag-tile .drag-insect-print {
+    z-index: 2;
+}
+
 .hexagon-content {
     position: relative;
     width: 100%;
@@ -310,7 +370,8 @@ body::before {
 /* ====== HAND AREA ====== */
 .hand-area {
     position: absolute;
-    bottom: -40px;
+    /* Keeps the 70px hand tiles inside the outer frame at 720px height. */
+    bottom: -30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -326,28 +387,41 @@ body::before {
     overflow-y: hidden;
 }
 
-/* Themed from the palette, not from JS. renderHand() used to write these three
-   properties inline on every render, which beat the :hover rule below and left
-   it dead from first paint. */
+/* Reserve pieces use the same owner resin, bevel, and sidewall as board tiles. */
 .hand-insect {
     width: 70px;
     height: 70px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
-    border: 2px solid var(--border);
+    border-radius: 0;
+    border: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.48));
+    background: transparent;
+}
+
+.hand-insect > .hand-tile-surface,
+.hand-insect > .hand-insect-print {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hand-insect > .hand-tile-surface { z-index: 0; }
+.hand-insect > .hand-insect-print { z-index: 1; }
+
+.hand-insect > .hand-tile-surface .hex-sidewall,
+.hand-insect > .hand-tile-surface .hex-bevel {
+    display: block;
 }
 
 .hand-insect:hover {
     transform: scale(1.1);
-    border-color: var(--accent-bright);
-    box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.6);
+    filter: brightness(1.08) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55));
 }
 
 .hand-insect.disabled {

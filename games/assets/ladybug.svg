@@ -1,55 +1,9 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <!-- Short stubby legs peeking from under shell -->
-    <path d="M24 50 Q18 48 14 54" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M76 50 Q82 48 86 54" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M22 62 Q16 62 12 68" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M78 62 Q84 62 88 68" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M26 74 Q20 76 16 82" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M74 74 Q80 76 84 82" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-
-    <!-- Shell/elytra (bright green dome) -->
-    <ellipse cx="50" cy="62" rx="30" ry="32" fill="#00FF00" stroke="#000" stroke-width="2"/>
-
-    <!-- 3D dome highlight -->
-    <ellipse cx="40" cy="50" rx="12" ry="14" fill="white" opacity="0.15" transform="rotate(-15 40 50)"/>
-    <!-- 3D shadow at bottom -->
-    <ellipse cx="50" cy="82" rx="18" ry="8" fill="#000" opacity="0.06"/>
-
-    <!-- Elytra center split line -->
-    <line x1="50" y1="34" x2="50" y2="92" stroke="#000" stroke-width="1.8"/>
-    <!-- Elytra separation at rear -->
-    <path d="M48 92 Q50 96 52 92" fill="none" stroke="#000" stroke-width="1" opacity="0.6"/>
-
-    <!-- 7-spot ladybug pattern (asymmetric, varied sizes) -->
-    <!-- Top center spot (straddling center line) -->
-    <circle cx="50" cy="44" r="3.5" fill="#000"/>
-    <!-- Left spots -->
-    <circle cx="36" cy="52" r="4.5" fill="#000"/>
-    <circle cx="38" cy="68" r="3.5" fill="#000"/>
-    <circle cx="34" cy="82" r="3" fill="#000"/>
-    <!-- Right spots -->
-    <circle cx="64" cy="54" r="4" fill="#000"/>
-    <circle cx="62" cy="70" r="4.5" fill="#000"/>
-    <circle cx="66" cy="84" r="2.8" fill="#000"/>
-
-    <!-- Pronotum (black shield between head and shell - defining ladybug feature) -->
-    <path d="M26 38 Q50 28 74 38 Q50 42 26 38 Z" fill="#000" stroke="#000" stroke-width="1"/>
-    <!-- White spots on pronotum -->
-    <circle cx="40" cy="35" r="2.2" fill="white"/>
-    <circle cx="60" cy="35" r="2.2" fill="white"/>
-
-    <!-- Head (black, tucked under pronotum) -->
-    <circle cx="50" cy="26" r="10" fill="#000" stroke="#000" stroke-width="1.5"/>
-
-    <!-- Eyes (white) -->
-    <circle cx="45" cy="24" r="2" fill="white"/>
-    <circle cx="55" cy="24" r="2" fill="white"/>
-
-    <!-- Short clubbed antennae -->
-    <path d="M44 18 L40 12" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="40" cy="12" r="1.2" fill="#000"/>
-    <path d="M56 18 L60 12" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="60" cy="12" r="1.2" fill="#000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 41 19 35 12 40M71 41 81 35 88 40M25 58H11M75 58H89M30 75 22 84M70 75 78 84M43 21 37 11M57 21 63 11" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M37 31V24Q50 12 63 24V31" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <circle cx="50" cy="58" r="31" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M50 29V87" stroke="#000" stroke-width="5"/>
+    <g fill="#000"><circle cx="37" cy="44" r="5"/><circle cx="63" cy="44" r="5"/><circle cx="32" cy="60" r="5"/><circle cx="68" cy="60" r="5"/><circle cx="38" cy="75" r="5"/><circle cx="62" cy="75" r="5"/></g>
   </g>
 </svg>

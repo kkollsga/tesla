@@ -1,58 +1,11 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <!-- Stubby beetle legs peeking from under shell -->
-    <path d="M22 48 Q16 44 10 48" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M78 48 Q84 44 90 48" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M20 60 Q14 58 8 62" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M80 60 Q86 58 92 62" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M22 72 Q16 72 10 78" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M78 72 Q84 72 90 78" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-
-    <!-- Shell/elytra (bright green) -->
-    <ellipse cx="50" cy="58" rx="32" ry="36" fill="#00FF00" stroke="#000" stroke-width="2"/>
-
-    <!-- 3D dome highlight -->
-    <ellipse cx="40" cy="46" rx="14" ry="16" fill="white" opacity="0.12" transform="rotate(-10 40 46)"/>
-    <!-- 3D shadow at bottom -->
-    <ellipse cx="50" cy="82" rx="20" ry="8" fill="#000" opacity="0.06"/>
-
-    <!-- Elytra split line (center) -->
-    <line x1="50" y1="28" x2="50" y2="92" stroke="#000" stroke-width="2"/>
-
-    <!-- Elytra outline curves (wing cover definition) -->
-    <path d="M50 28 Q28 28 22 58 Q20 82 50 92" fill="none" stroke="#000" stroke-width="0.8" opacity="0.3"/>
-    <path d="M50 28 Q72 28 78 58 Q80 82 50 92" fill="none" stroke="#000" stroke-width="0.8" opacity="0.3"/>
-
-    <!-- Elytral striae (longitudinal ridges) -->
-    <line x1="36" y1="32" x2="34" y2="88" stroke="#000" stroke-width="0.5" opacity="0.15"/>
-    <line x1="42" y1="28" x2="41" y2="90" stroke="#000" stroke-width="0.5" opacity="0.15"/>
-    <line x1="58" y1="28" x2="59" y2="90" stroke="#000" stroke-width="0.5" opacity="0.15"/>
-    <line x1="64" y1="32" x2="66" y2="88" stroke="#000" stroke-width="0.5" opacity="0.15"/>
-
-    <!-- Elytra separation at rear -->
-    <path d="M48 90 Q50 94 52 90" fill="none" stroke="#000" stroke-width="1" opacity="0.5"/>
-
-    <!-- Pronotum (shield between head and shell) -->
-    <ellipse cx="50" cy="26" rx="22" ry="8" fill="#00FF00" stroke="#000" stroke-width="1.8"/>
-    <!-- Pronotum texture line -->
-    <path d="M32 26 Q50 22 68 26" fill="none" stroke="#000" stroke-width="0.5" opacity="0.2"/>
-
-    <!-- Head (black - distinctive for beetle) -->
-    <circle cx="50" cy="14" r="11" fill="#000" stroke="#000" stroke-width="1.5"/>
-
-    <!-- Mandibles -->
-    <path d="M44 22 Q40 26 42 28" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M56 22 Q60 26 58 28" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-
-    <!-- Horns (within viewBox) -->
-    <path d="M44 8 Q40 4 42 2" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M56 8 Q60 4 58 2" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-
-    <!-- Eyes (white on black head) -->
-    <circle cx="44" cy="12" r="2" fill="white"/>
-    <circle cx="56" cy="12" r="2" fill="white"/>
-    <!-- Eye pupils -->
-    <circle cx="44" cy="12" r="0.8" fill="#000"/>
-    <circle cx="56" cy="12" r="0.8" fill="#000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 43 18 38 13 45M71 43 82 38 87 45M24 58 12 61M76 58 88 61M29 75 21 79 18 87M71 75 79 79 82 87M41 23 32 17 30 10M59 23 68 17 70 10" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M27 41C21 50 23 69 29 79Q36 89 50 89Q64 89 71 79C77 69 79 50 73 41Z" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M50 45V87" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M34 50Q30 67 38 77M66 50Q70 67 62 77" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M38 28V20Q50 12 62 20V28" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M34 27Q50 21 66 27L72 42Q50 50 28 42Z" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M45 17 42 9M55 17 58 9" fill="none" stroke="#000" stroke-width="3"/>
   </g>
 </svg>

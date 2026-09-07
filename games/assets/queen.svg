@@ -1,63 +1,13 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Queen bee -->
-
-  <!-- Legs - 3 pairs -->
-  <path d="M42 34 L32 28 L24 34" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M58 34 L68 28 L76 34" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M42 42 L26 44 L18 56" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M58 42 L74 44 L82 56" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M40 50 L24 58 L18 70" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M60 50 L76 58 L82 70" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Hindwings (behind, 90° out, single attach point per side) -->
-  <path d="M41 32 Q20 30 4 34 Q0 38 6 42 Q18 40 41 32 Z" fill="white" stroke="#000" stroke-width="1.5" opacity="0.82"/>
-  <path d="M35 34 Q16 34 6 37" fill="none" stroke="#000" stroke-width="0.5" opacity="0.22"/>
-  <path d="M59 32 Q80 30 96 34 Q100 38 94 42 Q82 40 59 32 Z" fill="white" stroke="#000" stroke-width="1.5" opacity="0.82"/>
-  <path d="M65 34 Q84 34 94 37" fill="none" stroke="#000" stroke-width="0.5" opacity="0.22"/>
-
-  <!-- Forewings (on top, angled forward, single attach point per side) -->
-  <path d="M41 32 Q22 14 6 16 Q0 22 2 30 Q14 38 41 32 Z" fill="white" stroke="#000" stroke-width="1.5" opacity="0.88"/>
-  <path d="M34 24 Q18 16 8 18" fill="none" stroke="#000" stroke-width="0.6" opacity="0.3"/>
-  <path d="M32 28 Q16 26 6 26" fill="none" stroke="#000" stroke-width="0.5" opacity="0.25"/>
-  <path d="M20 18 Q16 24 14 32" fill="none" stroke="#000" stroke-width="0.4" opacity="0.2"/>
-  <path d="M59 32 Q78 14 94 16 Q100 22 98 30 Q86 38 59 32 Z" fill="white" stroke="#000" stroke-width="1.5" opacity="0.88"/>
-  <path d="M66 24 Q82 16 92 18" fill="none" stroke="#000" stroke-width="0.6" opacity="0.3"/>
-  <path d="M68 28 Q84 26 94 26" fill="none" stroke="#000" stroke-width="0.5" opacity="0.25"/>
-  <path d="M80 18 Q84 24 86 32" fill="none" stroke="#000" stroke-width="0.4" opacity="0.2"/>
-
-  <!-- Abdomen: slimmer egg shape, directly from thorax -->
-  <path d="M46 38 C38 46 30 58 30 68 C30 82 42 94 50 94 C58 94 70 82 70 68 C70 58 62 46 54 38 Z" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-  <!-- Black stripe bands -->
-  <path d="M38 50 Q50 47 62 50 L62 55 Q50 52 38 55 Z" fill="#000"/>
-  <path d="M32 60 Q50 57 68 60 L68 65 Q50 62 32 65 Z" fill="#000"/>
-  <path d="M30 70 Q50 67 70 70 L70 75 Q50 72 30 75 Z" fill="#000"/>
-  <path d="M38 80 Q50 77 62 80 L60 84 Q50 81 40 84 Z" fill="#000"/>
-  <ellipse cx="42" cy="64" rx="4" ry="10" fill="white" opacity="0.1"/>
-
-  <!-- Thorax (small colored oval) -->
-  <ellipse cx="50" cy="32" rx="9" ry="6" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-  <ellipse cx="47" cy="30" rx="4" ry="3" fill="white" opacity="0.1"/>
-
-  <!-- Head (colored, wider than tall, overlaps thorax) -->
-  <ellipse cx="50" cy="20" rx="10" ry="7" fill="#00FF00" stroke="#000" stroke-width="1.5"/>
-  <ellipse cx="47" cy="18" rx="4" ry="3" fill="white" opacity="0.1"/>
-
-  <!-- Mandibles -->
-  <path d="M44 26 Q41 30 43 32" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M56 26 Q59 30 57 32" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-
-  <!-- Antennae -->
-  <path d="M42 14 Q36 6 30 2" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="30" cy="2" r="1.5" fill="#000"/>
-  <path d="M58 14 Q64 6 70 2" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="70" cy="2" r="1.5" fill="#000"/>
-
-  <!-- Eyes (black with white highlights) -->
-  <circle cx="43" cy="18" r="3" fill="#000"/>
-  <circle cx="57" cy="18" r="3" fill="#000"/>
-  <circle cx="44" cy="17" r="1" fill="white"/>
-  <circle cx="58" cy="17" r="1" fill="white"/>
-
-  <!-- Stinger -->
-  <path d="M50 94 L50 100" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 38 28 37 18 47M58 38 72 37 82 47M41 47 28 54 20 68M59 47 72 54 80 68M43 57 32 70 29 83M57 57 68 70 71 83M44 18 37 8 31 9M56 18 63 8 69 9" fill="none" stroke="#000" stroke-width="3"/>
+    <path d="M43 46C29 34 13 42 19 54C23 63 34 60 44 52ZM57 46C71 34 87 42 81 54C77 63 66 60 56 52Z" fill="white" stroke="#000" stroke-width="3"/>
+    <path d="M43 39C33 18 9 15 9 30C9 44 28 49 43 46ZM57 39C67 18 91 15 91 30C91 44 72 49 57 46Z" fill="white" stroke="#000" stroke-width="3"/>
+    <path d="M40 42 21 29M60 42 79 29" fill="none" stroke="#000" stroke-width="1.5" opacity="0.35"/>
+    <path d="M41 50C33 61 35 79 50 93C65 79 67 61 59 50Z" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M38 59Q50 62 62 59M38 70Q50 74 62 70M42 81Q50 84 58 81" fill="none" stroke="#000" stroke-width="5"/>
+    <ellipse cx="50" cy="43" rx="11" ry="13" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M39 24Q39 15 50 15Q61 15 61 24L58 31Q50 36 42 31Z" fill="#00FF00" stroke="#000" stroke-width="3"/>
+    <path d="M40 23 42 27M60 23 58 27" stroke="#000" stroke-width="4"/>
+  </g>
 </svg>

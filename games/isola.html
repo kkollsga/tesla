@@ -182,19 +182,49 @@
         .pawn-preview {
             width: 50px;
             height: 50px;
-            border-radius: 50%;
+            border-radius: 0;
             margin: 10px auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            position: relative;
+            background: transparent;
+            filter: drop-shadow(0 3px 2px rgba(0,0,0,0.45));
         }
 
         .pawn-preview.red {
-            background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
-            border: 3px solid #7F1D1D;
+            --pawn-light: #ff7777;
+            --pawn-base: #e32929;
+            --pawn-dark: #8e1515;
         }
 
         .pawn-preview.black {
-            background: radial-gradient(circle at 30% 30%, #444, #111);
-            border: 3px solid #3F3F46;
+            --pawn-light: #777d84;
+            --pawn-base: #30363c;
+            --pawn-dark: #101418;
+        }
+
+        .pawn-preview::before,
+        .pawn::before {
+            content: '';
+            position: absolute;
+            width: 28%;
+            height: 27%;
+            left: 36%;
+            top: 8%;
+            z-index: 2;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, var(--pawn-light), var(--pawn-base) 65%, var(--pawn-dark));
+            border: 1px solid var(--pawn-dark);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .pawn-preview::after,
+        .pawn::after {
+            content: '';
+            position: absolute;
+            inset: 33% 20% 8%;
+            border-radius: 44% 44% 22% 22%;
+            background: linear-gradient(110deg, var(--pawn-light), var(--pawn-base) 48%, var(--pawn-dark));
+            border: 1px solid var(--pawn-dark);
+            box-shadow: inset 0 2px 1px rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.18);
         }
 
         .grid-container {
@@ -202,103 +232,108 @@
             grid-template-columns: repeat(8, var(--cell));
             grid-template-rows: repeat(6, var(--cell));
             gap: var(--cell-gap);
-            background: rgba(0, 0, 0, 0.3);
+            background:
+                radial-gradient(circle at 22% 18%, rgba(94, 169, 187, 0.17), transparent 20%),
+                radial-gradient(circle at 74% 72%, rgba(36, 116, 143, 0.15), transparent 28%),
+                linear-gradient(145deg, #0b3545, #061f2d 68%, #041722);
             padding: var(--grid-pad);
             border-radius: 12px;
             box-shadow:
-                inset 0 4px 12px rgba(0,0,0,0.5),
-                0 8px 24px rgba(0,0,0,0.3);
+                inset 0 4px 14px rgba(0,0,0,0.52),
+                inset 0 0 0 1px rgba(112, 185, 200, 0.18),
+                0 10px 26px rgba(0,0,0,0.38);
             align-self: center;
         }
 
         .grid-cell {
             width: var(--cell);
             height: var(--cell);
-            /* Isola is one of only two games that THEME their board (the other
-               is hive). The old crimson gradient maps to the accent-deep and
-               border rungs — chosen because they reproduce today's lightness,
-               keeping the deliberate compromise between the red pawn (which
-               wants a dark cell) and the black pawn (which wants a light one). */
-            background: linear-gradient(135deg, var(--accent-deep) 0%, var(--border) 100%);
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.24), transparent 34%),
+                linear-gradient(135deg, #b8caca 0%, #8ca6a8 100%);
+            border: 1px solid #d8e4df;
             border-radius: 6px;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: filter 0.16s ease, outline-color 0.16s ease;
             box-shadow:
-                0 2px 4px rgba(0,0,0,0.3),
-                inset 0 1px 2px rgba(255,255,255,0.1);
+                0 3px 0 #4a666d,
+                0 5px 7px rgba(0,0,0,0.28),
+                inset 1px 1px 0 rgba(255,255,255,0.38),
+                inset -1px -1px 0 rgba(38,65,70,0.2);
         }
 
         .grid-cell:hover {
-            transform: translateY(-2px);
+            filter: brightness(1.06);
             box-shadow:
-                0 4px 8px rgba(0,0,0,0.4),
-                inset 0 1px 2px rgba(255,255,255,0.2);
+                0 3px 0 #4a666d,
+                0 6px 9px rgba(0,0,0,0.34),
+                inset 1px 1px 0 rgba(255,255,255,0.48),
+                inset -1px -1px 0 rgba(38,65,70,0.2);
         }
 
         .grid-cell.removed {
-            /* The hole a removed tile leaves. --surface-sunken is the "well"
-               rung; the inset shadow and the ::after vignette carry the depth. */
-            background: linear-gradient(135deg, var(--surface-sunken) 0%, var(--bg-edge) 100%);
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
             cursor: not-allowed;
             pointer-events: none;
         }
 
         .grid-cell.removed::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: calc(var(--cell) * 0.57);
-            height: calc(var(--cell) * 0.57);
-            background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, transparent 70%);
+            content: none;
         }
 
         .grid-cell.valid-move {
-            box-shadow: 0 0 0 3px #10b981, 0 0 20px rgba(16, 185, 129, 0.6);
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            outline: 3px solid #34d399;
+            outline-offset: -5px;
         }
 
         .grid-cell.valid-removal {
-            box-shadow: 0 0 0 3px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.6);
+            outline: 3px solid #f59e0b;
+            outline-offset: -5px;
+        }
+
+        .grid-container[data-phase="remove"] .grid-cell:not(.removed):not(.pawn-occupied):hover {
+            outline: 3px solid #f59e0b;
+            outline-offset: -5px;
         }
 
         .pawn {
             /* Keeps the pawn at the same fraction of a cell as the old 50/70. */
             width: calc(var(--cell) * 0.71);
             height: calc(var(--cell) * 0.71);
-            border-radius: 50%;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            filter: drop-shadow(0 5px 3px rgba(0,0,0,0.48));
             cursor: grab;
             z-index: 10;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* PIECE IDENTITY — literals by design, never palette tokens. The 3px
-           deep-tone rim is damme's checker idiom: the pawns were the only
-           pieces in the suite with no rim at all, and the rim is what keeps
-           the red pawn separable from the red palette's themed cell. */
+        /* PIECE IDENTITY — literals by design, never palette tokens. The
+           sculpted head/body uses a light edge so both red and charcoal remain
+           legible on the cool stone and over the water gaps. */
         .pawn.red {
-            background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
-            border: 3px solid #7F1D1D;
+            --pawn-light: #ff7777;
+            --pawn-base: #e32929;
+            --pawn-dark: #8e1515;
         }
 
         .pawn.black {
-            background: radial-gradient(circle at 30% 30%, #444, #111);
-            border: 3px solid #3F3F46;
+            --pawn-light: #777d84;
+            --pawn-base: #30363c;
+            --pawn-dark: #101418;
         }
 
         .pawn.dragging {
             position: fixed !important;
             z-index: 1000 !important;
             cursor: grabbing;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
+            box-shadow: none;
+            filter: drop-shadow(0 12px 10px rgba(0,0,0,0.68));
             pointer-events: none;
             opacity: 0.9;
         }
@@ -444,6 +479,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="game-polish.css">
 </head>
 <!-- data-theme selects the palette (red — isola's crimson heritage);
      themed-bg opts into the shared radial page wash from game-theme.css. -->
@@ -627,6 +663,7 @@
         // Render game state
         function renderGame() {
             const gridContainer = document.getElementById('grid-container');
+            gridContainer.dataset.phase = gameState.gamePhase;
             const cells = gridContainer.querySelectorAll('.grid-cell');
 
             // Update cells
@@ -645,7 +682,7 @@
                 }
 
                 // Clear highlighting
-                cell.classList.remove('valid-move', 'valid-removal');
+                cell.classList.remove('valid-move', 'valid-removal', 'pawn-occupied');
             });
 
             // Add pawns
@@ -655,11 +692,13 @@
             if (playerLeftCell) {
                 const pawnLeft = createPawn('left', gameState.playerLeft.color);
                 playerLeftCell.appendChild(pawnLeft);
+                playerLeftCell.classList.add('pawn-occupied');
             }
 
             if (playerRightCell) {
                 const pawnRight = createPawn('right', gameState.playerRight.color);
                 playerRightCell.appendChild(pawnRight);
+                playerRightCell.classList.add('pawn-occupied');
             }
 
             // Update player info highlighting

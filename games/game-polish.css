@@ -1,0 +1,246 @@
+/*
+ * Shared finishing layer for every game.
+ *
+ * Load this after the game's own stylesheet. Layout and board materials remain
+ * game-owned; this file gives the surrounding chrome one visual language.
+ */
+
+:root {
+    --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --chrome-line: rgba(255, 255, 255, 0.12);
+    --chrome-highlight: rgba(255, 255, 255, 0.07);
+}
+
+html,
+body,
+button,
+select,
+input {
+    font-family: var(--ui-font);
+}
+
+body {
+    color: var(--text, #f4f4f4);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Keep the four coloured rooms, but add depth without bright fog or bloom. */
+body.themed-bg {
+    background:
+        radial-gradient(ellipse at 50% 42%, rgba(var(--accent-rgb), 0.16) 0%, transparent 48%),
+        radial-gradient(ellipse at center, var(--bg-center) 0%, var(--bg-edge) 100%);
+}
+
+.navbar-btn {
+    color: rgba(255, 255, 255, 0.58);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+    text-shadow: none;
+    transition: color 160ms ease, transform 160ms ease, filter 160ms ease;
+}
+
+.navbar-btn:hover {
+    color: var(--text, #fff);
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.66));
+    text-shadow: none;
+    transform: translateY(-1px);
+}
+
+.navbar-btn:active {
+    transform: translateY(1px);
+}
+
+/* Panels should feel inset into the game room rather than pasted on top. */
+.player-info,
+.player-panel,
+.sidebar-content {
+    border-color: var(--chrome-line);
+    box-shadow:
+        inset 0 1px 0 var(--chrome-highlight),
+        0 10px 26px rgba(0, 0, 0, 0.18);
+}
+
+.player-info {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.065), transparent 48%),
+        rgba(var(--bg-edge-rgb), 0.70);
+    border: 1px solid var(--chrome-line);
+    backdrop-filter: blur(7px);
+}
+
+.player-name,
+.player-panel .player-name {
+    color: var(--text, #fff);
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.48);
+}
+
+.player-color,
+.player-label,
+.player-message,
+.player-instruction,
+.sidebar-label {
+    color: var(--text-dim, rgba(255, 255, 255, 0.68));
+}
+
+.player-status,
+.turn-indicator,
+.sidebar-status,
+.sidebar-value {
+    font-family: var(--ui-font);
+    font-weight: 700;
+}
+
+/* Gold is the stable cross-theme language for the player who can act. */
+.player-info.active,
+.player-panel.active {
+    border-color: rgba(var(--gold-rgb), 0.86);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 0 1px rgba(var(--gold-rgb), 0.18),
+        0 8px 26px rgba(var(--gold-rgb), 0.20);
+}
+
+.player-info.active .player-status {
+    color: var(--gold, #ffd700);
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.7);
+}
+
+/* One tactile button treatment; theme colour appears at the edge and on hover. */
+.game-button,
+.modal-btn {
+    border-radius: 9px;
+    font-family: var(--ui-font);
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    text-transform: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 4px 10px rgba(0, 0, 0, 0.30);
+    transition: background-color 160ms ease, border-color 160ms ease,
+                box-shadow 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.game-button {
+    background: linear-gradient(180deg, var(--surface-raised) 0%, var(--surface) 100%);
+    background-size: auto;
+    border: 1px solid rgba(var(--accent-rgb), 0.46);
+}
+
+.game-button::before,
+.game-button::after {
+    animation: none;
+}
+
+.game-button:hover {
+    background: linear-gradient(180deg, var(--border) 0%, var(--surface-raised) 100%);
+    border-color: rgba(var(--accent-rgb), 0.76);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.13),
+        0 6px 14px rgba(0, 0, 0, 0.34),
+        0 0 12px rgba(var(--accent-rgb), 0.12);
+    transform: translateY(-1px);
+}
+
+.game-button:active,
+.modal-btn:active {
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.32);
+    transform: translateY(1px);
+}
+
+.game-button:disabled,
+.modal-btn:disabled {
+    opacity: 0.46;
+    filter: saturate(0.55);
+    cursor: default;
+}
+
+.modal-btn-primary {
+    background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--accent-fg, #0d0d0d);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+.modal-btn-primary:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 7px 16px rgba(var(--accent-rgb), 0.28);
+    transform: translateY(-1px);
+}
+
+.info-modal {
+    background: rgba(3, 4, 5, 0.88);
+    backdrop-filter: blur(8px);
+}
+
+.info-panel {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.07), transparent 38%),
+        linear-gradient(160deg, var(--surface-raised) 0%, var(--surface) 58%, var(--bg-edge) 100%);
+    border: 1px solid rgba(var(--accent-rgb), 0.46);
+    border-radius: 16px;
+    color: var(--text, #fff);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 24px 64px rgba(0, 0, 0, 0.56);
+}
+
+.info-panel h2,
+.info-panel h3 {
+    color: var(--accent-bright);
+    font-family: var(--ui-font);
+    text-shadow: none;
+}
+
+.info-panel p,
+.info-panel li {
+    color: var(--text-dim, #c3c3c3);
+}
+
+/* Nonogram inherited serif text in clues on some browsers. */
+.sidebar,
+.sidebar-label,
+.sidebar-value,
+.sidebar-status,
+.selector-label,
+.selector-option,
+.clues-column,
+.clues-row,
+.clue-row,
+.clue-cell {
+    font-family: var(--ui-font);
+}
+
+/* Victory remains celebratory without a permanent neon-sign pulse. */
+.victory-overlay {
+    background: rgba(3, 4, 5, 0.86);
+    backdrop-filter: blur(7px);
+}
+
+.victory-text {
+    color: var(--gold, #ffd700);
+    letter-spacing: 0.045em;
+    text-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.72),
+        0 0 28px rgba(var(--gold-rgb), 0.32);
+    animation: none;
+}
+
+.victory-subtext {
+    color: var(--text, #fff);
+    text-shadow: 0 3px 9px rgba(0, 0, 0, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
